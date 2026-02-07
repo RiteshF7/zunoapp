@@ -1,0 +1,70 @@
+{
+  "items": [
+    {
+      "id": "feed-1",
+      "title": "10 Must-Know TypeScript Tips for 2025",
+      "description": "Boost your TypeScript skills with these essential tips and best practices for modern development.",
+      "imageUrl": "https://picsum.photos/seed/ts-tips/400/250",
+      "sourceUrl": "https://example.com/typescript-tips",
+      "category": "Tutorial",
+      "likes": 2340,
+      "platform": "youtube",
+      "contentType": "video"
+    },
+    {
+      "id": "feed-2",
+      "title": "The Ultimate Guide to Meal Prep",
+      "description": "Save time and eat healthy with this comprehensive meal prep guide covering 20 recipes.",
+      "imageUrl": "https://picsum.photos/seed/meal-prep/400/250",
+      "sourceUrl": "https://example.com/meal-prep",
+      "category": "Article",
+      "likes": 1567,
+      "platform": "instagram",
+      "contentType": "reel"
+    },
+    {
+      "id": "feed-3",
+      "title": "Minimalist Home Office Setup 2025",
+      "description": "Transform your workspace with these minimalist design ideas and productivity hacks.",
+      "imageUrl": "https://picsum.photos/seed/office/400/250",
+      "sourceUrl": "https://example.com/home-office",
+      "category": "Resource",
+      "likes": 892,
+      "platform": "pinterest",
+      "contentType": "image"
+    },
+    {
+      "id": "feed-4",
+      "title": "React Native Performance Deep Dive",
+      "description": "Learn advanced techniques to optimize your React Native app performance.",
+      "imageUrl": "https://picsum.photos/seed/rn-perf/400/250",
+      "sourceUrl": "https://example.com/rn-performance",
+      "category": "Tutorial",
+      "likes": 3105,
+      "platform": "youtube",
+      "contentType": "video"
+    },
+    {
+      "id": "feed-5",
+      "title": "5-Minute Morning Yoga Routine",
+      "description": "Start your day right with this quick and effective morning yoga flow for all levels.",
+      "imageUrl": "https://picsum.photos/seed/yoga/400/250",
+      "sourceUrl": "https://example.com/morning-yoga",
+      "category": "Health",
+      "likes": 4521,
+      "platform": "instagram",
+      "contentType": "reel"
+    },
+    {
+      "id": "feed-6",
+      "title": "Building a Second Brain with AI",
+      "description": "How to use AI tools to organize your knowledge and boost creativity.",
+      "imageUrl": "https://picsum.photos/seed/second-brain/400/250",
+      "sourceUrl": "https://example.com/second-brain",
+      "category": "Article",
+      "likes": 1890,
+      "platform": "twitter",
+      "contentType": "thread"
+    }
+  ]
+}

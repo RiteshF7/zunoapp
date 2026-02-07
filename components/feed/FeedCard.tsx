@@ -1,6 +1,7 @@
 // components/feed/FeedCard.tsx
 import React from "react";
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/common/Icon";
 import { ContentTypeBadge } from "./ContentTypeBadge";
@@ -11,13 +12,15 @@ import { useThemeStore } from "@/stores/themeStore";
 interface FeedCardProps {
   item: FeedItem;
   isBookmarked: boolean;
+  reason?: string | null;
   onBookmarkToggle: (id: string) => void;
   onOpenSource: (url: string) => void;
 }
 
-export function FeedCard({
+export const FeedCard = React.memo(function FeedCard({
   item,
   isBookmarked,
+  reason,
   onBookmarkToggle,
   onOpenSource,
 }: FeedCardProps) {
@@ -41,8 +44,10 @@ export function FeedCard({
       <View className="relative">
         <Image
           source={{ uri: item.imageUrl }}
-          className="w-full h-48"
-          resizeMode="cover"
+          style={{ width: "100%", height: 192 }}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
         />
 
         {/* Badges overlay */}
@@ -72,6 +77,16 @@ export function FeedCard({
         >
           {item.description}
         </Text>
+
+        {/* "Why this?" reason label */}
+        {reason && (
+          <View className="flex-row items-center gap-1.5 mb-3">
+            <Icon name="auto_awesome" size={12} color="#4D96FF" />
+            <Text className="text-xs text-accent-blue font-medium italic">
+              {reason}
+            </Text>
+          </View>
+        )}
 
         {/* Actions Row */}
         <View className="flex-row items-center justify-between">
@@ -129,4 +144,4 @@ export function FeedCard({
       </View>
     </Pressable>
   );
-}
+});

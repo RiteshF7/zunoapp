@@ -83,7 +83,7 @@ export default function HomeScreen() {
         title={contentData.app.name}
         subtitle={contentData.app.title}
         actions={[
-          { icon: "search", onPress: () => console.log("Search") },
+          { icon: "search", onPress: () => router.push("/search") },
           { icon: "notifications", onPress: () => console.log("Notifications") },
           { icon: "settings", onPress: () => setSettingsVisible(true) },
         ]}

@@ -1,6 +1,7 @@
 // app/(tabs)/feed.tsx
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { View, FlatList, RefreshControl, Linking, Text } from "react-native";
+import { useRouter } from "expo-router";
 import { Header } from "@/components/common/Header";
 import { FilterChips } from "@/components/common/FilterChips";
 import { SearchBar } from "@/components/common/SearchBar";
@@ -11,6 +12,7 @@ import feedData from "@/assets/data/feed.json";
 import { FeedItem, FEED_FILTERS } from "@/types/feed";
 
 export default function FeedScreen() {
+  const router = useRouter();
   const { feedBookmarks, toggleBookmark, initializeBookmarks } = useContentStore();
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -125,7 +127,7 @@ export default function FeedScreen() {
         actions={[
           {
             icon: "search",
-            onPress: () => setSearchActive(!searchActive),
+            onPress: () => router.push("/search"),
           },
           {
             icon: "settings",

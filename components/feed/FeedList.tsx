@@ -1,0 +1,61 @@
+// components/feed/FeedList.tsx
+import React from "react";
+import { FlatList, View, Text, RefreshControl } from "react-native";
+import { FeedCard } from "./FeedCard";
+import { FeedItem } from "@/types/feed";
+
+interface FeedListProps {
+  items: FeedItem[];
+  bookmarks: string[];
+  onBookmarkToggle: (id: string) => void;
+  onOpenSource: (url: string) => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  ListHeaderComponent?: React.ReactElement;
+}
+
+export function FeedList({
+  items,
+  bookmarks,
+  onBookmarkToggle,
+  onOpenSource,
+  onRefresh,
+  refreshing = false,
+  ListHeaderComponent,
+}: FeedListProps) {
+  if (items.length === 0) {
+    return (
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-lg font-semibold text-slate-400 dark:text-slate-500 mb-2">
+          No content yet
+        </Text>
+        <Text className="text-sm text-slate-400 dark:text-slate-600 text-center">
+          Your personalized feed will appear here once you start saving content.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <FlatList
+      data={items}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <FeedCard
+          item={item}
+          isBookmarked={bookmarks.includes(item.id)}
+          onBookmarkToggle={onBookmarkToggle}
+          onOpenSource={onOpenSource}
+        />
+      )}
+      ListHeaderComponent={ListHeaderComponent}
+      contentContainerStyle={{ paddingBottom: 100 }}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        ) : undefined
+      }
+    />
+  );
+}

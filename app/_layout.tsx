@@ -1,7 +1,7 @@
 // app/_layout.tsx
 import "../global.css";
 import { useEffect } from "react";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -56,7 +56,16 @@ export default function RootLayout() {
             style={{ flex: 1 }}
           >
             <View className="flex-1 bg-background-light dark:bg-background-dark">
-              <Slot />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  animation: "fade",
+                }}
+              >
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+              </Stack>
               <StatusBar style={isDark ? "light" : "dark"} />
             </View>
           </View>

@@ -14,9 +14,16 @@ export function CollectionsGrid({
   onCollectionPress,
 }: CollectionsGridProps) {
   return (
-    <View className="px-6 flex-row flex-wrap gap-4">
-      {collections.map((collection) => (
-        <View key={collection.id} style={{ width: "47.5%" }}>
+    <View className="px-6 flex-row flex-wrap" style={{ gap: 16 }}>
+      {collections.map((collection, index) => (
+        <View
+          key={collection.id}
+          style={{
+            width: "47.5%",
+            // Stagger animation on mount
+            opacity: 1,
+          }}
+        >
           <CollectionCard
             title={collection.title}
             count={collection.count}

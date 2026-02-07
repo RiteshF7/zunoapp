@@ -3,6 +3,8 @@ import React from "react";
 import { View, Text, Pressable, Image } from "react-native";
 import { cn } from "@/lib/utils";
 import { Icon } from "@/components/common/Icon";
+import { ContentTypeBadge } from "./ContentTypeBadge";
+import { PlatformBadge } from "./PlatformBadge";
 import { FeedItem } from "@/types/feed";
 import { useThemeStore } from "@/stores/themeStore";
 
@@ -29,20 +31,33 @@ export function FeedCard({
   };
 
   return (
-    <View className="bg-white dark:bg-card-dark rounded-2xl overflow-hidden mb-4 mx-6">
+    <Pressable
+      className="bg-white dark:bg-card-dark rounded-2xl overflow-hidden mb-4 mx-6"
+      style={({ pressed }) => ({
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
+    >
       {/* Thumbnail */}
-      <Image
-        source={{ uri: item.imageUrl }}
-        className="w-full h-48"
-        resizeMode="cover"
-      />
+      <View className="relative">
+        <Image
+          source={{ uri: item.imageUrl }}
+          className="w-full h-48"
+          resizeMode="cover"
+        />
 
-      {/* Category Badge */}
-      <View className="absolute top-3 left-3">
-        <View className="bg-black/60 px-3 py-1 rounded-full">
-          <Text className="text-white text-xs font-semibold">
-            {item.category}
-          </Text>
+        {/* Badges overlay */}
+        <View className="absolute top-3 left-3 flex-row gap-2 items-center">
+          <PlatformBadge platform={item.platform} />
+          <ContentTypeBadge type={item.contentType} />
+        </View>
+
+        {/* Category badge */}
+        <View className="absolute top-3 right-3">
+          <View className="bg-black/50 px-3 py-1 rounded-full">
+            <Text className="text-white text-xs font-semibold">
+              {item.category}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -61,13 +76,13 @@ export function FeedCard({
         {/* Actions Row */}
         <View className="flex-row items-center justify-between">
           {/* Likes */}
-          <View className="flex-row items-center gap-1">
+          <View className="flex-row items-center gap-1.5">
             <Icon
               name="favorite"
               size={16}
               color={isDark ? "#94a3b8" : "#94a3b8"}
             />
-            <Text className="text-xs text-slate-400 dark:text-slate-500">
+            <Text className="text-xs text-slate-400 dark:text-slate-500 font-medium">
               {formatLikes(item.likes)}
             </Text>
           </View>
@@ -112,6 +127,6 @@ export function FeedCard({
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }

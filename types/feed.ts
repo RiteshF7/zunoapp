@@ -19,3 +19,18 @@ export interface FeedItem {
 export interface FeedData {
   items: FeedItem[];
 }
+
+export interface FeedFilter {
+  id: string;
+  label: string;
+  contentTypes?: ContentType[];
+}
+
+export const FEED_FILTERS: FeedFilter[] = [
+  { id: "all", label: "All" },
+  { id: "videos", label: "Videos", contentTypes: ["video", "reel"] },
+  { id: "articles", label: "Articles", contentTypes: ["article"] },
+  { id: "posts", label: "Posts", contentTypes: ["post", "thread"] },
+  { id: "images", label: "Images", contentTypes: ["image"] },
+  { id: "audio", label: "Audio", contentTypes: ["podcast", "audio"] },
+];

@@ -1,99 +1,132 @@
 // app/index.tsx
-import React, { useState } from "react";
-import { View, Text, ScrollView } from "react-native";
-import { Header } from "@/components/common/Header";
-import { FilterChips } from "@/components/common/FilterChips";
-import { CollectionCard } from "@/components/home/CollectionCard";
-import { PrimaryButton } from "@/components/common/PrimaryButton";
-import { ThemeToggle } from "@/components/common/ThemeToggle";
-import { SearchBar } from "@/components/common/SearchBar";
-import { FeedCard } from "@/components/feed/FeedCard";
-import contentData from "@/assets/data/content.json";
-import feedData from "@/assets/data/feed.json";
-import { FeedItem } from "@/types/feed";
+import React, { useEffect, useRef } from "react";
+import { View, Text, Animated, Dimensions } from "react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { useThemeStore } from "@/stores/themeStore";
 
-export default function PreviewScreen() {
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [searchText, setSearchText] = useState("");
-  const [bookmarks, setBookmarks] = useState<string[]>([]);
+const { width, height } = Dimensions.get("window");
 
-  const toggleBookmark = (id: string) => {
-    setBookmarks((prev) =>
-      prev.includes(id) ? prev.filter((b) => b !== id) : [...prev, id]
-    );
-  };
+export default function SplashScreen() {
+  const router = useRouter();
+  const { isDark, initialize } = useThemeStore();
+
+  // Animations
+  const logoScale = useRef(new Animated.Value(0.5)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
+  const taglineOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    initialize();
+
+    // Staggered entrance animation
+    Animated.sequence([
+      // Logo fades in and scales up
+      Animated.parallel([
+        Animated.spring(logoScale, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(logoOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // App name fades in
+      Animated.timing(textOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      // Tagline fades in
+      Animated.timing(taglineOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Auto-navigate after 2.5 seconds
+    const timer = setTimeout(() => {
+      router.replace("/(tabs)");
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <Header
-          title="Zuno"
-          subtitle="Pick your"
-          actions={[
-            { icon: "search", onPress: () => {} },
-            { icon: "settings", onPress: () => {} },
-          ]}
-        />
+    <View className="flex-1 bg-background-light dark:bg-background-dark items-center justify-center">
+      {/* Decorative grid dots (subtle background) */}
+      <View className="absolute inset-0 opacity-5">
+        {Array.from({ length: 20 }).map((_, row) =>
+          Array.from({ length: 10 }).map((_, col) => (
+            <View
+              key={`${row}-${col}`}
+              className="absolute w-1 h-1 rounded-full bg-slate-400"
+              style={{
+                left: col * (width / 10) + width / 20,
+                top: row * (height / 20) + height / 40,
+              }}
+            />
+          ))
+        )}
+      </View>
 
-        {/* Theme Toggle */}
-        <View className="px-6 mb-4">
-          <ThemeToggle />
-        </View>
+      {/* Logo */}
+      <Animated.View
+        style={{
+          transform: [{ scale: logoScale }],
+          opacity: logoOpacity,
+        }}
+      >
+        <LinearGradient
+          colors={["#4D96FF", "#A855F7"]}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: 24,
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#4D96FF",
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.3,
+            shadowRadius: 16,
+            elevation: 12,
+          }}
+        >
+          <Text style={{ color: "white", fontSize: 36, fontWeight: "bold" }}>
+            Z
+          </Text>
+        </LinearGradient>
+      </Animated.View>
 
-        {/* Search Bar */}
-        <SearchBar
-          value={searchText}
-          onChangeText={setSearchText}
-          className="mb-4"
-        />
+      {/* Divider line */}
+      <Animated.View
+        style={{ opacity: textOpacity }}
+        className="w-8 h-0.5 bg-slate-300 dark:bg-slate-600 my-6"
+      />
 
-        {/* Filter Chips */}
-        <FilterChips
-          filters={contentData.filters}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
+      {/* App Name */}
+      <Animated.Text
+        style={{ opacity: textOpacity }}
+        className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100"
+      >
+        Zuno
+      </Animated.Text>
 
-        {/* Collection Cards (2-col sample) */}
-        <Text className="px-6 mt-4 mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          Collections
-        </Text>
-        <View className="px-6 flex-row flex-wrap gap-4 mb-6">
-          {contentData.collections.slice(0, 4).map((col) => (
-            <View key={col.id} style={{ width: "47%" }}>
-              <CollectionCard
-                title={col.title}
-                count={col.count}
-                icon={col.icon}
-                theme={col.theme as any}
-                onPress={() => console.log("Pressed:", col.id)}
-              />
-            </View>
-          ))}
-        </View>
-
-        {/* Feed Card Sample */}
-        <Text className="px-6 mt-2 mb-3 text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          Feed Cards
-        </Text>
-        {feedData.items.slice(0, 2).map((item) => (
-          <FeedCard
-            key={item.id}
-            item={item as FeedItem}
-            isBookmarked={bookmarks.includes(item.id)}
-            onBookmarkToggle={toggleBookmark}
-            onOpenSource={(url) => console.log("Open:", url)}
-          />
-        ))}
-
-        {/* Primary Button */}
-        <View className="px-6 mt-4 mb-8">
-          <PrimaryButton label="Add New" icon="add" />
-        </View>
-
-        <View style={{ height: 50 }} />
-      </ScrollView>
+      {/* Tagline */}
+      <Animated.Text
+        style={{ opacity: taglineOpacity }}
+        className="text-sm text-slate-500 dark:text-slate-400 mt-2"
+      >
+        Your unified content hub
+      </Animated.Text>
     </View>
   );
 }

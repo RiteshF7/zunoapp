@@ -1,6 +1,7 @@
 // app/(tabs)/index.tsx
 import React, { useState, useCallback } from "react";
 import { View, ScrollView, RefreshControl, Text } from "react-native";
+import { useRouter } from "expo-router";
 import { Header } from "@/components/common/Header";
 import { FilterChips } from "@/components/common/FilterChips";
 import { CollectionsGrid } from "@/components/home/CollectionsGrid";
@@ -8,43 +9,67 @@ import { CollectionSummary } from "@/components/home/CollectionSummary";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { SettingsDropdown } from "@/components/common/SettingsDropdown";
 import { useContentStore } from "@/stores/contentStore";
+import { useAuthStore } from "@/stores/authStore";
+import { useCollections } from "@/hooks/useCollections";
 import contentData from "@/assets/data/content.json";
 import { Collection } from "@/types/content";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { activeFilter, setActiveFilter } = useContentStore();
+  const { isAuthenticated } = useAuthStore();
+  const { data: supabaseCollections, isLoading, refetch } = useCollections();
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Use Supabase data if authenticated, otherwise fallback to mock data
+  const collections: Collection[] =
+    isAuthenticated && supabaseCollections
+      ? supabaseCollections.map((c) => ({
+          id: c.id,
+          title: c.title,
+          count: c.item_count,
+          icon: c.icon,
+          theme: c.theme as any,
+        }))
+      : (contentData.collections as Collection[]);
+
   // Filter collections based on active filter
-  // For mock data, "all" shows everything; other filters show a subset
   const filteredCollections = useCallback((): Collection[] => {
-    const allCollections = contentData.collections as Collection[];
-    if (activeFilter === "all") return allCollections;
-    if (activeFilter === "recent") return allCollections.slice(0, 3);
+    if (activeFilter === "all") return collections;
+    if (activeFilter === "recent") return collections.slice(0, 3);
     if (activeFilter === "ideas") {
-      return allCollections.filter((c) =>
-        ["creative-projects", "learning-discovery"].includes(c.id)
+      return collections.filter((c) =>
+        c.title.toLowerCase().includes("creative") ||
+        c.title.toLowerCase().includes("learning") ||
+        c.title.toLowerCase().includes("idea")
       );
     }
     if (activeFilter === "research") {
-      return allCollections.filter((c) =>
-        ["important-documents", "learning-discovery"].includes(c.id)
+      return collections.filter((c) =>
+        c.title.toLowerCase().includes("document") ||
+        c.title.toLowerCase().includes("learning") ||
+        c.title.toLowerCase().includes("research")
       );
     }
     if (activeFilter === "personal") {
-      return allCollections.filter((c) =>
-        ["personal-notes", "home-diy", "daily-helpers"].includes(c.id)
+      return collections.filter((c) =>
+        c.title.toLowerCase().includes("personal") ||
+        c.title.toLowerCase().includes("home") ||
+        c.title.toLowerCase().includes("daily")
       );
     }
-    return allCollections;
-  }, [activeFilter]);
+    return collections;
+  }, [activeFilter, collections]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // Simulate a refresh (in production, this would re-fetch from Supabase)
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    if (isAuthenticated) {
+      await refetch();
+    }
+    // Simulate a delay for visual feedback
+    setTimeout(() => setRefreshing(false), 500);
+  }, [isAuthenticated, refetch]);
 
   const handleCollectionPress = (id: string) => {
     // In future phases, this will navigate to the collection detail screen
@@ -117,7 +142,7 @@ export default function HomeScreen() {
         <PrimaryButton
           label="Add New"
           icon="add"
-          onPress={() => console.log("Add new content")}
+          onPress={() => router.push("/add-content")}
         />
       </View>
     </View>

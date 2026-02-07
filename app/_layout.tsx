@@ -8,6 +8,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useThemeStore } from "@/stores/themeStore";
+import { useAuthStore } from "@/stores/authStore";
+import { supabase } from "@/lib/supabase";
 import {
   useFonts,
   Inter_400Regular,
@@ -27,6 +29,7 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const { isDark, initialize } = useThemeStore();
+  const { setSession, initialize: initAuth } = useAuthStore();
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -37,6 +40,20 @@ export default function RootLayout() {
 
   useEffect(() => {
     initialize();
+
+    // Initialize auth
+    initAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (!fontsLoaded) {
@@ -65,6 +82,13 @@ export default function RootLayout() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(tabs)" />
+                <Stack.Screen
+                  name="add-content"
+                  options={{
+                    presentation: "modal",
+                    animation: "slide_from_bottom",
+                  }}
+                />
               </Stack>
               <StatusBar style={isDark ? "light" : "dark"} />
             </View>

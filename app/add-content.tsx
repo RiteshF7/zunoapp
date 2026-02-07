@@ -16,6 +16,7 @@ import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { IconButton } from "@/components/common/IconButton";
 import { Icon } from "@/components/common/Icon";
 import { contentService } from "@/services/content.service";
+import { processContentAI } from "@/lib/ai/categorize";
 import { useThemeStore } from "@/stores/themeStore";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -66,13 +67,21 @@ export default function AddContentScreen() {
 
     setLoading(true);
     try {
-      await contentService.saveContent({
+      const content = await contentService.saveContent({
         url: url.trim(),
         title: title.trim() || undefined,
         platform,
         content_type: contentType,
       });
-      Alert.alert("Saved!", "Content has been added to your library.", [
+
+      // Trigger AI processing (non-blocking)
+      processContentAI(content.id).then((result) => {
+        if (result.success) {
+          console.log("AI processed:", result);
+        }
+      });
+
+      Alert.alert("Saved!", "Content is being analyzed by AI...", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error: any) {

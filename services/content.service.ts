@@ -1,5 +1,5 @@
 // services/content.service.ts
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { Content } from "@/types/supabase";
 
 export const contentService = {
@@ -11,32 +11,20 @@ export const contentService = {
     platform?: string;
     contentType?: string;
   }): Promise<Content[]> {
-    let query = supabase
-      .from("content")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const params = new URLSearchParams();
+    if (options?.limit) params.set("limit", String(options.limit));
+    if (options?.offset) params.set("offset", String(options.offset));
+    if (options?.category) params.set("category", options.category);
+    if (options?.platform) params.set("platform", options.platform);
+    if (options?.contentType) params.set("content_type", options.contentType);
 
-    if (options?.limit) query = query.limit(options.limit);
-    if (options?.offset) query = query.range(options.offset, options.offset + (options.limit || 20) - 1);
-    if (options?.category) query = query.eq("ai_category", options.category);
-    if (options?.platform) query = query.eq("platform", options.platform);
-    if (options?.contentType) query = query.eq("content_type", options.contentType);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return data || [];
+    const qs = params.toString();
+    return api.get<Content[]>(`/api/content${qs ? `?${qs}` : ""}`);
   },
 
   // Get a single content item
   async getContentItem(id: string): Promise<Content | null> {
-    const { data, error } = await supabase
-      .from("content")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) throw error;
-    return data;
+    return api.get<Content>(`/api/content/${id}`);
   },
 
   // Create (save) new content
@@ -48,64 +36,21 @@ export const contentService = {
     platform?: string;
     content_type?: string;
   }): Promise<Content> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Not authenticated");
-
-    const { data, error } = await supabase
-      .from("content")
-      .insert({
-        user_id: user.id,
-        url: content.url,
-        title: content.title,
-        description: content.description,
-        thumbnail_url: content.thumbnail_url,
-        platform: content.platform || "other",
-        content_type: content.content_type || "post",
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    return api.post<Content>("/api/content", content);
   },
 
   // Update content
   async updateContent(id: string, updates: Partial<Content>): Promise<Content> {
-    const { data, error } = await supabase
-      .from("content")
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    return api.patch<Content>(`/api/content/${id}`, updates);
   },
 
   // Delete content
   async deleteContent(id: string): Promise<void> {
-    const { error } = await supabase
-      .from("content")
-      .delete()
-      .eq("id", id);
-
-    if (error) throw error;
+    await api.delete(`/api/content/${id}`);
   },
 
   // Get content with tags
   async getContentWithTags(id: string) {
-    const { data, error } = await supabase
-      .from("content")
-      .select(`
-        *,
-        content_tags (
-          tag:tag_id (id, name, slug, is_ai_generated)
-        )
-      `)
-      .eq("id", id)
-      .single();
-
-    if (error) throw error;
-    return data;
+    return api.get<any>(`/api/content/${id}/tags`);
   },
 };

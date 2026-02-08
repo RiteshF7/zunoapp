@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { Profile } from "@/types/supabase";
+import { api } from "@/lib/api";
 
 interface AuthState {
   session: Session | null;
@@ -43,12 +44,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session) {
-        // Fetch profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
+        // Fetch profile from Python backend
+        let profile: Profile | null = null;
+        try {
+          profile = await api.get<Profile>("/api/profile");
+        } catch {
+          // Profile fetch may fail if backend is unreachable
+          console.warn("Failed to fetch profile from backend");
+        }
 
         set({
           session,

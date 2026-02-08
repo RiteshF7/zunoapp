@@ -1,5 +1,5 @@
 // services/search.service.ts
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 
 export interface SearchResult {
   id: string;
@@ -19,63 +19,33 @@ export interface SearchResult {
 export const searchService = {
   // Full-text search (simple, no embeddings)
   async searchContent(query: string, limit = 20): Promise<SearchResult[]> {
-    const { data, error } = await supabase.rpc("search_content", {
-      query_text: query,
-      match_count: limit,
-    });
-
-    if (error) throw error;
-    return data || [];
+    return api.get<SearchResult[]>(
+      `/api/search?q=${encodeURIComponent(query)}&limit=${limit}`
+    );
   },
 
   // Hybrid search (full-text + semantic)
   async hybridSearch(query: string, limit = 20): Promise<SearchResult[]> {
-    // First, generate an embedding for the query
-    const embedding = await generateQueryEmbedding(query);
-
-    if (!embedding) {
-      // Fallback to full-text search if embedding generation fails
-      return searchService.searchContent(query, limit);
-    }
-
-    const { data, error } = await supabase.rpc("hybrid_search", {
-      query_text: query,
-      query_embedding: embedding,
-      match_count: limit,
-    });
-
-    if (error) throw error;
-    return data || [];
+    return api.get<SearchResult[]>(
+      `/api/search/hybrid?q=${encodeURIComponent(query)}&limit=${limit}`
+    );
   },
 
   // Tag-based search
   async searchByTag(tagSlug: string, limit = 50): Promise<SearchResult[]> {
-    const { data, error } = await supabase.rpc("search_by_tag", {
-      tag_slug: tagSlug,
-      match_count: limit,
-    });
-
-    if (error) throw error;
-    return data || [];
+    return api.get<SearchResult[]>(
+      `/api/search/tag/${encodeURIComponent(tagSlug)}?limit=${limit}`
+    );
   },
 
   // Get popular tags for the current user
   async getPopularTags(limit = 20): Promise<{ name: string; slug: string; count: number }[]> {
-    const { data, error } = await supabase
-      .from("tags")
-      .select("name, slug, usage_count")
-      .order("usage_count", { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-    return (data || []).map((t) => ({
-      name: t.name,
-      slug: t.slug,
-      count: t.usage_count,
-    }));
+    return api.get<{ name: string; slug: string; count: number }[]>(
+      `/api/tags/popular?limit=${limit}`
+    );
   },
 
-  // Get recent searches (stored locally)
+  // Get recent searches (stored locally — no backend call needed)
   async getRecentSearches(): Promise<string[]> {
     try {
       const AsyncStorage = require("@react-native-async-storage/async-storage").default;
@@ -108,17 +78,3 @@ export const searchService = {
     }
   },
 };
-
-// Generate embedding for a search query
-async function generateQueryEmbedding(query: string): Promise<number[] | null> {
-  try {
-    const { data, error } = await supabase.functions.invoke("generate-embedding", {
-      body: { text: query },
-    });
-
-    if (error) throw error;
-    return data?.embedding || null;
-  } catch {
-    return null;
-  }
-}

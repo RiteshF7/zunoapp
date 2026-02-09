@@ -1,4 +1,4 @@
-// app/add-content.tsx
+// app/add-content.tsx — AI processing via Python backend
 import React, { useState } from "react";
 import {
   View,

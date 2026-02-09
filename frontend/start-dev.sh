@@ -1,71 +1,85 @@
 #!/bin/bash
 # ============================================================
-# Zuno App - Dev Server Launcher
-# Kills stale processes, clears ports, starts Metro fresh.
+# Zuno App - Full Dev Launcher
+# Kills stale processes, starts Backend + Metro fresh.
+# Does NOT touch ADB/emulator if one is already running.
 # ============================================================
 
-PORT=8081
+METRO_PORT=8081
+BACKEND_PORT=8000
+BACKEND_DIR="../backend"
+FALLBACK_AVD="testrunner"
 
 echo "========================================"
-echo "  Zuno Dev Server Launcher"
+echo "  Zuno Dev Launcher"
 echo "========================================"
 echo ""
 
-# 1. Kill any process listening on port 8081
-echo "[1/4] Killing processes on port ${PORT}..."
+# ---------------------------------------------------------
+# STEP 1: Kill anything on Metro port (8081)
+# ---------------------------------------------------------
+echo "[1/4] Killing processes on port ${METRO_PORT}..."
 
-PIDS=$(netstat -ano | grep ":${PORT}" | grep "LISTENING" | awk '{print $5}' | sort -u)
+PIDS=$(netstat -ano | grep ":${METRO_PORT}" | grep "LISTENING" | awk '{print $5}' | sort -u)
 if [ -n "$PIDS" ]; then
   for PID in $PIDS; do
     echo "  Killing PID ${PID}..."
     taskkill //PID "$PID" //F || true
   done
 else
-  echo "  Port ${PORT} is already free."
+  echo "  Port ${METRO_PORT} is already free."
 fi
 
-# 2. Kill stale connections on the port
+# ---------------------------------------------------------
+# STEP 2: Kill anything on Backend port (8000)
+# ---------------------------------------------------------
 echo ""
-echo "[2/4] Cleaning up stale connections..."
+echo "[2/4] Killing processes on port ${BACKEND_PORT}..."
 
-STALE_PIDS=$(netstat -ano | grep ":${PORT}" | awk '{print $5}' | sort -u | grep -v "0" || true)
-if [ -n "$STALE_PIDS" ]; then
-  for PID in $STALE_PIDS; do
-    echo "  Killing stale PID ${PID}..."
+PIDS=$(netstat -ano | grep ":${BACKEND_PORT}" | grep "LISTENING" | awk '{print $5}' | sort -u)
+if [ -n "$PIDS" ]; then
+  for PID in $PIDS; do
+    echo "  Killing PID ${PID}..."
     taskkill //PID "$PID" //F || true
   done
 else
-  echo "  No stale connections."
+  echo "  Port ${BACKEND_PORT} is already free."
 fi
 
-# 3. Reset ADB reverse port forwarding
-echo ""
-echo "[3/4] Resetting ADB port forwarding..."
-
-adb reverse --remove-all || true
-sleep 1
-adb reverse tcp:${PORT} tcp:${PORT} || echo "  ADB reverse failed (will use LAN IP fallback)."
-
-# 4. Wait for port to free up
-echo ""
-echo "[4/4] Waiting for port ${PORT}..."
-
-RETRIES=0
-while [ $RETRIES -lt 10 ]; do
-  BUSY=$(netstat -ano | grep ":${PORT}" | grep "LISTENING" || true)
-  if [ -z "$BUSY" ]; then
-    echo "  Port ${PORT} is free!"
-    break
-  fi
-  RETRIES=$((RETRIES + 1))
-  echo "  Still busy, waiting... ($RETRIES/10)"
-  sleep 1
-done
-
-# Start Metro
+# ---------------------------------------------------------
+# STEP 3: Start Backend server (background)
+# ---------------------------------------------------------
 echo ""
 echo "========================================"
-echo "  Starting Expo Dev Server"
+echo "[3/4] Starting Backend (port ${BACKEND_PORT})"
+echo "========================================"
+echo ""
+
+if [ -d "${BACKEND_DIR}/venv" ]; then
+  (
+    cd "${BACKEND_DIR}" && \
+    source venv/Scripts/activate || source venv/bin/activate && \
+    python -m uvicorn app.main:app --reload --host 0.0.0.0 --port ${BACKEND_PORT} &
+  )
+  echo "  Backend starting in background..."
+  sleep 2
+
+  if curl -s http://localhost:${BACKEND_PORT}/health > /dev/null; then
+    echo "  Backend is UP."
+  else
+    echo "  Backend still starting (may take a few seconds)..."
+  fi
+else
+  echo "  WARNING: No venv found at ${BACKEND_DIR}/venv — skipping backend."
+  echo "  Run: cd ${BACKEND_DIR} && python -m venv venv && source venv/Scripts/activate && pip install -r requirements.txt"
+fi
+
+# ---------------------------------------------------------
+# STEP 4: Start Expo Dev Server
+# ---------------------------------------------------------
+echo ""
+echo "========================================"
+echo "[4/4] Starting Expo Dev Server (port ${METRO_PORT})"
 echo "========================================"
 echo ""
 

@@ -1,4 +1,4 @@
-"""OpenAI / Gemini AI service — categorize, summarize, tag, embed content."""
+"""AI service — categorize, summarize, tag, embed content via Gemini or OpenAI."""
 
 from __future__ import annotations
 
@@ -22,53 +22,93 @@ SYSTEM_PROMPT = (
     "Return ONLY valid JSON."
 )
 
+GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_EMBEDDING_MODEL = "text-embedding-004"
+
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
-async def process_with_ai(
-    text: str, settings: Settings
-) -> dict[str, Any]:
-    """Categorize, summarize, tag, and embed the given text.
-
-    Returns dict with keys: category, summary, tags, title, embedding.
-    """
-    if settings.ai_provider == "gemini":
+async def process_with_ai(text: str, settings: Settings) -> dict[str, Any]:
+    """Categorize, summarize, tag, and embed the given text."""
+    if settings.ai_provider == "gemini" and settings.gemini_api_key:
         return await _process_with_gemini(text, settings)
-    return await _process_with_openai(text, settings)
+    if settings.openai_api_key:
+        return await _process_with_openai(text, settings)
+    raise RuntimeError("No AI provider configured. Set GEMINI_API_KEY or OPENAI_API_KEY.")
 
 
-async def generate_embedding(
-    text: str, settings: Settings
-) -> list[float] | None:
-    """Generate an embedding vector for the given text using OpenAI."""
-    if not settings.openai_api_key:
-        return None
+async def generate_embedding(text: str, settings: Settings) -> list[float] | None:
+    """Generate an embedding vector using the configured AI provider."""
+    if settings.ai_provider == "gemini" and settings.gemini_api_key:
+        return await _gemini_embedding(text, settings.gemini_api_key)
+    if settings.openai_api_key:
+        return await _openai_embedding(text, settings.openai_api_key)
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Gemini implementation
+# ---------------------------------------------------------------------------
+async def _process_with_gemini(text: str, settings: Settings) -> dict[str, Any]:
+    api_key = settings.gemini_api_key
+    prompt = f"{SYSTEM_PROMPT}\n\nContent:\n{text}\n\nReturn ONLY valid JSON."
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={api_key}",
+            headers={"Content-Type": "application/json"},
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "responseMimeType": "application/json",
+                },
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        result_text = data["candidates"][0]["content"]["parts"][0]["text"]
+        result = json.loads(result_text)
+
+    # Generate embedding via Gemini
+    embedding = await _gemini_embedding(text, api_key)
+
+    return {
+        "category": result.get("category", "Uncategorized"),
+        "summary": result.get("summary", ""),
+        "tags": result.get("tags", []),
+        "title": result.get("title"),
+        "embedding": embedding,
+    }
+
+
+async def _gemini_embedding(text: str, api_key: str) -> list[float] | None:
+    """Generate an embedding using Gemini's text-embedding-004 model."""
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
-                "https://api.openai.com/v1/embeddings",
-                headers={
-                    "Authorization": f"Bearer {settings.openai_api_key}",
-                    "Content-Type": "application/json",
+                f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_EMBEDDING_MODEL}:embedContent?key={api_key}",
+                headers={"Content-Type": "application/json"},
+                json={
+                    "model": f"models/{GEMINI_EMBEDDING_MODEL}",
+                    "content": {"parts": [{"text": text[:2048]}]},
                 },
-                json={"model": "text-embedding-3-small", "input": text},
             )
             resp.raise_for_status()
             data = resp.json()
-            return data["data"][0]["embedding"]
+            return data["embedding"]["values"]
     except Exception as exc:
-        logger.warning("Embedding generation failed: %s", exc)
+        logger.warning("Gemini embedding failed: %s", exc)
         return None
 
 
 # ---------------------------------------------------------------------------
-# OpenAI implementation
+# OpenAI implementation (fallback)
 # ---------------------------------------------------------------------------
 async def _process_with_openai(text: str, settings: Settings) -> dict[str, Any]:
     api_key = settings.openai_api_key
     async with httpx.AsyncClient(timeout=60) as client:
-        # Step 1: Categorize / summarize / tag
         completion_resp = await client.post(
             "https://api.openai.com/v1/chat/completions",
             headers={
@@ -89,18 +129,7 @@ async def _process_with_openai(text: str, settings: Settings) -> dict[str, Any]:
         completion = completion_resp.json()
         result = json.loads(completion["choices"][0]["message"]["content"])
 
-        # Step 2: Generate embedding
-        embedding_resp = await client.post(
-            "https://api.openai.com/v1/embeddings",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={"model": "text-embedding-3-small", "input": text},
-        )
-        embedding_resp.raise_for_status()
-        embedding_data = embedding_resp.json()
-        embedding = embedding_data["data"][0]["embedding"]
+        embedding = await _openai_embedding(text, api_key)
 
     return {
         "category": result.get("category", "Uncategorized"),
@@ -111,49 +140,21 @@ async def _process_with_openai(text: str, settings: Settings) -> dict[str, Any]:
     }
 
 
-# ---------------------------------------------------------------------------
-# Gemini implementation
-# ---------------------------------------------------------------------------
-async def _process_with_gemini(text: str, settings: Settings) -> dict[str, Any]:
-    api_key = settings.gemini_api_key
-    prompt = (
-        "Analyze this content and return a JSON object with:\n"
-        '- "category": A single category (Cooking, Tech, Travel, Fitness, Finance, '
-        "Design, Health, Education, Entertainment, Lifestyle, Business, Science, Sports, Music, Art)\n"
-        '- "summary": A concise 1-2 sentence summary (max 150 chars)\n'
-        '- "tags": An array of 3-5 relevant tags (lowercase, no #)\n'
-        '- "title": A clean title if you can infer one\n\n'
-        f"Content:\n{text}\n\nReturn ONLY valid JSON."
-    )
-
-    async with httpx.AsyncClient(timeout=60) as client:
-        resp = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}",
-            headers={"Content-Type": "application/json"},
-            json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.3,
-                    "responseMimeType": "application/json",
+async def _openai_embedding(text: str, api_key: str) -> list[float] | None:
+    """Generate an embedding using OpenAI text-embedding-3-small."""
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                "https://api.openai.com/v1/embeddings",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
                 },
-            },
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        result_text = data["candidates"][0]["content"]["parts"][0]["text"]
-        result = json.loads(result_text)
-
-    # Gemini doesn't have a native embedding API — use OpenAI if available, else placeholder
-    embedding: list[float] | None = None
-    if settings.openai_api_key:
-        embedding = await generate_embedding(text, settings)
-    if embedding is None:
-        embedding = [0.0] * 1536  # placeholder
-
-    return {
-        "category": result.get("category", "Uncategorized"),
-        "summary": result.get("summary", ""),
-        "tags": result.get("tags", []),
-        "title": result.get("title"),
-        "embedding": embedding,
-    }
+                json={"model": "text-embedding-3-small", "input": text},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return data["data"][0]["embedding"]
+    except Exception as exc:
+        logger.warning("OpenAI embedding failed: %s", exc)
+        return None

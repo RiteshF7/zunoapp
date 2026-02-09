@@ -55,7 +55,7 @@ export default function HomeScreen() {
   }, [refetch, refetchCategories]);
 
   const handleCollectionPress = (id: string) => {
-    console.log("Collection pressed:", id);
+    router.push(`/collection/${id}`);
   };
 
   return (

@@ -116,6 +116,12 @@ export default function RootLayout() {
                     animation: "slide_from_bottom",
                   }}
                 />
+                <Stack.Screen
+                  name="collection/[id]"
+                  options={{
+                    animation: "slide_from_right",
+                  }}
+                />
               </Stack>
               <StatusBar style={isDark ? "light" : "dark"} />
             </View>

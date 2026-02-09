@@ -6,9 +6,9 @@ import { FeedItem } from "@/types/feed";
 
 interface FeedListProps {
   items: FeedItem[];
-  bookmarks: string[];
-  onBookmarkToggle: (id: string) => void;
-  onOpenSource: (url: string) => void;
+  favorites?: string[];
+  onFavoriteToggle?: (id: string) => void;
+  onItemPress?: (id: string) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
   ListHeaderComponent?: React.ReactElement;
@@ -16,9 +16,9 @@ interface FeedListProps {
 
 export function FeedList({
   items,
-  bookmarks,
-  onBookmarkToggle,
-  onOpenSource,
+  favorites = [],
+  onFavoriteToggle,
+  onItemPress,
   onRefresh,
   refreshing = false,
   ListHeaderComponent,
@@ -43,9 +43,9 @@ export function FeedList({
       renderItem={({ item }) => (
         <FeedCard
           item={item}
-          isBookmarked={bookmarks.includes(item.id)}
-          onBookmarkToggle={onBookmarkToggle}
-          onOpenSource={onOpenSource}
+          isFavorited={favorites.includes(item.id)}
+          onFavoriteToggle={onFavoriteToggle}
+          onPress={onItemPress}
         />
       )}
       ListHeaderComponent={ListHeaderComponent}

@@ -1,6 +1,7 @@
 // app/(tabs)/feed.tsx
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { View, FlatList, RefreshControl, Linking, Text } from "react-native";
+
 import { useRouter } from "expo-router";
 import { Header } from "@/components/common/Header";
 import { FilterChips } from "@/components/common/FilterChips";
@@ -76,8 +77,8 @@ export default function FeedScreen() {
     ({ item }: { item: FeedItem }) => (
       <FeedCard
         item={item}
-        isBookmarked={feedBookmarks.includes(item.id)}
-        onBookmarkToggle={toggleBookmark}
+        isFavorited={feedBookmarks.includes(item.id)}
+        onFavoriteToggle={toggleBookmark}
         onPress={handleFeedItemPress}
       />
     ),

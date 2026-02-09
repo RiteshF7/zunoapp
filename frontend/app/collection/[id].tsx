@@ -91,22 +91,24 @@ export default function CollectionDetailScreen() {
     [router]
   );
 
-  // Get theme colors for the header accent
+  // Get theme colors for the header accent and card bg
   const theme = (collection?.theme || "blue") as CollectionTheme;
   const themeColors = COLLECTION_THEMES[theme] || COLLECTION_THEMES.blue;
   const accentBg = isDark ? themeColors.iconBg.dark : themeColors.iconBg.light;
   const accentColor = isDark
     ? themeColors.iconColor.dark
     : themeColors.iconColor.light;
+  const cardBgColor = isDark ? themeColors.cardBg.dark : themeColors.cardBg.light;
 
   const renderItem = useCallback(
     ({ item }: { item: FeedItem }) => (
       <FeedCard
         item={item}
+        cardBg={cardBgColor}
         onPress={handleContentPress}
       />
     ),
-    [handleContentPress]
+    [handleContentPress, cardBgColor]
   );
 
   const ListHeader = (

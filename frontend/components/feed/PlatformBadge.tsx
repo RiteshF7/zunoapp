@@ -3,38 +3,55 @@ import React from "react";
 import { View, Text } from "react-native";
 import { cn } from "@/lib/utils";
 import { Platform as PlatformType } from "@/types/feed";
+import {
+  Instagram,
+  Youtube,
+  Twitter,
+  Facebook,
+  Linkedin,
+  Globe,
+  MessageCircle,
+  Disc3,
+  Rss,
+  type LucideIcon,
+} from "lucide-react-native";
 
 interface PlatformBadgeProps {
   platform: PlatformType;
   className?: string;
 }
 
-const platformConfig: Record<PlatformType, { label: string; color: string }> = {
-  youtube: { label: "YT", color: "bg-red-500" },
-  instagram: { label: "IG", color: "bg-pink-500" },
-  twitter: { label: "X", color: "bg-slate-800 dark:bg-slate-200" },
-  facebook: { label: "FB", color: "bg-blue-600" },
-  linkedin: { label: "LI", color: "bg-blue-700" },
-  tiktok: { label: "TT", color: "bg-slate-900" },
-  reddit: { label: "RD", color: "bg-orange-500" },
-  pinterest: { label: "PI", color: "bg-red-600" },
-  spotify: { label: "SP", color: "bg-green-500" },
-  medium: { label: "MD", color: "bg-slate-700" },
-  other: { label: "WB", color: "bg-slate-500" },
+const platformConfig: Record<
+  PlatformType,
+  { label: string; bg: string; icon: LucideIcon }
+> = {
+  youtube: { label: "YouTube", bg: "#FF0000", icon: Youtube },
+  instagram: { label: "Instagram", bg: "#E1306C", icon: Instagram },
+  twitter: { label: "X", bg: "#14171A", icon: Twitter },
+  facebook: { label: "Facebook", bg: "#1877F2", icon: Facebook },
+  linkedin: { label: "LinkedIn", bg: "#0A66C2", icon: Linkedin },
+  tiktok: { label: "TikTok", bg: "#111111", icon: Disc3 },
+  reddit: { label: "Reddit", bg: "#FF4500", icon: MessageCircle },
+  pinterest: { label: "Pinterest", bg: "#E60023", icon: Rss },
+  spotify: { label: "Spotify", bg: "#1DB954", icon: Disc3 },
+  medium: { label: "Medium", bg: "#333333", icon: Globe },
+  other: { label: "Web", bg: "#64748b", icon: Globe },
 };
 
 export function PlatformBadge({ platform, className }: PlatformBadgeProps) {
   const config = platformConfig[platform] || platformConfig.other;
+  const IconComponent = config.icon;
 
   return (
     <View
       className={cn(
-        "w-6 h-6 rounded-full items-center justify-center",
-        config.color,
+        "flex-row items-center gap-1 px-2.5 py-1 rounded-full",
         className
       )}
+      style={{ backgroundColor: config.bg }}
     >
-      <Text className="text-white text-[8px] font-bold">
+      <IconComponent size={10} color="#fff" strokeWidth={2.5} />
+      <Text className="text-white text-[10px] font-bold">
         {config.label}
       </Text>
     </View>

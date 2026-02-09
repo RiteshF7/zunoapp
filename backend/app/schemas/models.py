@@ -80,6 +80,7 @@ class ContentOut(BaseModel):
     content_type: str = "post"
     ai_category: str | None = None
     ai_summary: str | None = None
+    ai_structured_content: dict[str, Any] | None = None
     ai_processed: bool = False
     source_metadata: dict[str, Any] | None = None
     created_at: str

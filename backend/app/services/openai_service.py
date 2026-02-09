@@ -13,12 +13,27 @@ from app.config import Settings
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
-    "You are a content analysis AI. Analyze the given content and return a JSON object with:\n"
+    "You are a content analysis AI. Your job is to deeply analyze saved content so the user "
+    "can consume it WITHOUT visiting the original source.\n\n"
+    "Return a JSON object with these fields:\n"
     '- "category": A single category (e.g., Cooking, Tech, Travel, Fitness, Finance, '
     "Design, Health, Education, Entertainment, Lifestyle, Business, Science, Sports, Music, Art)\n"
-    '- "summary": A concise 1-2 sentence summary (max 150 chars)\n'
     '- "tags": An array of 3-5 relevant tags (lowercase, no #)\n'
-    '- "title": A clean title if you can infer one (optional)\n'
+    '- "title": A clean, descriptive title\n'
+    '- "tldr": A 2-3 sentence summary that captures the essence of the content. '
+    "The reader should understand the full gist just from this.\n"
+    '- "key_points": An array of 4-8 key points extracted from the content. '
+    "Each point should be a clear, self-contained sentence. "
+    "For recipes include ingredients and key steps, for tutorials include instructions, "
+    "for articles include main arguments/findings, for videos describe key moments.\n"
+    '- "action_items": An array of actionable steps the user can follow. '
+    "For recipes: numbered cooking steps. For tutorials: step-by-step instructions. "
+    "For informational content: practical takeaways. Return an empty array [] if "
+    "the content has no actionable steps.\n"
+    '- "save_motive": A short phrase describing WHY the user likely saved this '
+    '(e.g., "To try this recipe later", "For coding reference", '
+    '"To learn about investing", "For travel inspiration", "To share with friends"). '
+    "Infer the motive from the content type and topic.\n\n"
     "Return ONLY valid JSON."
 )
 
@@ -74,12 +89,28 @@ async def _process_with_gemini(text: str, settings: Settings) -> dict[str, Any]:
     # Generate embedding via Gemini
     embedding = await _gemini_embedding(text, api_key)
 
+    return _normalize_ai_result(result, embedding)
+
+
+def _normalize_ai_result(
+    result: dict[str, Any], embedding: list[float] | None
+) -> dict[str, Any]:
+    """Build a consistent return dict from raw AI JSON output."""
+    # Use tldr if present, fall back to legacy "summary" field
+    tldr = result.get("tldr") or result.get("summary", "")
     return {
         "category": result.get("category", "Uncategorized"),
-        "summary": result.get("summary", ""),
+        "summary": tldr,  # backward-compat: ai_summary column in DB
         "tags": result.get("tags", []),
         "title": result.get("title"),
         "embedding": embedding,
+        # New structured fields
+        "structured_content": {
+            "tldr": tldr,
+            "key_points": result.get("key_points", []),
+            "action_items": result.get("action_items", []),
+            "save_motive": result.get("save_motive", ""),
+        },
     }
 
 
@@ -131,13 +162,7 @@ async def _process_with_openai(text: str, settings: Settings) -> dict[str, Any]:
 
         embedding = await _openai_embedding(text, api_key)
 
-    return {
-        "category": result.get("category", "Uncategorized"),
-        "summary": result.get("summary", ""),
-        "tags": result.get("tags", []),
-        "title": result.get("title"),
-        "embedding": embedding,
-    }
+    return _normalize_ai_result(result, embedding)
 
 
 async def _openai_embedding(text: str, api_key: str) -> list[float] | None:

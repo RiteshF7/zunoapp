@@ -1,4 +1,4 @@
-"""URL metadata scraping — extract OG tags, title, description, thumbnail."""
+"""URL metadata scraping — extract OG tags, title, description, thumbnail, body text."""
 
 from __future__ import annotations
 
@@ -7,9 +7,17 @@ import re
 from dataclasses import dataclass, field
 
 import httpx
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Comment
 
 logger = logging.getLogger(__name__)
+
+# Maximum characters of body text to extract (keeps AI API costs reasonable)
+_MAX_BODY_CHARS = 8000
+
+# Tags whose content is never visible text
+_INVISIBLE_TAGS = frozenset(
+    {"script", "style", "noscript", "iframe", "svg", "head", "meta", "link"}
+)
 
 
 @dataclass
@@ -17,10 +25,11 @@ class UrlMetadata:
     title: str | None = None
     description: str | None = None
     thumbnail: str | None = None
+    body_text: str | None = None
 
 
 async def fetch_url_metadata(url: str) -> UrlMetadata:
-    """Fetch and extract Open Graph / meta tags from a URL."""
+    """Fetch and extract Open Graph / meta tags + visible body text from a URL."""
     try:
         async with httpx.AsyncClient(
             timeout=15,
@@ -36,8 +45,14 @@ async def fetch_url_metadata(url: str) -> UrlMetadata:
         title = _get_og(soup, "og:title") or _get_tag_text(soup, "title")
         description = _get_og(soup, "og:description") or _get_meta(soup, "description")
         thumbnail = _get_og(soup, "og:image")
+        body_text = _extract_visible_text(soup)
 
-        return UrlMetadata(title=title, description=description, thumbnail=thumbnail)
+        return UrlMetadata(
+            title=title,
+            description=description,
+            thumbnail=thumbnail,
+            body_text=body_text,
+        )
     except Exception as exc:
         logger.warning("Failed to fetch metadata for %s: %s", url, exc)
         return UrlMetadata()
@@ -67,3 +82,33 @@ def _get_tag_text(soup: BeautifulSoup, tag_name: str) -> str | None:
     """Extract text content from an HTML tag."""
     tag = soup.find(tag_name)
     return tag.get_text(strip=True) if tag else None
+
+
+def _extract_visible_text(soup: BeautifulSoup) -> str | None:
+    """Extract visible body text, stripping scripts/styles/nav chrome.
+
+    Returns up to ``_MAX_BODY_CHARS`` characters of cleaned text, or *None*
+    if nothing meaningful is found.
+    """
+    # Remove invisible elements in-place so get_text ignores them
+    for tag in soup.find_all(_INVISIBLE_TAGS):
+        tag.decompose()
+    # Remove HTML comments
+    for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
+        comment.extract()
+
+    # Prefer <article> or <main> if present — they hold the actual content
+    body = soup.find("article") or soup.find("main") or soup.find("body")
+    if body is None:
+        return None
+
+    raw = body.get_text(separator="\n", strip=True)
+
+    # Collapse excessive whitespace / blank lines
+    lines = [line.strip() for line in raw.splitlines() if line.strip()]
+    text = "\n".join(lines)
+
+    if len(text) < 50:
+        return None  # too short to be useful
+
+    return text[:_MAX_BODY_CHARS]

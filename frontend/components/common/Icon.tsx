@@ -49,6 +49,12 @@ import {
   ShoppingBag,
   Share2,
   FolderOpen,
+  ChevronDown,
+  ChevronUp,
+  Target,
+  ListChecks,
+  Zap,
+  Info,
   type LucideIcon,
 } from "lucide-react-native";
 
@@ -101,6 +107,12 @@ const iconMap: Record<string, LucideIcon> = {
   shopping_bag: ShoppingBag,
   share: Share2,
   folder: FolderOpen,
+  expand_more: ChevronDown,
+  expand_less: ChevronUp,
+  target: Target,
+  checklist: ListChecks,
+  bolt: Zap,
+  info: Info,
 };
 
 interface IconProps {

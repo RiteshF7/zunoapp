@@ -83,4 +83,4 @@ echo "[4/4] Starting Expo Dev Server (port ${METRO_PORT})"
 echo "========================================"
 echo ""
 
-exec npx expo start --dev-client --clear
+exec npx expo start --dev-client

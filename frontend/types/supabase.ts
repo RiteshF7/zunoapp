@@ -37,6 +37,13 @@ export interface Collection {
   updated_at: string;
 }
 
+export interface AiStructuredContent {
+  tldr: string;
+  key_points: string[];
+  action_items: string[];
+  save_motive: string;
+}
+
 export interface Content {
   id: string;
   user_id: string;
@@ -48,6 +55,7 @@ export interface Content {
   content_type: string;
   ai_category: string | null;
   ai_summary: string | null;
+  ai_structured_content: AiStructuredContent | null;
   ai_processed: boolean;
   source_metadata: Record<string, any> | null;
   created_at: string;

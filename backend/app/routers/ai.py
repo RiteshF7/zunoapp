@@ -53,12 +53,15 @@ async def process_content(
     # 2. Fetch URL metadata
     metadata = await fetch_url_metadata(content["url"])
 
-    # 3. Build text for AI analysis
+    # 3. Build text for AI analysis (include full body text for deep extraction)
     text_parts = [
-        metadata.title or content.get("title") or "",
-        metadata.description or content.get("description") or "",
-        content["url"],
+        f"Title: {metadata.title or content.get('title') or ''}",
+        f"Description: {metadata.description or content.get('description') or ''}",
+        f"URL: {content['url']}",
     ]
+    # Append full page body text when available for deeper AI analysis
+    if metadata.body_text:
+        text_parts.append(f"\n--- Full Page Content ---\n{metadata.body_text}")
     text_to_analyze = "\n\n".join(part for part in text_parts if part)
 
     # 4. AI processing
@@ -79,6 +82,10 @@ async def process_content(
         "ai_summary": ai_result["summary"],
         "ai_processed": True,
     }
+    # Store structured AI content (key_points, action_items, tldr, save_motive)
+    if ai_result.get("structured_content"):
+        update_payload["ai_structured_content"] = ai_result["structured_content"]
+
     # Only set embedding if available
     if ai_result.get("embedding"):
         update_payload["embedding"] = ai_result["embedding"]

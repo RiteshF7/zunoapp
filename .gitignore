@@ -1,59 +1,74 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
-node_modules/
-
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
-
-# Native
-.kotlin/
-*.orig.*
+# ===========================
+# Secrets & Private Keys
+# ===========================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
 *.jks
 *.p8
 *.p12
-*.key
 *.mobileprovision
+*.keystore
+google-services.json
+
+# ===========================
+# Frontend (Expo / React Native)
+# ===========================
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
+frontend/web-build/
+frontend/expo-env.d.ts
+
+# Generated native directories (created by expo prebuild / run)
+frontend/android/
+frontend/ios/
+
+# Native build temps
+**/.cxx/
+**/.gradle/
 
 # Metro
 .metro-health-check*
 
-# debug
+# ===========================
+# Backend (Python / FastAPI)
+# ===========================
+backend/venv/
+backend/.venv/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# ===========================
+# OS Files
+# ===========================
+.DS_Store
+Thumbs.db
+nul
+
+# ===========================
+# IDE / Editor
+# ===========================
+.cursor/
+.idea/
+
+# ===========================
+# Debug Logs
+# ===========================
 npm-debug.*
 yarn-debug.*
 yarn-error.*
 
-# macOS
-.DS_Store
-*.pem
-
-# Environment variables / secrets
-.env
-.env.local
-.env.production
-backend/.env
-
-# typescript
+# ===========================
+# TypeScript
+# ===========================
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
-
-# Python backend
-backend/venv/
-backend/__pycache__/
-backend/app/__pycache__/
-backend/app/**/__pycache__/
-*.pyc
-*.pyo
-
-# IDE / editor
-.cursor/
-
-# Windows
-nul
-Thumbs.db
+# ===========================
+# Kotlin
+# ===========================
+.kotlin/
+*.orig.*

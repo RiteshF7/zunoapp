@@ -6,7 +6,6 @@ import { Header } from "@/components/common/Header";
 import { FilterChips } from "@/components/common/FilterChips";
 import { CollectionsGrid } from "@/components/home/CollectionsGrid";
 import { CollectionSummary } from "@/components/home/CollectionSummary";
-import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { SettingsDropdown } from "@/components/common/SettingsDropdown";
 import { useContentStore } from "@/stores/contentStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -133,18 +132,9 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Bottom padding for fixed button */}
-        <View style={{ height: 120 }} />
+        {/* Bottom padding for floating tab bar */}
+        <View style={{ height: 100 }} />
       </ScrollView>
-
-      {/* Fixed Bottom Button */}
-      <View className="absolute bottom-24 left-0 right-0 px-6">
-        <PrimaryButton
-          label="Add New"
-          icon="add"
-          onPress={() => router.push("/add-content")}
-        />
-      </View>
     </View>
   );
 }

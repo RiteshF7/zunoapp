@@ -21,6 +21,9 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 
+// Manrope variable font – loaded as multiple weight aliases
+const ManropeFont = require("@/assets/fonts/Manrope-VariableFont.ttf");
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -45,6 +48,11 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    Manrope_400Regular: ManropeFont,
+    Manrope_500Medium: ManropeFont,
+    Manrope_600SemiBold: ManropeFont,
+    Manrope_700Bold: ManropeFont,
+    Manrope_800ExtraBold: ManropeFont,
   });
 
   useEffect(() => {

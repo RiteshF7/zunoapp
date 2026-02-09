@@ -17,7 +17,11 @@ module.exports = {
         "accent-blue": "#4D96FF",
       },
       fontFamily: {
-        display: ["Inter"],
+        sans: ["Manrope_400Regular"],
+        "sans-medium": ["Manrope_500Medium"],
+        "sans-semibold": ["Manrope_600SemiBold"],
+        "sans-bold": ["Manrope_700Bold"],
+        display: ["Manrope_700Bold"],
       },
       borderRadius: {
         DEFAULT: "20px",

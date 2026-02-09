@@ -44,7 +44,7 @@ export function SearchBar({
         onSubmitEditing={onSubmit}
         returnKeyType="search"
         className="flex-1 ml-3 text-sm text-slate-900 dark:text-slate-100"
-        style={{ fontFamily: "Inter_400Regular" }}
+        style={{ fontFamily: "Manrope_400Regular" }}
       />
       {value.length > 0 && (
         <Pressable

@@ -1,7 +1,6 @@
 // components/home/CollectionCard.tsx
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, View, Text } from "react-native";
-import { cn } from "@/lib/utils";
 import { Icon } from "@/components/common/Icon";
 import { COLLECTION_THEMES, CollectionTheme } from "@/lib/constants";
 import { useThemeStore } from "@/stores/themeStore";
@@ -21,56 +20,82 @@ export function CollectionCard({
   theme,
   onPress,
 }: CollectionCardProps) {
-  const themeColors = COLLECTION_THEMES[theme] || COLLECTION_THEMES.blue;
+  const t = COLLECTION_THEMES[theme] || COLLECTION_THEMES.blue;
   const { isDark } = useThemeStore();
+  const [pressed, setPressed] = useState(false);
 
-  // Map theme to actual colors for the icon
-  const iconColorMap: Record<string, { light: string; dark: string }> = {
-    blue: { light: "#2563eb", dark: "#60a5fa" },
-    green: { light: "#16a34a", dark: "#4ade80" },
-    purple: { light: "#9333ea", dark: "#c084fc" },
-    amber: { light: "#d97706", dark: "#fbbf24" },
-    rose: { light: "#e11d48", dark: "#fb7185" },
-    indigo: { light: "#4f46e5", dark: "#818cf8" },
-  };
-
-  const colors = iconColorMap[theme] || iconColorMap.blue;
+  const cardBgColor = isDark ? t.cardBg.dark : t.cardBg.light;
+  const iconBgColor = isDark ? t.iconBg.dark : t.iconBg.light;
+  const iconColor = isDark ? t.iconColor.dark : t.iconColor.light;
 
   return (
     <Pressable
       onPress={onPress}
-      className={cn(
-        "p-5 rounded-2xl flex-col justify-between h-48",
-        themeColors.bgLight,
-        themeColors.bgDark
-      )}
-      style={({ pressed }) => ({
-        transform: [{ scale: pressed ? 0.95 : 1 }],
-      })}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
     >
-      {/* Icon */}
       <View
-        className={cn(
-          "w-12 h-12 rounded-xl items-center justify-center mb-4",
-          themeColors.iconBgLight,
-          themeColors.iconBgDark
-        )}
+        style={{
+          backgroundColor: cardBgColor,
+          borderRadius: 22,
+          height: 200,
+          paddingHorizontal: 20,
+          paddingTop: 16,
+          paddingBottom: 20,
+          justifyContent: "flex-end",
+          borderWidth: isDark ? 1 : 0,
+          borderColor: isDark ? "rgba(255,255,255,0.06)" : "transparent",
+          transform: [{ scale: pressed ? 0.96 : 1 }],
+        }}
       >
-        <Icon
-          name={icon}
-          size={24}
-          color={isDark ? colors.dark : colors.light}
-        />
-      </View>
+        {/* Icon — centered in the remaining top space */}
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <View
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: iconBgColor,
+            }}
+          >
+            <Icon name={icon} size={26} color={iconColor} />
+          </View>
+        </View>
 
-      {/* Content */}
-      <View>
-        <Text className="font-bold text-slate-800 dark:text-white text-lg leading-tight mb-1">
-          {title}
-        </Text>
-        <Text className="text-sm text-slate-500 dark:text-slate-400">
-          {count} items
-        </Text>
+        {/* Title + count pinned to bottom */}
+        <View style={{ marginTop: 14 }}>
+          <Text
+            style={{
+              fontFamily: "Manrope_700Bold",
+              fontWeight: "700",
+              fontSize: 15,
+              lineHeight: 20,
+              marginBottom: 5,
+              color: isDark ? "#f1f5f9" : "#1e293b",
+            }}
+            numberOfLines={2}
+          >
+            {title}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "Manrope_400Regular",
+              fontSize: 13,
+              lineHeight: 16,
+              color: isDark ? "#94a3b8" : "#64748b",
+            }}
+          >
+            {count} items
+          </Text>
+        </View>
       </View>
     </Pressable>
   );

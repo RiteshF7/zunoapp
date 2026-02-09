@@ -63,16 +63,25 @@ export default function FeedScreen() {
     );
   }, []);
 
+  const handleFeedItemPress = useCallback(
+    (id: string) => {
+      // Feed items are external — open their source URL
+      const item = feedData.items.find((i) => i.id === id);
+      if (item) handleOpenSource(item.sourceUrl);
+    },
+    [handleOpenSource]
+  );
+
   const renderFeedItem = useCallback(
     ({ item }: { item: FeedItem }) => (
       <FeedCard
         item={item}
         isBookmarked={feedBookmarks.includes(item.id)}
         onBookmarkToggle={toggleBookmark}
-        onOpenSource={handleOpenSource}
+        onPress={handleFeedItemPress}
       />
     ),
-    [feedBookmarks, toggleBookmark, handleOpenSource]
+    [feedBookmarks, toggleBookmark, handleFeedItemPress]
   );
 
   const ListHeader = (

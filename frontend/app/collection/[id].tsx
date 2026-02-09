@@ -5,7 +5,6 @@ import {
   Text,
   FlatList,
   RefreshControl,
-  Pressable,
   Linking,
   ActivityIndicator,
 } from "react-native";
@@ -17,7 +16,6 @@ import { IconButton } from "@/components/common/IconButton";
 import { FeedCard } from "@/components/feed/FeedCard";
 import { collectionsService } from "@/services/collections.service";
 import { useThemeStore } from "@/stores/themeStore";
-import { useContentStore } from "@/stores/contentStore";
 import { COLLECTION_THEMES, CollectionTheme } from "@/lib/constants";
 import { FeedItem } from "@/types/feed";
 import { Content } from "@/types/supabase";
@@ -27,7 +25,6 @@ export default function CollectionDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDark } = useThemeStore();
-  const { feedBookmarks, toggleBookmark } = useContentStore();
   const [refreshing, setRefreshing] = useState(false);
 
   // Fetch collection details
@@ -87,6 +84,13 @@ export default function CollectionDetailScreen() {
     );
   }, []);
 
+  const handleContentPress = useCallback(
+    (contentId: string) => {
+      router.push(`/content/${contentId}`);
+    },
+    [router]
+  );
+
   // Get theme colors for the header accent
   const theme = (collection?.theme || "blue") as CollectionTheme;
   const themeColors = COLLECTION_THEMES[theme] || COLLECTION_THEMES.blue;
@@ -99,12 +103,10 @@ export default function CollectionDetailScreen() {
     ({ item }: { item: FeedItem }) => (
       <FeedCard
         item={item}
-        isBookmarked={feedBookmarks.includes(item.id)}
-        onBookmarkToggle={toggleBookmark}
-        onOpenSource={handleOpenSource}
+        onPress={handleContentPress}
       />
     ),
-    [feedBookmarks, toggleBookmark, handleOpenSource]
+    [handleContentPress]
   );
 
   const ListHeader = (

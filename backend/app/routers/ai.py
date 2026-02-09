@@ -69,10 +69,12 @@ async def process_content(
         raise HTTPException(status_code=502, detail=f"AI processing failed: {exc}")
 
     # 5. Update content record
+    detected_platform = _detect_platform(content["url"])
     update_payload: dict = {
         "title": content.get("title") or metadata.title or ai_result.get("title"),
         "description": content.get("description") or metadata.description,
         "thumbnail_url": content.get("thumbnail_url") or metadata.thumbnail,
+        "platform": detected_platform,
         "ai_category": ai_result["category"],
         "ai_summary": ai_result["summary"],
         "ai_processed": True,
@@ -119,7 +121,7 @@ async def process_content(
         content["user_id"],
         ai_result["category"],
         ai_result.get("tags", []),
-        content.get("platform", "other"),
+        detected_platform,
         content.get("content_type", "post"),
     )
 
@@ -210,6 +212,35 @@ async def generate_feed(
         items=feed_result.data or [],
         interests=top_categories,
     )
+
+
+# ---------------------------------------------------------------------------
+# Helper: detect platform from URL
+# ---------------------------------------------------------------------------
+_PLATFORM_PATTERNS: list[tuple[str, str]] = [
+    ("instagram.com", "instagram"),
+    ("youtube.com", "youtube"),
+    ("youtu.be", "youtube"),
+    ("twitter.com", "twitter"),
+    ("x.com", "twitter"),
+    ("facebook.com", "facebook"),
+    ("fb.com", "facebook"),
+    ("linkedin.com", "linkedin"),
+    ("tiktok.com", "tiktok"),
+    ("reddit.com", "reddit"),
+    ("pinterest.com", "pinterest"),
+    ("spotify.com", "spotify"),
+    ("medium.com", "medium"),
+]
+
+
+def _detect_platform(url: str) -> str:
+    """Detect the platform from a URL's domain."""
+    url_lower = url.lower()
+    for domain, platform in _PLATFORM_PATTERNS:
+        if domain in url_lower:
+            return platform
+    return "other"
 
 
 # ---------------------------------------------------------------------------

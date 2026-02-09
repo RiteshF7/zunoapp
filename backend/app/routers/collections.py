@@ -15,6 +15,30 @@ router = APIRouter(prefix="/api/collections", tags=["collections"])
 
 
 # ---------------------------------------------------------------------------
+# Categories (must be above /{collection_id} to avoid route conflict)
+# ---------------------------------------------------------------------------
+@router.get("/categories")
+async def list_categories(
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Return distinct AI categories the user has content in."""
+    result = (
+        db.table("content")
+        .select("ai_category")
+        .eq("user_id", user_id)
+        .eq("ai_processed", True)
+        .not_.is_("ai_category", "null")
+        .execute()
+    )
+    # Deduplicate and sort
+    categories = sorted(
+        {row["ai_category"] for row in (result.data or []) if row.get("ai_category")}
+    )
+    return categories
+
+
+# ---------------------------------------------------------------------------
 # Collections CRUD
 # ---------------------------------------------------------------------------
 @router.get("", response_model=list[CollectionOut])

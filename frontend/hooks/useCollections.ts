@@ -13,6 +13,16 @@ export function useCollections() {
   });
 }
 
+export function useCategories() {
+  const { isAuthenticated } = useAuthStore();
+
+  return useQuery({
+    queryKey: ["categories"],
+    queryFn: () => collectionsService.getCategories(),
+    enabled: isAuthenticated,
+  });
+}
+
 export function useCollection(id: string) {
   return useQuery({
     queryKey: ["collections", id],

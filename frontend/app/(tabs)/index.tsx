@@ -1,5 +1,5 @@
 // app/(tabs)/index.tsx
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { View, ScrollView, RefreshControl, Text, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { Header } from "@/components/common/Header";
@@ -8,23 +8,27 @@ import { CollectionsGrid } from "@/components/home/CollectionsGrid";
 import { CollectionSummary } from "@/components/home/CollectionSummary";
 import { SettingsDropdown } from "@/components/common/SettingsDropdown";
 import { useContentStore } from "@/stores/contentStore";
-import { useCollections } from "@/hooks/useCollections";
+import { useCollections, useCategories } from "@/hooks/useCollections";
 import { Collection } from "@/types/content";
-
-const FILTERS = [
-  { id: "all", label: "All" },
-  { id: "recent", label: "Recent" },
-  { id: "ideas", label: "Ideas" },
-  { id: "research", label: "Research" },
-  { id: "personal", label: "Personal" },
-];
 
 export default function HomeScreen() {
   const router = useRouter();
   const { activeFilter, setActiveFilter } = useContentStore();
   const { data: supabaseCollections, isLoading, refetch } = useCollections();
+  const { data: categories, refetch: refetchCategories } = useCategories();
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Build dynamic filter chips from real AI categories
+  const filters = useMemo(() => {
+    const base = [{ id: "all", label: "All" }];
+    if (categories && categories.length > 0) {
+      for (const cat of categories) {
+        base.push({ id: cat, label: cat });
+      }
+    }
+    return base;
+  }, [categories]);
 
   // Map Supabase data to Collection type
   const collections: Collection[] = (supabaseCollections || []).map((c) => ({
@@ -35,39 +39,20 @@ export default function HomeScreen() {
     theme: c.theme as any,
   }));
 
-  // Filter collections based on active filter
+  // Filter collections based on active filter (category match)
   const filteredCollections = useCallback((): Collection[] => {
     if (activeFilter === "all") return collections;
-    if (activeFilter === "recent") return collections.slice(0, 3);
-    if (activeFilter === "ideas") {
-      return collections.filter((c) =>
-        c.title.toLowerCase().includes("creative") ||
-        c.title.toLowerCase().includes("learning") ||
-        c.title.toLowerCase().includes("idea")
-      );
-    }
-    if (activeFilter === "research") {
-      return collections.filter((c) =>
-        c.title.toLowerCase().includes("document") ||
-        c.title.toLowerCase().includes("learning") ||
-        c.title.toLowerCase().includes("research")
-      );
-    }
-    if (activeFilter === "personal") {
-      return collections.filter((c) =>
-        c.title.toLowerCase().includes("personal") ||
-        c.title.toLowerCase().includes("home") ||
-        c.title.toLowerCase().includes("daily")
-      );
-    }
-    return collections;
+    // Match collection title to the selected category
+    return collections.filter(
+      (c) => c.title.toLowerCase() === activeFilter.toLowerCase()
+    );
   }, [activeFilter, collections]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([refetch(), refetchCategories()]);
     setTimeout(() => setRefreshing(false), 500);
-  }, [refetch]);
+  }, [refetch, refetchCategories]);
 
   const handleCollectionPress = (id: string) => {
     console.log("Collection pressed:", id);
@@ -100,9 +85,9 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Filter Chips */}
+        {/* Filter Chips — dynamic from AI categories */}
         <FilterChips
-          filters={FILTERS}
+          filters={filters}
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
         />
@@ -132,10 +117,10 @@ export default function HomeScreen() {
             {filteredCollections().length === 0 && (
               <View className="items-center justify-center py-16 px-6">
                 <Text className="text-lg font-semibold text-slate-400 dark:text-slate-500 mb-2">
-                  No collections found
+                  No collections yet
                 </Text>
                 <Text className="text-sm text-slate-400 dark:text-slate-600 text-center">
-                  Try a different filter or add new content to create collections.
+                  Save content and AI will automatically create collections for you.
                 </Text>
               </View>
             )}

@@ -19,6 +19,7 @@ from app.schemas.models import (
 )
 from app.services.openai_service import process_with_ai, generate_embedding
 from app.services.metadata_service import fetch_url_metadata
+from app.services.collection_manager import ensure_category_collection
 from app.services.feed_generator import (
     get_top_n,
     generate_ai_feed,
@@ -81,6 +82,9 @@ async def process_content(
         update_payload["embedding"] = ai_result["embedding"]
 
     db.table("content").update(update_payload).eq("id", content_id).execute()
+
+    # 5b. Auto-create / link smart collection for this category
+    ensure_category_collection(db, content["user_id"], ai_result["category"], content_id)
 
     # 6. Create and assign tags
     for tag_name in ai_result.get("tags", []):

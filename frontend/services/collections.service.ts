@@ -8,6 +8,11 @@ export const collectionsService = {
     return api.get<Collection[]>("/api/collections");
   },
 
+  // Get distinct AI categories the user has content in
+  async getCategories(): Promise<string[]> {
+    return api.get<string[]>("/api/collections/categories");
+  },
+
   // Get a single collection
   async getCollection(id: string): Promise<Collection | null> {
     return api.get<Collection>(`/api/collections/${id}`);

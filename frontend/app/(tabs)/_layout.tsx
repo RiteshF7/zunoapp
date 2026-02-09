@@ -3,7 +3,7 @@ import React from "react";
 import { View, Pressable, Platform, StyleSheet } from "react-native";
 import { Tabs, useRouter, usePathname } from "expo-router";
 import { BlurView } from "expo-blur";
-import { Home, Plus, User } from "lucide-react-native";
+import { Home, Sparkles, Plus, User } from "lucide-react-native";
 import { useThemeStore } from "@/stores/themeStore";
 import { useProtectedRoute } from "@/hooks/useAuth";
 
@@ -53,7 +53,7 @@ function FloatingTabBar() {
           ]}
         />
 
-        {/* Icons row — 3 items: Home, +, Profile */}
+        {/* Icons row — Home, Feed, +, Profile */}
         <View style={styles.row}>
           {/* Home */}
           <Pressable
@@ -68,6 +68,22 @@ function FloatingTabBar() {
               color={isActive("/") ? activeColor : inactiveColor}
               strokeWidth={2}
               fill={isActive("/") ? activeColor : "transparent"}
+            />
+          </Pressable>
+
+          {/* Feed */}
+          <Pressable
+            onPress={() => router.replace("/(tabs)/feed")}
+            style={[
+              styles.iconBtn,
+              isActive("/feed") && styles.iconBtnActive,
+            ]}
+          >
+            <Sparkles
+              size={20}
+              color={isActive("/feed") ? activeColor : inactiveColor}
+              strokeWidth={2}
+              fill={isActive("/feed") ? activeColor : "transparent"}
             />
           </Pressable>
 

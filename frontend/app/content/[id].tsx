@@ -117,7 +117,7 @@ export default function ContentDetailScreen() {
           className="text-base font-semibold text-slate-900 dark:text-slate-100 flex-1 text-center"
           numberOfLines={1}
         >
-          {content.title || "Content Detail"}
+          AI Summary
         </Text>
         <IconButton onPress={handleOpenSource}>
           <Icon
@@ -133,43 +133,23 @@ export default function ContentDetailScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
-        {/* Thumbnail */}
-        {content.thumbnail_url ? (
-          <Image
-            source={{ uri: content.thumbnail_url }}
-            style={{ width: "100%", height: 200 }}
-            contentFit="cover"
-            transition={200}
-            cachePolicy="memory-disk"
-          />
-        ) : null}
-
         <View className="px-6 pt-5">
-          {/* Platform + Category Row */}
-          <View className="flex-row gap-2 items-center mb-3">
-            <PlatformBadge platform={(content.platform || "other") as any} />
-            <ContentTypeBadge type={(content.content_type || "post") as any} />
+          {/* Compact header: category + date */}
+          <View className="flex-row items-center gap-2 mb-4">
             {content.ai_category ? (
-              <View className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                <Text className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <View className="bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
+                <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   {content.ai_category}
                 </Text>
               </View>
             ) : null}
+            <Text className="text-xs text-slate-400 dark:text-slate-500">
+              Saved {formatDate(content.created_at)}
+            </Text>
           </View>
 
-          {/* Title */}
-          <Text className="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-1">
-            {content.title || "Untitled"}
-          </Text>
-
-          {/* Date */}
-          <Text className="text-xs text-slate-400 dark:text-slate-500 mb-5">
-            Saved {formatDate(content.created_at)}
-          </Text>
-
           {/* =========================================================== */}
-          {/* AI STRUCTURED CONTENT — default view                        */}
+          {/* AI CONTENT — this is the DEFAULT and PRIMARY view            */}
           {/* =========================================================== */}
           {hasStructuredContent ? (
             <View>
@@ -218,10 +198,7 @@ export default function ContentDetailScreen() {
                     </Text>
                   </View>
                   {structured.key_points.map((point, idx) => (
-                    <View
-                      key={idx}
-                      className="flex-row mb-2.5"
-                    >
+                    <View key={idx} className="flex-row mb-2.5">
                       <View
                         className="w-6 h-6 rounded-full items-center justify-center mr-3 mt-0.5"
                         style={{
@@ -258,10 +235,7 @@ export default function ContentDetailScreen() {
                     </Text>
                   </View>
                   {structured.action_items.map((item, idx) => (
-                    <View
-                      key={idx}
-                      className="flex-row mb-2.5"
-                    >
+                    <View key={idx} className="flex-row mb-2.5">
                       <View
                         className="w-6 h-6 rounded-md items-center justify-center mr-3 mt-0.5"
                         style={{
@@ -286,7 +260,7 @@ export default function ContentDetailScreen() {
               ) : null}
             </View>
           ) : (
-            /* Fallback: show legacy ai_summary if no structured content */
+            /* Fallback: show legacy ai_summary when no structured content exists */
             content.ai_summary ? (
               <View className="bg-accent-blue/10 rounded-2xl p-4 mb-4">
                 <View className="flex-row items-center gap-1.5 mb-2">
@@ -303,14 +277,12 @@ export default function ContentDetailScreen() {
           )}
 
           {/* =========================================================== */}
-          {/* ORIGINAL CONTENT INFO — collapsible section                  */}
+          {/* ORIGINAL CONTENT — collapsible, hidden by default           */}
           {/* =========================================================== */}
           <Pressable
             onPress={toggleOriginal}
             className="flex-row items-center justify-between py-3 mt-1 mb-2"
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.7 : 1,
-            })}
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
             <View className="flex-row items-center gap-2">
               <Icon name="info" size={16} color={isDark ? "#94a3b8" : "#64748b"} />
@@ -334,7 +306,38 @@ export default function ContentDetailScreen() {
                 borderColor: isDark ? "#334155" : "#e2e8f0",
               }}
             >
-              {/* Description */}
+              {/* Thumbnail */}
+              {content.thumbnail_url ? (
+                <View className="mb-4">
+                  <Image
+                    source={{ uri: content.thumbnail_url }}
+                    style={{ width: "100%", height: 180, borderRadius: 12 }}
+                    contentFit="cover"
+                    transition={200}
+                    cachePolicy="memory-disk"
+                  />
+                </View>
+              ) : null}
+
+              {/* Platform + Type badges */}
+              <View className="flex-row gap-2 items-center mb-3">
+                <PlatformBadge platform={(content.platform || "other") as any} />
+                <ContentTypeBadge type={(content.content_type || "post") as any} />
+              </View>
+
+              {/* Original Title */}
+              {content.title ? (
+                <View className="mb-4">
+                  <Text className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                    Original Title
+                  </Text>
+                  <Text className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                    {content.title}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Original Description */}
               {content.description ? (
                 <View className="mb-4">
                   <Text className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">

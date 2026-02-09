@@ -5,6 +5,8 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { PrimaryButton } from "@/components/common/PrimaryButton";
 import { authService } from "@/services/auth.service";
+import { supabase } from "@/lib/supabase";
+import * as WebBrowser from "expo-web-browser";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -13,14 +15,48 @@ export default function LoginScreen() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const { error, url } = await authService.signInWithGoogle();
-    setLoading(false);
 
     if (error) {
+      setLoading(false);
       Alert.alert("Error", error.message);
-    } else if (url) {
-      // Open Google OAuth URL in browser
-      const WebBrowser = require("expo-web-browser");
-      await WebBrowser.openAuthSessionAsync(url, "zunoapp://auth/callback");
+      return;
+    }
+
+    if (url) {
+      try {
+        // Open Google OAuth URL in browser
+        const result = await WebBrowser.openAuthSessionAsync(
+          url,
+          "zunoapp://auth/callback"
+        );
+
+        // If openAuthSessionAsync captured the redirect, extract tokens here
+        if (result.type === "success" && result.url) {
+          const hashIndex = result.url.indexOf("#");
+          if (hashIndex !== -1) {
+            const hashPart = result.url.substring(hashIndex + 1);
+            const params = new URLSearchParams(hashPart);
+            const access_token = params.get("access_token");
+            const refresh_token = params.get("refresh_token");
+
+            if (access_token && refresh_token) {
+              const { error: sessionError } = await supabase.auth.setSession({
+                access_token,
+                refresh_token,
+              });
+
+              if (!sessionError) {
+                router.replace("/(tabs)");
+                return;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("OAuth browser error:", e);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

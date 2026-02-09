@@ -4,9 +4,11 @@ import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 import { Icon } from "@/components/common/Icon";
 import { useThemeStore } from "@/stores/themeStore";
+import { useProtectedRoute } from "@/hooks/useAuth";
 
 export default function TabLayout() {
   const { isDark } = useThemeStore();
+  useProtectedRoute();
 
   return (
     <Tabs

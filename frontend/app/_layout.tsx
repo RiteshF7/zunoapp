@@ -12,6 +12,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useThemeStore } from "@/stores/themeStore";
 import { useAuthStore } from "@/stores/authStore";
+import { useProtectedRoute } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import {
   useFonts,
@@ -39,6 +40,8 @@ const asyncStoragePersister = createAsyncStoragePersister({
 export default function RootLayout() {
   const { isDark, initialize } = useThemeStore();
   const { setSession, initialize: initAuth } = useAuthStore();
+
+  useProtectedRoute();
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,

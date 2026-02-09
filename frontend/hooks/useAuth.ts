@@ -20,9 +20,7 @@ export function useProtectedRoute() {
 
     if (!isAuthenticated && !inAuthGroup) {
       // User is not signed in and not on auth screen
-      // For now, we allow unauthenticated access (skip for now)
-      // Uncomment to enforce auth:
-      // router.replace("/(auth)/login");
+      router.replace("/(auth)/login");
     } else if (isAuthenticated && inAuthGroup) {
       // User is signed in but on auth screen — redirect to home
       router.replace("/(tabs)");

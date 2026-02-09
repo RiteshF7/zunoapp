@@ -19,7 +19,9 @@
         "NSPhotoLibraryUsageDescription": "Zuno needs access to save content thumbnails.",
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["zunoapp"]
+            "CFBundleURLSchemes": [
+              "zunoapp"
+            ]
           }
         ]
       }
@@ -33,9 +35,13 @@
       "intentFilters": [
         {
           "action": "android.intent.action.SEND",
-          "category": ["android.intent.category.DEFAULT"],
+          "category": [
+            "android.intent.category.DEFAULT"
+          ],
           "data": [
-            { "mimeType": "text/plain" }
+            {
+              "mimeType": "text/plain"
+            }
           ]
         }
       ]
@@ -52,8 +58,10 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
-      }
-    }
+        "projectId": "ced60d10-dd30-4836-8fb7-4efc6a340849"
+      },
+      "router": {}
+    },
+    "owner": "ftweleve"
   }
 }

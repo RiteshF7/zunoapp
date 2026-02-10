@@ -21,7 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from app.config import get_settings
-from app.services.openai_service import process_with_ai
+from app.services.ai_service import process_with_ai
 from app.services.metadata_service import fetch_url_metadata
 from app.services.collection_manager import ensure_category_collection
 from supabase import create_client

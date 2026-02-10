@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 # Copy and fill in environment variables
 cp .env.example .env
-# Edit .env with your Supabase and OpenAI keys
+# Edit .env with your Supabase and Vertex AI config
 
 # Run the server
 uvicorn app.main:app --reload --port 8000
@@ -30,13 +30,18 @@ uvicorn app.main:app --reload --port 8000
 | `SUPABASE_URL` | Yes | Your Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (secret) |
 | `SUPABASE_JWT_SECRET` | Yes | Supabase JWT secret for token validation |
-| `OPENAI_API_KEY` | Yes* | OpenAI API key for AI features |
-| `GEMINI_API_KEY` | No | Google Gemini API key (alternative AI provider) |
-| `AI_PROVIDER` | No | `openai` (default) or `gemini` |
+| `GCP_PROJECT_ID` | Yes* | Google Cloud project ID for Vertex AI |
+| `GCP_LOCATION` | No | GCP region (default: `us-central1`) |
+| `GCP_CREDENTIALS_JSON` | No | Path to service account JSON (uses ADC if empty) |
+| `VERTEX_EMBEDDING_MODEL` | No | Embedding model (default: `text-embedding-005`) |
+| `VERTEX_LLM_MODEL` | No | LLM model (default: `gemini-2.0-flash-001`) |
+| `RAG_CHUNK_SIZE` | No | Target tokens per chunk (default: 500) |
+| `RAG_CHUNK_OVERLAP` | No | Overlap tokens between chunks (default: 50) |
+| `RAG_TOP_K` | No | Chunks to retrieve for RAG (default: 8) |
 | `BACKEND_PORT` | No | Server port (default: 8000) |
 | `CORS_ORIGINS` | No | Comma-separated allowed origins |
 
-*Required for AI features; the app works without it but AI processing and hybrid search will be unavailable.
+*Required for AI features (content analysis, embeddings, feed generation, knowledge engine). See [docs/VERTEX_AI_SETUP.md](../docs/VERTEX_AI_SETUP.md) for setup instructions.
 
 ## API Endpoints (25 total)
 
@@ -77,6 +82,11 @@ uvicorn app.main:app --reload --port 8000
 - `POST /api/ai/process-content` — AI categorize/summarize/tag/embed
 - `POST /api/ai/generate-embedding` — generate embedding vector
 - `POST /api/ai/generate-feed` — generate personalized feed
+
+### Knowledge Engine (RAG)
+- `POST /api/knowledge/ask` — query your saved content with RAG
+- `POST /api/knowledge/reindex` — re-chunk and re-embed content
+- `GET /api/knowledge/stats` — knowledge base statistics
 
 ## Architecture
 

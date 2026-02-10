@@ -1,10 +1,9 @@
 # ── Content Analysis Prompt ────────────────────────────────────────────────
-# Used by: app/services/openai_service.py → process_with_ai()
+# Used by: app/services/ai_service.py → process_with_ai()
 # Purpose: Deep content analysis so user can consume without visiting source
 # ───────────────────────────────────────────────────────────────────────────
 
 version: "1.0"
-model: gpt-4o-mini
 temperature: 0.3
 
 system: |

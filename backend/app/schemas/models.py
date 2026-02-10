@@ -229,6 +229,48 @@ class SuggestedContentOut(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Knowledge Engine (RAG)
+# ---------------------------------------------------------------------------
+class KnowledgeQueryRequest(BaseModel):
+    """Request body for the RAG query endpoint."""
+    query: str = Field(..., min_length=1, max_length=2000)
+    top_k: int = Field(8, ge=1, le=30)
+    format: str = "default"  # "default" | "summary" | "list" | "detailed"
+    include_sources: bool = True
+
+
+class KnowledgeSourceOut(BaseModel):
+    """A source reference returned alongside a RAG answer."""
+    content_id: str
+    title: str | None = None
+    platform: str | None = None
+    url: str | None = None
+    timestamp: str | None = None
+    chunk_text: str | None = None
+    relevance_score: float | None = None
+
+
+class KnowledgeQueryResponse(BaseModel):
+    """Response from the RAG query endpoint."""
+    answer: str
+    sources: list[KnowledgeSourceOut] = []
+    chunks_used: int = 0
+
+
+class ReindexRequest(BaseModel):
+    """Optional filters for the reindex endpoint."""
+    content_ids: list[str] | None = None  # None = reindex all
+
+
+class ReindexResponse(BaseModel):
+    """Response from the reindex endpoint."""
+    content_processed: int = 0
+    chunks_created: int = 0
+    errors: int = 0
+    message: str = ""
+
+
+# ---------------------------------------------------------------------------
 # App Config (global — same for all users)
 # ---------------------------------------------------------------------------
 class FeatureFlags(BaseModel):

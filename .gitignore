@@ -12,6 +12,8 @@
 *.mobileprovision
 *.keystore
 google-services.json
+vertex-ai-key.json
+*-service-account*.json
 
 # ===========================
 # Frontend (Expo / React Native)

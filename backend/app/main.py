@@ -12,6 +12,7 @@ from app.utils.rate_limit import limiter
 from app.routers import (
     profile, collections, content, feed, search, ai,
     app_config, user_preferences, suggested_feed, admin,
+    knowledge,
 )
 
 # Configure logging
@@ -74,6 +75,7 @@ app.include_router(feed.router)
 app.include_router(suggested_feed.router)    # interest-based suggestions
 app.include_router(search.router)
 app.include_router(ai.router)
+app.include_router(knowledge.router)         # RAG knowledge engine
 app.include_router(admin.router)             # cache bust, prompt reload, stats
 
 

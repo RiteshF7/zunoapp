@@ -6,7 +6,7 @@ from supabase import Client
 from app.dependencies import get_current_user, get_supabase
 from app.config import Settings, get_settings
 from app.schemas.models import SearchResultOut, PopularTagOut
-from app.services.openai_service import generate_embedding
+from app.services.ai_service import generate_query_embedding
 from app.utils.rate_limit import limiter, RATE_SEARCH, RATE_READ
 from app.utils.cache import cache
 
@@ -41,7 +41,7 @@ async def hybrid_search(
     settings: Settings = Depends(get_settings),
 ):
     """Hybrid search (full-text + semantic). Falls back to FTS if embedding fails."""
-    embedding = await generate_embedding(q, settings)
+    embedding = await generate_query_embedding(q, settings)
 
     if embedding is None:
         # Fallback to full-text search

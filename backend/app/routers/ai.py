@@ -17,14 +17,16 @@ from app.schemas.models import (
     GenerateFeedResponse,
     FeedItemOut,
 )
-from app.services.openai_service import process_with_ai, generate_embedding
+from app.services.ai_service import (
+    process_with_ai,
+    generate_embedding,
+    generate_embeddings_batch,
+    generate_ai_feed,
+)
 from app.services.metadata_service import fetch_url_metadata
 from app.services.collection_manager import ensure_category_collection
-from app.services.feed_generator import (
-    get_top_n,
-    generate_ai_feed,
-    generate_rule_feed,
-)
+from app.services.feed_generator import get_top_n, generate_rule_feed
+from app.services.chunking_service import chunk_text
 from app.utils.rate_limit import limiter, RATE_AI_PROCESS, RATE_AI_EMBEDDING, RATE_AI_FEED
 from app.utils.cache import bust_cache
 
@@ -96,7 +98,32 @@ async def process_content(
 
     db.table("content").update(update_payload).eq("id", content_id).execute()
 
-    # 5b. Auto-create / link smart collection for this category
+    # 5b. Store full text for RAG and create knowledge chunks
+    if metadata.body_text or text_to_analyze:
+        full_text = metadata.body_text or text_to_analyze
+        # Store full_text on content record
+        db.table("content").update({"full_text": full_text}).eq("id", content_id).execute()
+
+        # Chunk and embed for RAG (only if Vertex AI is configured)
+        if settings.gcp_project_id:
+            try:
+                await _chunk_and_embed_content(
+                    db=db,
+                    content_id=content_id,
+                    user_id=content["user_id"],
+                    full_text=full_text,
+                    content_metadata={
+                        "title": update_payload.get("title", ""),
+                        "platform": detected_platform,
+                        "url": content["url"],
+                        "category": ai_result["category"],
+                    },
+                    settings=settings,
+                )
+            except Exception as exc:
+                logger.warning("RAG chunking failed for %s (non-fatal): %s", content_id, exc)
+
+    # 5c. Auto-create / link smart collection for this category
     ensure_category_collection(db, content["user_id"], ai_result["category"], content_id)
 
     # 6. Create and assign tags
@@ -199,7 +226,7 @@ async def generate_feed(
     top_platforms = get_top_n(interests.get("platforms", {}), 3)
 
     # Generate feed items
-    if settings.openai_api_key:
+    if settings.gcp_project_id:
         try:
             feed_items = await generate_ai_feed(
                 settings, top_categories, top_tags, top_platforms, interests
@@ -263,6 +290,63 @@ def _detect_platform(url: str) -> str:
         if domain in url_lower:
             return platform
     return "other"
+
+
+# ---------------------------------------------------------------------------
+# Helper: chunk content and store Vertex AI embeddings for RAG
+# ---------------------------------------------------------------------------
+async def _chunk_and_embed_content(
+    db: Client,
+    content_id: str,
+    user_id: str,
+    full_text: str,
+    content_metadata: dict,
+    settings: Settings,
+) -> int:
+    """Chunk text, generate Vertex AI embeddings, and store in content_chunks.
+
+    Returns the number of chunks created.
+    """
+    # 1. Chunk the text
+    chunks = chunk_text(
+        full_text,
+        max_tokens=settings.rag_chunk_size,
+        overlap_tokens=settings.rag_chunk_overlap,
+    )
+    if not chunks:
+        return 0
+
+    # 2. Generate embeddings for all chunks (batch)
+    chunk_texts = [c.chunk_text for c in chunks]
+    embeddings = await generate_embeddings_batch(chunk_texts, settings)
+
+    # 3. Delete existing chunks for this content (re-processing support)
+    db.table("content_chunks").delete().eq("content_id", content_id).execute()
+
+    # 4. Insert new chunks with embeddings
+    rows = []
+    for chunk, embedding in zip(chunks, embeddings):
+        row = {
+            "content_id": content_id,
+            "user_id": user_id,
+            "chunk_index": chunk.chunk_index,
+            "chunk_text": chunk.chunk_text,
+            "token_count": chunk.token_count,
+            "metadata": content_metadata,
+        }
+        if embedding is not None:
+            row["embedding"] = embedding
+        rows.append(row)
+
+    # Batch insert (Supabase supports bulk inserts)
+    if rows:
+        db.table("content_chunks").insert(rows).execute()
+
+    logger.info(
+        "Created %d chunks for content %s (%d with embeddings)",
+        len(rows), content_id, sum(1 for e in embeddings if e is not None),
+    )
+    return len(rows)
 
 
 # ---------------------------------------------------------------------------

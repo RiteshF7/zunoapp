@@ -33,10 +33,17 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
     supabase_jwt_secret: str
 
-    # AI Providers
-    openai_api_key: str = ""
-    gemini_api_key: str = ""
-    ai_provider: str = "openai"  # "openai" or "gemini"
+    # Vertex AI (Google Cloud) — single AI provider
+    gcp_project_id: str = ""
+    gcp_location: str = "us-central1"
+    gcp_credentials_json: str = ""  # Path to service account JSON file
+    vertex_embedding_model: str = "text-embedding-005"
+    vertex_llm_model: str = "gemini-2.0-flash-001"
+
+    # RAG settings
+    rag_chunk_size: int = 500       # Target tokens per chunk
+    rag_chunk_overlap: int = 50     # Overlap tokens between chunks
+    rag_top_k: int = 8              # Default number of chunks to retrieve
 
     # Server
     backend_port: int = 8000

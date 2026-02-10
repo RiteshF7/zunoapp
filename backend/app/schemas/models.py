@@ -188,3 +188,95 @@ class GenerateFeedResponse(BaseModel):
     items: list[FeedItemOut]
     interests: list[list[Any]] | None = None
     message: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# User Preferences (per-user config)
+# ---------------------------------------------------------------------------
+class UserPreferencesOut(BaseModel):
+    id: str
+    user_id: str
+    feed_type: str = "usersaved"  # "usersaved" | "suggestedcontent"
+    created_at: str
+    updated_at: str
+
+
+class UserPreferencesUpdate(BaseModel):
+    feed_type: str | None = None  # "usersaved" | "suggestedcontent"
+
+
+# ---------------------------------------------------------------------------
+# Suggested Feed
+# ---------------------------------------------------------------------------
+class SuggestedContentOut(BaseModel):
+    """A content item from another user's shared collection."""
+    id: str
+    user_id: str
+    url: str
+    title: str | None = None
+    description: str | None = None
+    thumbnail_url: str | None = None
+    platform: str = "other"
+    content_type: str = "post"
+    ai_category: str | None = None
+    ai_summary: str | None = None
+    ai_structured_content: dict[str, Any] | None = None
+    ai_processed: bool = False
+    source_metadata: dict[str, Any] | None = None
+    relevance_score: float = 0.0
+    created_at: str
+    updated_at: str
+
+
+# ---------------------------------------------------------------------------
+# App Config (global — same for all users)
+# ---------------------------------------------------------------------------
+class FeatureFlags(BaseModel):
+    """Toggle features on/off without an app update."""
+    feed_enabled: bool = True
+    vfeed_enabled: bool = False
+    ai_processing_enabled: bool = True
+    search_enabled: bool = True
+    collections_enabled: bool = True
+    share_enabled: bool = True
+
+
+class ContentLimits(BaseModel):
+    """Dynamic limits for user content."""
+    max_saves: int = 500
+    max_collections: int = 50
+    max_tags_per_content: int = 10
+
+
+class FeedSettings(BaseModel):
+    """Tunable feed behaviour."""
+    page_size: int = 20
+    refresh_interval_seconds: int = 300
+    max_feed_items: int = 200
+
+
+class AppLinks(BaseModel):
+    """Deep-links / external URLs the app may need."""
+    terms_url: str = "https://zuno.app/terms"
+    privacy_url: str = "https://zuno.app/privacy"
+    support_url: str = "https://zuno.app/support"
+    app_store_url: str = ""
+    play_store_url: str = ""
+
+
+class AppConfigOut(BaseModel):
+    """Top-level config payload returned at app startup."""
+    app_version: str = "1.0.0"
+    min_supported_version: str = "1.0.0"
+    maintenance_mode: bool = False
+    maintenance_message: str | None = None
+    feature_flags: FeatureFlags = Field(default_factory=FeatureFlags)
+    content_limits: ContentLimits = Field(default_factory=ContentLimits)
+    feed_settings: FeedSettings = Field(default_factory=FeedSettings)
+    app_links: AppLinks = Field(default_factory=AppLinks)
+    supported_platforms: list[str] = Field(
+        default_factory=lambda: [
+            "youtube", "instagram", "x", "reddit",
+            "tiktok", "spotify", "web",
+        ]
+    )

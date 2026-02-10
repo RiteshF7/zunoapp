@@ -108,6 +108,36 @@ export interface UserInterests {
   last_updated: string;
 }
 
+export type FeedType = "usersaved" | "suggestedcontent";
+
+export interface UserPreferences {
+  id: string;
+  user_id: string;
+  feed_type: FeedType;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A suggested content item (from another user's shared collection). */
+export interface SuggestedContent {
+  id: string;
+  user_id: string;
+  url: string;
+  title: string | null;
+  description: string | null;
+  thumbnail_url: string | null;
+  platform: string;
+  content_type: string;
+  ai_category: string | null;
+  ai_summary: string | null;
+  ai_structured_content: Record<string, any> | null;
+  ai_processed: boolean;
+  source_metadata: Record<string, any> | null;
+  relevance_score: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // Database type map
 export interface Database {
   public: {
@@ -121,6 +151,7 @@ export interface Database {
       feed_items: { Row: FeedItem; Insert: Omit<FeedItem, "id" | "created_at">; Update: Partial<FeedItem> };
       bookmarks: { Row: Bookmark; Insert: Omit<Bookmark, "id" | "created_at">; Update: Partial<Bookmark> };
       user_interests: { Row: UserInterests; Insert: Omit<UserInterests, "id" | "last_updated">; Update: Partial<UserInterests> };
+      user_preferences: { Row: UserPreferences; Insert: Omit<UserPreferences, "id" | "created_at" | "updated_at">; Update: Partial<UserPreferences> };
     };
   };
 }

@@ -12,6 +12,8 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useThemeStore } from "@/stores/themeStore";
 import { useAuthStore } from "@/stores/authStore";
+import { useConfigStore } from "@/stores/configStore";
+import { useUserPreferencesStore } from "@/stores/userPreferencesStore";
 import { supabase } from "@/lib/supabase";
 import {
   useFonts,
@@ -42,6 +44,8 @@ const asyncStoragePersister = createAsyncStoragePersister({
 export default function RootLayout() {
   const { isDark, initialize } = useThemeStore();
   const { setSession, initialize: initAuth } = useAuthStore();
+  const { initialize: initConfig } = useConfigStore();
+  const { initialize: initUserPrefs } = useUserPreferencesStore();
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -58,6 +62,9 @@ export default function RootLayout() {
   useEffect(() => {
     initialize();
 
+    // Fetch remote app config (public, no auth needed)
+    initConfig();
+
     // Initialize auth
     initAuth();
 
@@ -65,6 +72,10 @@ export default function RootLayout() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
+        // Fetch per-user preferences once authenticated
+        if (session) {
+          initUserPrefs();
+        }
       }
     );
 

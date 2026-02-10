@@ -14,7 +14,10 @@ import { Collection } from "@/types/content";
 export default function HomeScreen() {
   const router = useRouter();
   const { activeFilter, setActiveFilter } = useContentStore();
-  const { data: supabaseCollections, isLoading, refetch } = useCollections();
+
+  // Server-side filtering: pass category to the backend when a filter is active
+  const categoryParam = activeFilter !== "all" ? activeFilter : undefined;
+  const { data: supabaseCollections, isLoading, refetch } = useCollections(categoryParam);
   const { data: categories, refetch: refetchCategories } = useCategories();
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,7 +33,7 @@ export default function HomeScreen() {
     return base;
   }, [categories]);
 
-  // Map Supabase data to Collection type
+  // Map backend data to Collection type (no client-side filtering needed)
   const collections: Collection[] = (supabaseCollections || []).map((c) => ({
     id: c.id,
     title: c.title,
@@ -38,15 +41,6 @@ export default function HomeScreen() {
     icon: c.icon,
     theme: c.theme as any,
   }));
-
-  // Filter collections based on active filter (category match)
-  const filteredCollections = useCallback((): Collection[] => {
-    if (activeFilter === "all") return collections;
-    // Match collection title to the selected category
-    return collections.filter(
-      (c) => c.title.toLowerCase() === activeFilter.toLowerCase()
-    );
-  }, [activeFilter, collections]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -103,18 +97,18 @@ export default function HomeScreen() {
         ) : (
           <>
             {/* Collection Summary */}
-            <CollectionSummary collections={filteredCollections()} />
+            <CollectionSummary collections={collections} />
 
             {/* Collections Grid */}
             <View className="mt-2 mb-6">
               <CollectionsGrid
-                collections={filteredCollections()}
+                collections={collections}
                 onCollectionPress={handleCollectionPress}
               />
             </View>
 
             {/* Empty state when no collections */}
-            {filteredCollections().length === 0 && (
+            {collections.length === 0 && (
               <View className="items-center justify-center py-16 px-6">
                 <Text className="text-lg font-semibold text-slate-400 dark:text-slate-500 mb-2">
                   No collections yet

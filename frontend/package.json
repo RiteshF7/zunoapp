@@ -5,6 +5,15 @@
   "scripts": {
     "start": "expo start",
     "dev": "bash start-dev.sh",
+    "dev:start": "bash start-dev.sh start",
+    "dev:stop": "bash start-dev.sh stop",
+    "dev:backend": "bash start-dev.sh backend",
+    "dev:frontend": "bash start-dev.sh frontend",
+    "dev:clean": "bash start-dev.sh clean",
+    "dev:refresh": "bash start-dev.sh refresh",
+    "dev:nuke": "bash start-dev.sh nuke",
+    "dev:logs-be": "bash start-dev.sh logs-be",
+    "dev:logs-fe": "bash start-dev.sh logs-fe",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web"

@@ -1,11 +1,14 @@
 // services/collections.service.ts
 import { api } from "@/lib/api";
-import { Collection } from "@/types/supabase";
+import { Collection, Content } from "@/types/supabase";
 
 export const collectionsService = {
-  // Get all collections for the current user
-  async getCollections(): Promise<Collection[]> {
-    return api.get<Collection[]>("/api/collections");
+  // Get all collections for the current user, optionally filtered by AI category
+  async getCollections(category?: string): Promise<Collection[]> {
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    const qs = params.toString();
+    return api.get<Collection[]>(`/api/collections${qs ? `?${qs}` : ""}`);
   },
 
   // Get distinct AI categories the user has content in
@@ -40,9 +43,9 @@ export const collectionsService = {
     await api.delete(`/api/collections/${id}`);
   },
 
-  // Get items in a collection
-  async getCollectionItems(collectionId: string) {
-    return api.get<any[]>(`/api/collections/${collectionId}/items`);
+  // Get items in a collection (backend returns flat Content[])
+  async getCollectionItems(collectionId: string): Promise<Content[]> {
+    return api.get<Content[]>(`/api/collections/${collectionId}/items`);
   },
 
   // Add item to collection

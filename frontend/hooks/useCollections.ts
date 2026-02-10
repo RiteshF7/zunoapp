@@ -3,12 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { collectionsService } from "@/services/collections.service";
 import { useAuthStore } from "@/stores/authStore";
 
-export function useCollections() {
+export function useCollections(category?: string) {
   const { isAuthenticated } = useAuthStore();
 
   return useQuery({
-    queryKey: ["collections"],
-    queryFn: () => collectionsService.getCollections(),
+    queryKey: ["collections", { category }],
+    queryFn: () => collectionsService.getCollections(category),
     enabled: isAuthenticated,
   });
 }

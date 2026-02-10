@@ -1,6 +1,6 @@
 """Collections CRUD + collection items."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
@@ -9,6 +9,7 @@ from app.schemas.models import (
     CollectionCreate,
     CollectionUpdate,
     CollectionItemAdd,
+    ContentOut,
 )
 
 router = APIRouter(prefix="/api/collections", tags=["collections"])
@@ -43,17 +44,22 @@ async def list_categories(
 # ---------------------------------------------------------------------------
 @router.get("", response_model=list[CollectionOut])
 async def list_collections(
+    category: str | None = Query(None, description="Filter by AI category (smart_rules->>'category')"),
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
 ):
-    """List all collections for the current user."""
-    result = (
+    """List all collections for the current user, optionally filtered by AI category."""
+    query = (
         db.table("collections")
         .select("*")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
-        .execute()
     )
+
+    if category:
+        query = query.filter("smart_rules->>category", "eq", category)
+
+    result = query.execute()
     return result.data or []
 
 
@@ -133,13 +139,13 @@ async def delete_collection(
 # ---------------------------------------------------------------------------
 # Collection Items
 # ---------------------------------------------------------------------------
-@router.get("/{collection_id}/items")
+@router.get("/{collection_id}/items", response_model=list[ContentOut])
 async def get_collection_items(
     collection_id: str,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
 ):
-    """Get items in a collection with joined content."""
+    """Get content items in a collection, sorted by most recently added."""
     result = (
         db.table("collection_items")
         .select("added_at, content:content_id (*)")
@@ -147,7 +153,13 @@ async def get_collection_items(
         .order("added_at", desc=True)
         .execute()
     )
-    return result.data or []
+    # Flatten: extract the nested content object from each join row
+    items = []
+    for row in result.data or []:
+        content = row.get("content")
+        if content:
+            items.append(content)
+    return items
 
 
 @router.post("/{collection_id}/items", status_code=201)

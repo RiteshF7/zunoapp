@@ -18,7 +18,7 @@ import { collectionsService } from "@/services/collections.service";
 import { useThemeStore } from "@/stores/themeStore";
 import { COLLECTION_THEMES, CollectionTheme } from "@/lib/constants";
 import { FeedItem } from "@/types/feed";
-import { Content } from "@/types/supabase";
+import type { Content } from "@/types/supabase";
 
 export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,7 +37,7 @@ export default function CollectionDetailScreen() {
     enabled: !!id,
   });
 
-  // Fetch collection items (content)
+  // Fetch collection items — backend returns flat Content[]
   const {
     data: items,
     isLoading: itemsLoading,
@@ -48,26 +48,20 @@ export default function CollectionDetailScreen() {
     enabled: !!id,
   });
 
-  // Map Supabase content to FeedItem for FeedCard reuse
+  // Map Content to FeedItem for FeedCard reuse (simple field rename, no unwrapping)
   const feedItems: FeedItem[] = useMemo(() => {
     if (!items) return [];
-    return items
-      .map((item: any) => {
-        const content: Content | null = item.content;
-        if (!content) return null;
-        return {
-          id: content.id,
-          title: content.title || "Untitled",
-          description: content.ai_summary || content.description || "",
-          imageUrl: content.thumbnail_url || "",
-          sourceUrl: content.url,
-          category: content.ai_category || "",
-          likes: 0,
-          platform: (content.platform || "other") as any,
-          contentType: (content.content_type || "post") as any,
-        };
-      })
-      .filter(Boolean) as FeedItem[];
+    return items.map((content: Content) => ({
+      id: content.id,
+      title: content.title || "Untitled",
+      description: content.ai_summary || content.description || "",
+      imageUrl: content.thumbnail_url || "",
+      sourceUrl: content.url,
+      category: content.ai_category || "",
+      likes: 0,
+      platform: (content.platform || "other") as any,
+      contentType: (content.content_type || "post") as any,
+    }));
   }, [items]);
 
   const isLoading = collectionLoading || itemsLoading;

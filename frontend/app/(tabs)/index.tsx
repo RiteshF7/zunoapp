@@ -94,7 +94,7 @@ export default function HomeScreen() {
             </Text>
           </View>
         ) : (
-          <>
+          <View>
             {/* Collection Summary */}
             <CollectionSummary collections={collections} />
 
@@ -117,7 +117,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
             )}
-          </>
+          </View>
         )}
 
         {/* Bottom padding for floating tab bar */}

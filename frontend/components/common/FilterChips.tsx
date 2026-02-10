@@ -21,6 +21,7 @@ export function FilterChips({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      nestedScrollEnabled
       className={cn("px-6 py-2", className)}
       contentContainerStyle={{ gap: 8 }}
     >

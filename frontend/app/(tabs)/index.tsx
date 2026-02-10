@@ -60,7 +60,6 @@ export default function HomeScreen() {
         subtitle="Pick your"
         actions={[
           { icon: "search", onPress: () => router.push("/search") },
-          { icon: "notifications", onPress: () => console.log("Notifications") },
           { icon: "settings", onPress: () => setSettingsVisible(true) },
         ]}
       />

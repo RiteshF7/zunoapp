@@ -1,18 +1,22 @@
 """Search endpoints: FTS, hybrid, tag-based, popular tags."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
 from app.config import Settings, get_settings
 from app.schemas.models import SearchResultOut, PopularTagOut
 from app.services.openai_service import generate_embedding
+from app.utils.rate_limit import limiter, RATE_SEARCH, RATE_READ
+from app.utils.cache import cache
 
 router = APIRouter(tags=["search"])
 
 
 @router.get("/api/search", response_model=list[SearchResultOut])
+@limiter.limit(RATE_SEARCH)
 async def full_text_search(
+    request: Request,
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=100),
     user_id: str = Depends(get_current_user),
@@ -27,7 +31,9 @@ async def full_text_search(
 
 
 @router.get("/api/search/hybrid", response_model=list[SearchResultOut])
+@limiter.limit(RATE_SEARCH)
 async def hybrid_search(
+    request: Request,
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=100),
     user_id: str = Depends(get_current_user),
@@ -53,7 +59,9 @@ async def hybrid_search(
 
 
 @router.get("/api/search/tag/{slug}", response_model=list[SearchResultOut])
+@limiter.limit(RATE_SEARCH)
 async def search_by_tag(
+    request: Request,
     slug: str,
     limit: int = Query(50, ge=1, le=200),
     user_id: str = Depends(get_current_user),
@@ -68,12 +76,23 @@ async def search_by_tag(
 
 
 @router.get("/api/tags/popular")
+@limiter.limit(RATE_READ)
 async def get_popular_tags(
+    request: Request,
     limit: int = Query(20, ge=1, le=100),
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
 ):
-    """Get popular tags ordered by usage_count."""
+    """Get popular tags ordered by usage_count (cached for 10 minutes)."""
+    return await _get_popular_tags_cached(limit=limit, db=db)
+
+
+@cache(ttl=600, prefix="popular_tags", key="{limit}")
+async def _get_popular_tags_cached(
+    limit: int = 20,
+    db: Client = None,
+):
+    """Inner cached function for popular tags."""
     result = (
         db.table("tags")
         .select("name, slug, usage_count")

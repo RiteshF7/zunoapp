@@ -46,3 +46,7 @@ CREATE POLICY "Users can insert own preferences"
 CREATE POLICY "Users can update own preferences"
   ON user_preferences FOR UPDATE
   USING (auth.uid() = user_id);
+
+-- Register this migration
+INSERT INTO _migrations (name) VALUES ('001_user_preferences')
+ON CONFLICT (name) DO NOTHING;

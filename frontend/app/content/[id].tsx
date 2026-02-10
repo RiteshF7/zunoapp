@@ -357,14 +357,18 @@ export default function ContentDetailScreen() {
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
                     {tags.map((tag) => (
-                      <View
+                      <Pressable
                         key={tag.slug}
                         className="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full"
+                        style={({ pressed }) => ({
+                          transform: [{ scale: pressed ? 0.95 : 1 }],
+                        })}
+                        onPress={() => router.push(`/search?tag=${tag.slug}`)}
                       >
                         <Text className="text-xs font-medium text-slate-600 dark:text-slate-400">
                           #{tag.name}
                         </Text>
-                      </View>
+                      </Pressable>
                     ))}
                   </View>
                 </View>

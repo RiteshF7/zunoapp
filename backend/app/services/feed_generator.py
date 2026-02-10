@@ -12,6 +12,7 @@ from urllib.parse import quote
 import httpx
 
 from app.config import Settings
+from app.prompts import get_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -32,24 +33,17 @@ async def generate_ai_feed(
     interests: dict[str, Any],
 ) -> list[dict[str, Any]]:
     """Generate personalized feed recommendations using OpenAI."""
-    prompt = (
-        "Based on a user's content interests, generate 10 feed recommendations.\n\n"
-        "User Profile:\n"
-        f"- Top categories: {', '.join(f'{c} ({n} saved)' for c, n in top_categories)}\n"
-        f"- Top tags: {', '.join(f'{t} ({n})' for t, n in top_tags)}\n"
-        f"- Preferred platforms: {', '.join(p for p, _ in top_platforms)}\n"
-        f"- Total saved: {interests.get('total_saved', 0)}\n\n"
-        "Generate a JSON array of 10 content recommendations. Each item should have:\n"
-        '- "title": An engaging title\n'
-        '- "description": 1-2 sentence description\n'
-        '- "source_url": A plausible URL (use example.com)\n'
-        '- "category": Category that matches user interests\n'
-        '- "content_type": One of: video, reel, article, thread, post, image, podcast\n'
-        '- "platform": One of: youtube, instagram, twitter, facebook, linkedin, tiktok, reddit, pinterest, spotify\n'
-        '- "likes": Random number between 500-10000\n'
-        '- "reason": A "Why this?" explanation referencing the user\'s interests\n\n'
-        "Make recommendations diverse but strongly related to the user's interests.\n"
-        "Return ONLY a valid JSON object with an \"items\" key containing the array."
+    prompt_config = get_prompt("feed_generation")
+    system_prompt = prompt_config["system"]
+    model = prompt_config.get("model", "gpt-4o-mini")
+    temperature = prompt_config.get("temperature", 0.8)
+
+    # Fill the user prompt template from the YAML file
+    user_prompt = prompt_config["user_template"].format(
+        top_categories=", ".join(f"{c} ({n} saved)" for c, n in top_categories),
+        top_tags=", ".join(f"{t} ({n})" for t, n in top_tags),
+        top_platforms=", ".join(p for p, _ in top_platforms),
+        total_saved=interests.get("total_saved", 0),
     )
 
     async with httpx.AsyncClient(timeout=60) as client:
@@ -60,12 +54,12 @@ async def generate_ai_feed(
                 "Content-Type": "application/json",
             },
             json={
-                "model": "gpt-4o-mini",
+                "model": model,
                 "messages": [
-                    {"role": "system", "content": "You generate content feed recommendations as JSON."},
-                    {"role": "user", "content": prompt},
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
                 ],
-                "temperature": 0.8,
+                "temperature": temperature,
                 "response_format": {"type": "json_object"},
             },
         )

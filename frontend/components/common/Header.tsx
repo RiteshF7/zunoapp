@@ -1,6 +1,7 @@
 // components/common/Header.tsx
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cn } from "@/lib/utils";
 import { Avatar } from "./Avatar";
@@ -31,6 +32,7 @@ export function Header({
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const { isDark } = useThemeStore();
+  const router = useRouter();
 
   return (
     <View
@@ -42,7 +44,11 @@ export function Header({
     >
       {/* Left side: Avatar + Title */}
       <View className="flex-row items-center gap-3">
-        {showAvatar && <Avatar />}
+        {showAvatar && (
+          <Pressable onPress={() => router.replace("/(tabs)/profile")}>
+            <Avatar />
+          </Pressable>
+        )}
         <View>
           {subtitle && (
             <Text className="text-xs text-slate-500 dark:text-slate-400">

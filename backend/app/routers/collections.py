@@ -1,6 +1,6 @@
 """Collections CRUD + collection items."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
@@ -11,6 +11,8 @@ from app.schemas.models import (
     CollectionItemAdd,
     ContentOut,
 )
+from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
+from app.utils.cache import cache, bust_cache
 
 router = APIRouter(prefix="/api/collections", tags=["collections"])
 
@@ -19,11 +21,19 @@ router = APIRouter(prefix="/api/collections", tags=["collections"])
 # Categories (must be above /{collection_id} to avoid route conflict)
 # ---------------------------------------------------------------------------
 @router.get("/categories")
+@limiter.limit(RATE_READ)
 async def list_categories(
+    request: Request,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
 ):
-    """Return distinct AI categories the user has content in."""
+    """Return distinct AI categories the user has content in (cached 15 min)."""
+    return await _list_categories_cached(user_id=user_id, db=db)
+
+
+@cache(ttl=900, prefix="categories", key="{user_id}")
+async def _list_categories_cached(user_id: str = "", db: Client = None):
+    """Inner cached function for user categories."""
     result = (
         db.table("content")
         .select("ai_category")
@@ -43,7 +53,9 @@ async def list_categories(
 # Collections CRUD
 # ---------------------------------------------------------------------------
 @router.get("", response_model=list[CollectionOut])
+@limiter.limit(RATE_READ)
 async def list_collections(
+    request: Request,
     category: str | None = Query(None, description="Filter by AI category (smart_rules->>'category')"),
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -64,7 +76,9 @@ async def list_collections(
 
 
 @router.get("/{collection_id}", response_model=CollectionOut)
+@limiter.limit(RATE_READ)
 async def get_collection(
+    request: Request,
     collection_id: str,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -84,7 +98,9 @@ async def get_collection(
 
 
 @router.post("", response_model=CollectionOut, status_code=201)
+@limiter.limit(RATE_WRITE)
 async def create_collection(
+    request: Request,
     body: CollectionCreate,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -100,7 +116,9 @@ async def create_collection(
 
 
 @router.patch("/{collection_id}", response_model=CollectionOut)
+@limiter.limit(RATE_WRITE)
 async def update_collection(
+    request: Request,
     collection_id: str,
     body: CollectionUpdate,
     user_id: str = Depends(get_current_user),
@@ -124,7 +142,9 @@ async def update_collection(
 
 
 @router.delete("/{collection_id}", status_code=204)
+@limiter.limit(RATE_WRITE)
 async def delete_collection(
+    request: Request,
     collection_id: str,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -140,7 +160,9 @@ async def delete_collection(
 # Collection Items
 # ---------------------------------------------------------------------------
 @router.get("/{collection_id}/items", response_model=list[ContentOut])
+@limiter.limit(RATE_READ)
 async def get_collection_items(
+    request: Request,
     collection_id: str,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -163,7 +185,9 @@ async def get_collection_items(
 
 
 @router.post("/{collection_id}/items", status_code=201)
+@limiter.limit(RATE_WRITE)
 async def add_item_to_collection(
+    request: Request,
     collection_id: str,
     body: CollectionItemAdd,
     user_id: str = Depends(get_current_user),
@@ -180,7 +204,9 @@ async def add_item_to_collection(
 
 
 @router.delete("/{collection_id}/items/{content_id}", status_code=204)
+@limiter.limit(RATE_WRITE)
 async def remove_item_from_collection(
+    request: Request,
     collection_id: str,
     content_id: str,
     user_id: str = Depends(get_current_user),

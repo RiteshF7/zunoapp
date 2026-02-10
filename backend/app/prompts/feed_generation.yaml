@@ -1,0 +1,33 @@
+# ── Feed Generation Prompt ─────────────────────────────────────────────────
+# Used by: app/services/feed_generator.py → generate_ai_feed()
+# Purpose: Generate personalized content recommendations based on user interests
+# ───────────────────────────────────────────────────────────────────────────
+
+version: "1.0"
+model: gpt-4o-mini
+temperature: 0.8
+
+system: "You generate content feed recommendations as JSON."
+
+# The user prompt is a template — placeholders are filled at runtime
+user_template: |
+  Based on a user's content interests, generate 10 feed recommendations.
+
+  User Profile:
+  - Top categories: {top_categories}
+  - Top tags: {top_tags}
+  - Preferred platforms: {top_platforms}
+  - Total saved: {total_saved}
+
+  Generate a JSON array of 10 content recommendations. Each item should have:
+  - "title": An engaging title
+  - "description": 1-2 sentence description
+  - "source_url": A plausible URL (use example.com)
+  - "category": Category that matches user interests
+  - "content_type": One of: video, reel, article, thread, post, image, podcast
+  - "platform": One of: youtube, instagram, twitter, facebook, linkedin, tiktok, reddit, pinterest, spotify
+  - "likes": Random number between 500-10000
+  - "reason": A "Why this?" explanation referencing the user's interests
+
+  Make recommendations diverse but strongly related to the user's interests.
+  Return ONLY a valid JSON object with an "items" key containing the array.

@@ -7,7 +7,7 @@ to control feature flags, limits, and links without shipping an app update.
 
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 from app.schemas.models import (
     AppConfigOut,
@@ -16,6 +16,7 @@ from app.schemas.models import (
     FeedSettings,
     AppLinks,
 )
+from app.utils.rate_limit import limiter, RATE_PUBLIC
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,8 @@ _CONFIG = AppConfigOut(
 
 
 @router.get("", response_model=AppConfigOut)
-async def get_app_config():
+@limiter.limit(RATE_PUBLIC)
+async def get_app_config(request: Request):
     """Return the current app configuration.
 
     This is a **public** endpoint (no JWT required) so the app can

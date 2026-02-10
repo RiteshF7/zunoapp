@@ -4,7 +4,7 @@ import logging
 import re
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from supabase import Client
 
 from app.config import Settings, get_settings
@@ -25,6 +25,8 @@ from app.services.feed_generator import (
     generate_ai_feed,
     generate_rule_feed,
 )
+from app.utils.rate_limit import limiter, RATE_AI_PROCESS, RATE_AI_EMBEDDING, RATE_AI_FEED
+from app.utils.cache import bust_cache
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,9 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 # POST /api/ai/process-content
 # ---------------------------------------------------------------------------
 @router.post("/process-content", response_model=ProcessContentResponse)
+@limiter.limit(RATE_AI_PROCESS)
 async def process_content(
+    request: Request,
     body: ProcessContentRequest,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -132,6 +136,10 @@ async def process_content(
         content.get("content_type", "post"),
     )
 
+    # 8. Bust caches that may be stale now
+    bust_cache("popular_tags:*")
+    bust_cache("categories:*")
+
     return ProcessContentResponse(
         success=True,
         category=ai_result["category"],
@@ -144,7 +152,9 @@ async def process_content(
 # POST /api/ai/generate-embedding
 # ---------------------------------------------------------------------------
 @router.post("/generate-embedding", response_model=GenerateEmbeddingResponse)
+@limiter.limit(RATE_AI_EMBEDDING)
 async def generate_embedding_endpoint(
+    request: Request,
     body: GenerateEmbeddingRequest,
     user_id: str = Depends(get_current_user),
     settings: Settings = Depends(get_settings),
@@ -160,7 +170,9 @@ async def generate_embedding_endpoint(
 # POST /api/ai/generate-feed
 # ---------------------------------------------------------------------------
 @router.post("/generate-feed", response_model=GenerateFeedResponse)
+@limiter.limit(RATE_AI_FEED)
 async def generate_feed(
+    request: Request,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
     settings: Settings = Depends(get_settings),
@@ -205,6 +217,9 @@ async def generate_feed(
     # Upsert feed items into DB
     for item in feed_items:
         db.table("feed_items").upsert(item, on_conflict="source_url").execute()
+
+    # Bust feed cache so next GET /api/feed picks up new items
+    bust_cache("feed:*")
 
     # Return the latest feed
     feed_result = (

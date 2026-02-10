@@ -72,7 +72,11 @@ export default function ProfileScreen() {
             subtitle={isAuthenticated ? "Manage your account" : "Sign in to access"}
             isDark={isDark}
             onPress={() => {
-              if (!isAuthenticated) router.push("/(auth)/login");
+              if (!isAuthenticated) {
+                router.push("/(auth)/login");
+              } else {
+                router.replace("/(tabs)/profile");
+              }
             }}
           />
 
@@ -88,6 +92,7 @@ export default function ProfileScreen() {
             title="Saved Items"
             subtitle="View your bookmarked content"
             isDark={isDark}
+            onPress={() => router.replace("/(tabs)/feed")}
           />
 
           {isAuthenticated && (

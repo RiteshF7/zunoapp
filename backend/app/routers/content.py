@@ -1,16 +1,19 @@
 """Content CRUD + content-with-tags."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
 from app.schemas.models import ContentOut, ContentCreate, ContentUpdate
+from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 
 router = APIRouter(prefix="/api/content", tags=["content"])
 
 
 @router.get("", response_model=list[ContentOut])
+@limiter.limit(RATE_READ)
 async def list_content(
+    request: Request,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     category: str | None = None,
@@ -41,7 +44,9 @@ async def list_content(
 
 
 @router.get("/{content_id}", response_model=ContentOut)
+@limiter.limit(RATE_READ)
 async def get_content(
+    request: Request,
     content_id: str,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -61,7 +66,9 @@ async def get_content(
 
 
 @router.post("", response_model=ContentOut, status_code=201)
+@limiter.limit(RATE_WRITE)
 async def create_content(
+    request: Request,
     body: ContentCreate,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -77,7 +84,9 @@ async def create_content(
 
 
 @router.patch("/{content_id}", response_model=ContentOut)
+@limiter.limit(RATE_WRITE)
 async def update_content(
+    request: Request,
     content_id: str,
     body: ContentUpdate,
     user_id: str = Depends(get_current_user),
@@ -101,7 +110,9 @@ async def update_content(
 
 
 @router.delete("/{content_id}", status_code=204)
+@limiter.limit(RATE_WRITE)
 async def delete_content(
+    request: Request,
     content_id: str,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
@@ -114,7 +125,9 @@ async def delete_content(
 
 
 @router.get("/{content_id}/tags")
+@limiter.limit(RATE_READ)
 async def get_content_with_tags(
+    request: Request,
     content_id: str,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),

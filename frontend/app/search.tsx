@@ -1,5 +1,5 @@
 // app/search.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SearchBar } from "@/components/common/SearchBar";
 import { IconButton } from "@/components/common/IconButton";
@@ -22,6 +22,7 @@ import { ContentType, Platform as PlatformType } from "@/types/feed";
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { tag } = useLocalSearchParams<{ tag?: string }>();
   const insets = useSafeAreaInsets();
   const { isDark } = useThemeStore();
   const {
@@ -36,6 +37,14 @@ export default function SearchScreen() {
     clearRecentSearches,
   } = useSearch();
   const { data: popularTags } = usePopularTags();
+
+  // If opened with a tag query param, trigger search by tag on mount
+  useEffect(() => {
+    if (tag) {
+      setQuery(`#${tag}`);
+      searchByTag(tag);
+    }
+  }, [tag]);
 
   const handleSearch = () => {
     if (query.trim()) {
@@ -54,6 +63,7 @@ export default function SearchScreen() {
       style={({ pressed }) => ({
         transform: [{ scale: pressed ? 0.98 : 1 }],
       })}
+      onPress={() => router.push(`/content/${item.id}`)}
     >
       {/* Thumbnail */}
       {item.thumbnail_url ? (

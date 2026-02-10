@@ -4,11 +4,12 @@ Per-user configuration (feed_type, etc.).  Auto-creates a default row
 on first GET so the client never receives a 404.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
 from app.schemas.models import UserPreferencesOut, UserPreferencesUpdate
+from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 
 router = APIRouter(prefix="/api/user-preferences", tags=["user-preferences"])
 
@@ -16,7 +17,9 @@ _VALID_FEED_TYPES = {"usersaved", "suggestedcontent"}
 
 
 @router.get("", response_model=UserPreferencesOut)
+@limiter.limit(RATE_READ)
 async def get_user_preferences(
+    request: Request,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
 ):
@@ -45,7 +48,9 @@ async def get_user_preferences(
 
 
 @router.patch("", response_model=UserPreferencesOut)
+@limiter.limit(RATE_WRITE)
 async def update_user_preferences(
+    request: Request,
     body: UserPreferencesUpdate,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),

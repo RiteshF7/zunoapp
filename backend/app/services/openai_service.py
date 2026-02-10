@@ -9,36 +9,22 @@ from typing import Any
 import httpx
 
 from app.config import Settings
+from app.prompts import get_prompt
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = (
-    "You are a content analysis AI. Your job is to deeply analyze saved content so the user "
-    "can consume it WITHOUT visiting the original source.\n\n"
-    "Return a JSON object with these fields:\n"
-    '- "category": A single category (e.g., Cooking, Tech, Travel, Fitness, Finance, '
-    "Design, Health, Education, Entertainment, Lifestyle, Business, Science, Sports, Music, Art)\n"
-    '- "tags": An array of 3-5 relevant tags (lowercase, no #)\n'
-    '- "title": A clean, descriptive title\n'
-    '- "tldr": A 2-3 sentence summary that captures the essence of the content. '
-    "The reader should understand the full gist just from this.\n"
-    '- "key_points": An array of 4-8 key points extracted from the content. '
-    "Each point should be a clear, self-contained sentence. "
-    "For recipes include ingredients and key steps, for tutorials include instructions, "
-    "for articles include main arguments/findings, for videos describe key moments.\n"
-    '- "action_items": An array of actionable steps the user can follow. '
-    "For recipes: numbered cooking steps. For tutorials: step-by-step instructions. "
-    "For informational content: practical takeaways. Return an empty array [] if "
-    "the content has no actionable steps.\n"
-    '- "save_motive": A short phrase describing WHY the user likely saved this '
-    '(e.g., "To try this recipe later", "For coding reference", '
-    '"To learn about investing", "For travel inspiration", "To share with friends"). '
-    "Infer the motive from the content type and topic.\n\n"
-    "Return ONLY valid JSON."
-)
-
 GEMINI_MODEL = "gemini-2.0-flash"
 GEMINI_EMBEDDING_MODEL = "text-embedding-004"
+
+
+def _get_content_analysis_prompt() -> dict[str, Any]:
+    """Load the content analysis prompt config from YAML."""
+    return get_prompt("content_analysis")
+
+
+def _get_feed_generation_prompt() -> dict[str, Any]:
+    """Load the feed generation prompt config from YAML (used by feed_generator)."""
+    return get_prompt("feed_generation")
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +53,10 @@ async def generate_embedding(text: str, settings: Settings) -> list[float] | Non
 # ---------------------------------------------------------------------------
 async def _process_with_gemini(text: str, settings: Settings) -> dict[str, Any]:
     api_key = settings.gemini_api_key
-    prompt = f"{SYSTEM_PROMPT}\n\nContent:\n{text}\n\nReturn ONLY valid JSON."
+    prompt_config = _get_content_analysis_prompt()
+    system_prompt = prompt_config["system"]
+
+    prompt = f"{system_prompt}\n\nContent:\n{text}\n\nReturn ONLY valid JSON."
 
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
@@ -76,7 +65,7 @@ async def _process_with_gemini(text: str, settings: Settings) -> dict[str, Any]:
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {
-                    "temperature": 0.3,
+                    "temperature": prompt_config.get("temperature", 0.3),
                     "responseMimeType": "application/json",
                 },
             },
@@ -139,6 +128,11 @@ async def _gemini_embedding(text: str, api_key: str) -> list[float] | None:
 # ---------------------------------------------------------------------------
 async def _process_with_openai(text: str, settings: Settings) -> dict[str, Any]:
     api_key = settings.openai_api_key
+    prompt_config = _get_content_analysis_prompt()
+    system_prompt = prompt_config["system"]
+    model = prompt_config.get("model", "gpt-4o-mini")
+    temperature = prompt_config.get("temperature", 0.3)
+
     async with httpx.AsyncClient(timeout=60) as client:
         completion_resp = await client.post(
             "https://api.openai.com/v1/chat/completions",
@@ -147,12 +141,12 @@ async def _process_with_openai(text: str, settings: Settings) -> dict[str, Any]:
                 "Content-Type": "application/json",
             },
             json={
-                "model": "gpt-4o-mini",
+                "model": model,
                 "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": text},
                 ],
-                "temperature": 0.3,
+                "temperature": temperature,
                 "response_format": {"type": "json_object"},
             },
         )

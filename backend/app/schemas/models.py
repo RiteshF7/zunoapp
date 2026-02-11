@@ -297,6 +297,7 @@ class GoalOut(BaseModel):
     status: str = "active"
     confidence: float = 0.5
     evidence_content_ids: list[str] = []
+    parent_goal_id: str | None = None
     created_at: str
     updated_at: str
 
@@ -305,6 +306,7 @@ class GoalDetailOut(GoalOut):
     """Goal with all steps included."""
     steps: list[GoalStepOut] = []
     ai_reasoning: str = ""
+    children: list[GoalOut] = []
 
 
 class GoalUpdate(BaseModel):
@@ -317,6 +319,24 @@ class GoalUpdate(BaseModel):
 class GoalStepUpdate(BaseModel):
     """Toggle step completion."""
     is_completed: bool
+
+
+# ---------------------------------------------------------------------------
+# Goal Consolidation (merge suggestions)
+# ---------------------------------------------------------------------------
+class GoalMergeSuggestionOut(BaseModel):
+    """A pending AI-suggested goal merge."""
+    id: str
+    user_id: str
+    suggested_parent_title: str
+    suggested_parent_description: str = ""
+    suggested_parent_category: str = ""
+    child_goal_ids: list[str] = []
+    ai_reasoning: str = ""
+    new_steps: list[dict[str, Any]] = []
+    status: str = "pending"
+    created_at: str
+    updated_at: str
 
 
 # ---------------------------------------------------------------------------

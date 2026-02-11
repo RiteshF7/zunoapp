@@ -1,11 +1,17 @@
 """Content CRUD + content-with-tags."""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
 from app.schemas.models import ContentOut, ContentCreate, ContentUpdate
+from app.services.metadata_service import fetch_url_metadata
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
+from app.utils.url_detect import detect_platform_and_type
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/content", tags=["content"])
 
@@ -73,9 +79,60 @@ async def create_content(
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
 ):
-    """Save new content (user_id auto-set from JWT)."""
+    """Save new content (user_id auto-set from JWT).
+
+    Automatically:
+    - Detects platform and content_type from the URL.
+    - Scrapes the URL for title, description, thumbnail, author, etc.
+    - Builds a rich description with topics, author, source, and media type.
+    """
     payload = body.model_dump(exclude_none=True)
     payload["user_id"] = user_id
+
+    # Auto-detect platform and content_type from URL
+    detected_platform, detected_type = detect_platform_and_type(body.url)
+
+    if body.platform in ("other", "web") or "platform" not in payload:
+        payload["platform"] = detected_platform
+    if body.content_type == "post" or "content_type" not in payload:
+        payload["content_type"] = detected_type
+
+    # Scrape URL metadata for title, description, thumbnail, author, etc.
+    try:
+        metadata = await fetch_url_metadata(body.url)
+    except Exception as exc:
+        logger.warning("Metadata scrape failed for %s (non-fatal): %s", body.url, exc)
+        metadata = None
+
+    if metadata:
+        # Auto-fill title if not provided by client
+        if not body.title and metadata.title:
+            payload["title"] = metadata.title
+
+        # Auto-fill thumbnail
+        if not body.thumbnail_url and metadata.thumbnail:
+            payload["thumbnail_url"] = metadata.thumbnail
+
+        # Build a rich auto-description if client didn't provide one
+        if not body.description:
+            payload["description"] = _build_auto_description(
+                metadata=metadata,
+                platform=payload.get("platform", detected_platform),
+                content_type=payload.get("content_type", detected_type),
+            )
+
+        # Store extended metadata in source_metadata JSON column
+        source_meta: dict = {}
+        if metadata.author:
+            source_meta["author"] = metadata.author
+        if metadata.site_name:
+            source_meta["site_name"] = metadata.site_name
+        if metadata.og_type:
+            source_meta["og_type"] = metadata.og_type
+        if metadata.keywords:
+            source_meta["keywords"] = metadata.keywords
+        if source_meta:
+            payload["source_metadata"] = source_meta
 
     result = db.table("content").insert(payload).execute()
     if not result.data:
@@ -144,3 +201,79 @@ async def get_content_with_tags(
     if not result.data:
         raise HTTPException(status_code=404, detail="Content not found")
     return result.data
+
+
+# ---------------------------------------------------------------------------
+# Helper: build a rich auto-description from scraped metadata
+# ---------------------------------------------------------------------------
+_PLATFORM_LABELS: dict[str, str] = {
+    "youtube": "YouTube",
+    "instagram": "Instagram",
+    "twitter": "X (Twitter)",
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "tiktok": "TikTok",
+    "reddit": "Reddit",
+    "pinterest": "Pinterest",
+    "spotify": "Spotify",
+    "medium": "Medium",
+}
+
+_TYPE_LABELS: dict[str, str] = {
+    "video": "Video",
+    "article": "Article",
+    "post": "Post",
+    "podcast": "Podcast",
+    "image": "Image",
+}
+
+
+def _build_auto_description(
+    metadata: "UrlMetadata",
+    platform: str,
+    content_type: str,
+) -> str:
+    """Build a concise auto-description from scraped metadata.
+
+    Includes: original description/topics, author, source, and media type.
+    """
+    from app.services.metadata_service import UrlMetadata  # noqa: F811
+
+    parts: list[str] = []
+
+    # Original description (truncated)
+    if metadata.description:
+        desc = metadata.description.strip()
+        if len(desc) > 200:
+            desc = desc[:197] + "..."
+        parts.append(desc)
+
+    # Source & author line
+    source_parts: list[str] = []
+    platform_label = _PLATFORM_LABELS.get(platform, platform.title() if platform != "other" else "")
+    type_label = _TYPE_LABELS.get(content_type, content_type.title())
+
+    if platform_label:
+        source_parts.append(platform_label)
+    if metadata.site_name and metadata.site_name.lower() != platform_label.lower():
+        source_parts.append(metadata.site_name)
+    if metadata.author:
+        source_parts.append(f"by {metadata.author}")
+
+    info_line = " · ".join(source_parts)
+    if info_line:
+        info_line = f"{type_label} — {info_line}" if type_label else info_line
+    elif type_label:
+        info_line = type_label
+
+    if info_line:
+        parts.append(info_line)
+
+    # Keywords / topics
+    if metadata.keywords:
+        kw = metadata.keywords.strip()
+        if len(kw) > 150:
+            kw = kw[:147] + "..."
+        parts.append(f"Topics: {kw}")
+
+    return " | ".join(parts) if parts else ""

@@ -105,6 +105,36 @@ async def generate_embedding(
     return await provider.generate_embedding(text, task_type="RETRIEVAL_DOCUMENT")
 
 
+async def expand_query(query: str, settings: Settings) -> str:
+    """Expand a user query via AI to fix typos, add synonyms, and alternate names.
+
+    Returns the expanded query string, or the original query if expansion fails.
+    """
+    if not query or not settings.gcp_project_id:
+        return query
+
+    try:
+        from app.prompts import get_prompt
+
+        prompt_config = get_prompt("query_expansion")
+        provider = _get_provider(settings)
+        expanded = await provider.generate_text(
+            system_prompt=prompt_config["system"],
+            user_prompt=prompt_config["user_template"].format(query=query),
+            temperature=prompt_config.get("temperature", 0.2),
+            max_tokens=prompt_config.get("max_output_tokens", 256),
+            json_mode=False,
+        )
+        expanded = expanded.strip()
+        if expanded:
+            logger.info("Query expanded: '%s' → '%s'", query, expanded)
+            return expanded
+    except Exception as exc:
+        logger.warning("Query expansion failed (using original): %s", exc)
+
+    return query
+
+
 async def generate_query_embedding(
     text: str, settings: Settings,
 ) -> list[float] | None:

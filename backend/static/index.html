@@ -404,40 +404,9 @@ function openSaveContentModal() {
     <h2 class="text-lg font-bold text-white mb-4">Save Content</h2>
     <div class="space-y-3">
       <div>
-        <label class="text-xs text-muted font-medium mb-1 block">URL *</label>
-        <input id="m-url" type="url" placeholder="https://..." class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
-      </div>
-      <div>
-        <label class="text-xs text-muted font-medium mb-1 block">Title</label>
-        <input id="m-title" placeholder="Optional title" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
-      </div>
-      <div>
-        <label class="text-xs text-muted font-medium mb-1 block">Description</label>
-        <textarea id="m-desc" rows="2" placeholder="Optional description" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent resize-none"></textarea>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-muted font-medium mb-1 block">Platform</label>
-          <select id="m-platform" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent">
-            <option value="web">Web</option>
-            <option value="youtube">YouTube</option>
-            <option value="instagram">Instagram</option>
-            <option value="x">X / Twitter</option>
-            <option value="reddit">Reddit</option>
-            <option value="tiktok">TikTok</option>
-            <option value="spotify">Spotify</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-muted font-medium mb-1 block">Type</label>
-          <select id="m-type" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent">
-            <option value="article">Article</option>
-            <option value="video">Video</option>
-            <option value="post">Post</option>
-            <option value="podcast">Podcast</option>
-            <option value="image">Image</option>
-          </select>
-        </div>
+        <label class="text-xs text-muted font-medium mb-1 block">URL</label>
+        <input id="m-url" type="url" placeholder="Paste a link..." class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" autofocus />
+        <p class="text-[11px] text-muted/60 mt-1.5">Title, description, platform &amp; type are auto-detected</p>
       </div>
       <button onclick="doSaveContent()" id="save-content-btn" class="w-full bg-accent hover:bg-accentHover text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98] mt-2">Save Content</button>
     </div>
@@ -452,13 +421,7 @@ async function doSaveContent() {
   btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>';
   btn.disabled = true;
 
-  const body = {
-    url,
-    title: document.getElementById('m-title').value.trim() || null,
-    description: document.getElementById('m-desc').value.trim() || null,
-    platform: document.getElementById('m-platform').value,
-    content_type: document.getElementById('m-type').value,
-  };
+  const body = { url };
   const res = await api('POST', '/api/content', body);
   if (res.ok) {
     closeModal();

@@ -26,6 +26,10 @@ class UrlMetadata:
     description: str | None = None
     thumbnail: str | None = None
     body_text: str | None = None
+    author: str | None = None
+    site_name: str | None = None
+    og_type: str | None = None
+    keywords: str | None = None
 
 
 async def fetch_url_metadata(url: str) -> UrlMetadata:
@@ -47,11 +51,29 @@ async def fetch_url_metadata(url: str) -> UrlMetadata:
         thumbnail = _get_og(soup, "og:image")
         body_text = _extract_visible_text(soup)
 
+        # Extended metadata
+        author = (
+            _get_meta(soup, "author")
+            or _get_og(soup, "article:author")
+            or _get_meta(soup, "twitter:creator")
+            or _get_meta(soup, "article:author")
+        )
+        site_name = (
+            _get_og(soup, "og:site_name")
+            or _get_meta(soup, "application-name")
+        )
+        og_type = _get_og(soup, "og:type")
+        keywords = _get_meta(soup, "keywords")
+
         return UrlMetadata(
             title=title,
             description=description,
             thumbnail=thumbnail,
             body_text=body_text,
+            author=author,
+            site_name=site_name,
+            og_type=og_type,
+            keywords=keywords,
         )
     except Exception as exc:
         logger.warning("Failed to fetch metadata for %s: %s", url, exc)

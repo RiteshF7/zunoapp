@@ -30,6 +30,7 @@ from app.services.chunking_service import chunk_text
 from app.services.goal_engine import analyze_and_update_goals
 from app.utils.rate_limit import limiter, RATE_AI_PROCESS, RATE_AI_EMBEDDING, RATE_AI_FEED
 from app.utils.cache import bust_cache
+from app.utils.url_detect import detect_platform
 
 logger = logging.getLogger(__name__)
 
@@ -282,32 +283,9 @@ async def generate_feed(
 
 
 # ---------------------------------------------------------------------------
-# Helper: detect platform from URL
+# Helper: detect platform from URL (delegated to shared utility)
 # ---------------------------------------------------------------------------
-_PLATFORM_PATTERNS: list[tuple[str, str]] = [
-    ("instagram.com", "instagram"),
-    ("youtube.com", "youtube"),
-    ("youtu.be", "youtube"),
-    ("twitter.com", "twitter"),
-    ("x.com", "twitter"),
-    ("facebook.com", "facebook"),
-    ("fb.com", "facebook"),
-    ("linkedin.com", "linkedin"),
-    ("tiktok.com", "tiktok"),
-    ("reddit.com", "reddit"),
-    ("pinterest.com", "pinterest"),
-    ("spotify.com", "spotify"),
-    ("medium.com", "medium"),
-]
-
-
-def _detect_platform(url: str) -> str:
-    """Detect the platform from a URL's domain."""
-    url_lower = url.lower()
-    for domain, platform in _PLATFORM_PATTERNS:
-        if domain in url_lower:
-            return platform
-    return "other"
+_detect_platform = detect_platform
 
 
 # ---------------------------------------------------------------------------

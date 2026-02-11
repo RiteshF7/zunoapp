@@ -16,6 +16,7 @@ from app.schemas.models import (
     ReindexResponse,
 )
 from app.services.ai_service import (
+    expand_query,
     generate_query_embedding,
     generate_embeddings_batch,
     generate_rag_answer,
@@ -58,8 +59,11 @@ async def ask_knowledge(
             detail="Knowledge engine requires Vertex AI configuration (GCP_PROJECT_ID).",
         )
 
-    # 1. Embed the query
-    query_embedding = await generate_query_embedding(body.query, settings)
+    # 1a. Expand the query via AI (fix typos, add synonyms, alternate names)
+    expanded_query = await expand_query(body.query, settings)
+
+    # 1b. Embed the expanded query
+    query_embedding = await generate_query_embedding(expanded_query, settings)
     if query_embedding is None:
         raise HTTPException(
             status_code=502,

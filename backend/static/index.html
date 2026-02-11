@@ -72,6 +72,10 @@
           <span class="material-icons-round text-xl">folder</span>
           <span class="text-[10px] font-medium">Collections</span>
         </button>
+        <button onclick="navigate('#goals')" data-tab="goals" class="nav-btn flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors">
+          <span class="material-icons-round text-xl">flag</span>
+          <span class="text-[10px] font-medium">Goals</span>
+        </button>
         <button onclick="navigate('#knowledge')" data-tab="knowledge" class="nav-btn flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors">
           <span class="material-icons-round text-xl">psychology</span>
           <span class="text-[10px] font-medium">Ask</span>
@@ -182,7 +186,7 @@ async function router() {
   // Update active nav tab
   document.querySelectorAll('.nav-btn').forEach(btn => {
     const tab = btn.dataset.tab;
-    const active = tab === page || (page === 'collection' && tab === 'collections') || (page === 'content-detail' && tab === 'content');
+    const active = tab === page || (page === 'collection' && tab === 'collections') || (page === 'content-detail' && tab === 'content') || (page === 'goal-detail' && tab === 'goals');
     btn.classList.toggle('text-accent', active);
     btn.classList.toggle('text-muted', !active);
   });
@@ -198,6 +202,8 @@ async function router() {
       case 'content-detail': await renderContentDetail(main, id); break;
       case 'collections': await renderCollections(main); break;
       case 'collection': await renderCollectionDetail(main, id); break;
+      case 'goals': await renderGoals(main); break;
+      case 'goal-detail': await renderGoalDetail(main, id); break;
       case 'search': await renderSearch(main); break;
       case 'knowledge': await renderKnowledge(main); break;
       case 'profile': await renderProfile(main); break;
@@ -889,6 +895,220 @@ async function deleteCollection(id) {
   if (!confirm('Delete this collection?')) return;
   const res = await api('DELETE', `/api/collections/${id}`);
   if (res.ok) { toast('Deleted!'); navigate('#collections'); }
+  else toast(res.data?.detail || 'Failed to delete', true);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GOALS PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+let _goalsFilter = 'active';
+
+async function renderGoals(el) {
+  const res = await api('GET', '/api/goals', null, { status: _goalsFilter });
+  const goals = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-xl font-bold text-white">Goals</h1>
+        <span class="text-muted text-xs">${goals.length} goal${goals.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div class="flex gap-2 mb-5">
+        ${['active', 'completed', 'dismissed'].map(s => `
+          <button onclick="setGoalsFilter('${s}')" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${_goalsFilter === s ? 'bg-accent text-white' : 'bg-surface text-muted hover:text-white'}">${s.charAt(0).toUpperCase() + s.slice(1)}</button>
+        `).join('')}
+      </div>
+
+      ${goals.length === 0 ? `
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <span class="material-icons-round text-5xl text-border mb-3">flag</span>
+          <p class="text-muted text-sm">${_goalsFilter === 'active' ? 'No active goals yet' : `No ${_goalsFilter} goals`}</p>
+          <p class="text-muted/50 text-xs mt-1">Save more content and Zuno will detect your goals automatically</p>
+        </div>` : ''}
+
+      <div class="space-y-3">
+        ${goals.map(goalCard).join('')}
+      </div>
+    </div>`;
+}
+
+function goalCard(goal) {
+  const confidence = Math.round((goal.confidence || 0) * 100);
+  const evidenceCount = (goal.evidence_content_ids || []).length;
+  const statusColors = {
+    active: 'text-accent',
+    completed: 'text-green-400',
+    dismissed: 'text-muted',
+  };
+  const statusIcons = {
+    active: 'flag',
+    completed: 'check_circle',
+    dismissed: 'do_not_disturb_on',
+  };
+
+  return `
+    <div onclick="navigate('#goal-detail/${goal.id}')" class="bg-surface rounded-2xl p-4 hover:bg-surfaceHover transition-colors cursor-pointer active:scale-[0.98]">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <span class="material-icons-round text-xl ${statusColors[goal.status] || 'text-accent'}">${statusIcons[goal.status] || 'flag'}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="font-semibold text-white text-sm leading-snug line-clamp-2">${esc(goal.title)}</h3>
+          <p class="text-muted text-xs mt-1 line-clamp-2">${esc(goal.description || '')}</p>
+          <div class="flex items-center gap-3 mt-2">
+            ${badge(goal.category, 'emerald')}
+            <span class="text-muted text-[10px] flex items-center gap-0.5">
+              <span class="material-icons-round text-xs">trending_up</span> ${confidence}% confidence
+            </span>
+            <span class="text-muted text-[10px] flex items-center gap-0.5">
+              <span class="material-icons-round text-xs">link</span> ${evidenceCount} source${evidenceCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function setGoalsFilter(status) {
+  _goalsFilter = status;
+  renderGoals(document.getElementById('page'));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GOAL DETAIL PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderGoalDetail(el, id) {
+  if (!id) { navigate('#goals'); return; }
+
+  const res = await api('GET', `/api/goals/${id}`);
+  if (!res.ok) { el.innerHTML = '<p class="text-red-400 py-8 text-center">Goal not found</p>'; return; }
+  const g = res.data;
+  const steps = g.steps || [];
+  const completedCount = steps.filter(s => s.is_completed).length;
+  const totalSteps = steps.length;
+  const progressPercent = totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0;
+  const confidence = Math.round((g.confidence || 0) * 100);
+  const evidenceCount = (g.evidence_content_ids || []).length;
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <button onclick="navigate('#goals')" class="flex items-center gap-1 text-muted text-sm mb-4 hover:text-white transition-colors">
+        <span class="material-icons-round text-lg">arrow_back</span> Back
+      </button>
+
+      <!-- Goal Header -->
+      <div class="bg-surface rounded-2xl p-5 mb-4">
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <span class="material-icons-round text-2xl text-accent">flag</span>
+            </div>
+            <div>
+              <h1 class="text-lg font-bold text-white leading-snug">${esc(g.title)}</h1>
+              <div class="flex items-center gap-2 mt-1">
+                ${badge(g.category, 'emerald')}
+                ${badge(g.status, g.status === 'active' ? 'indigo' : g.status === 'completed' ? 'green' : 'gray')}
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="text-gray-300 text-sm leading-relaxed">${esc(g.description)}</p>
+
+        <div class="flex items-center gap-4 mt-4 text-xs text-muted">
+          <span class="flex items-center gap-1"><span class="material-icons-round text-sm">trending_up</span> ${confidence}% confidence</span>
+          <span class="flex items-center gap-1"><span class="material-icons-round text-sm">link</span> ${evidenceCount} sources</span>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mt-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-medium text-white">Progress</span>
+            <span class="text-xs text-muted">${completedCount}/${totalSteps} steps</span>
+          </div>
+          <div class="w-full h-2 bg-bg rounded-full overflow-hidden">
+            <div class="h-full bg-accent rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="mb-4">
+        <h3 class="text-sm font-semibold text-white mb-3">Steps</h3>
+        ${steps.length === 0 ? '<p class="text-muted text-sm text-center py-4">No steps yet</p>' : `
+          <div class="space-y-2" id="goal-steps-list">
+            ${steps.map(step => goalStepCard(step, id)).join('')}
+          </div>`}
+      </div>
+
+      ${g.ai_reasoning ? `
+        <div class="bg-surface rounded-2xl p-4 mb-4">
+          <h3 class="text-xs font-semibold text-accent uppercase tracking-wide mb-2">AI Reasoning</h3>
+          <p class="text-muted text-sm leading-relaxed">${esc(g.ai_reasoning)}</p>
+        </div>` : ''}
+
+      <!-- Actions -->
+      <div class="space-y-2">
+        ${g.status === 'active' ? `
+          <button onclick="updateGoalStatus('${g.id}', 'completed')" class="w-full flex items-center justify-center gap-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]">
+            <span class="material-icons-round text-lg">check_circle</span> Mark Complete
+          </button>
+          <button onclick="updateGoalStatus('${g.id}', 'dismissed')" class="w-full flex items-center justify-center gap-2 bg-surface hover:bg-surfaceHover border border-border text-muted font-medium py-3 rounded-xl transition-colors active:scale-[0.98]">
+            <span class="material-icons-round text-lg">do_not_disturb_on</span> Dismiss Goal
+          </button>` : ''}
+        ${g.status !== 'active' ? `
+          <button onclick="updateGoalStatus('${g.id}', 'active')" class="w-full flex items-center justify-center gap-2 bg-accent/10 hover:bg-accent/20 text-accent font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]">
+            <span class="material-icons-round text-lg">flag</span> Reactivate
+          </button>` : ''}
+        <button onclick="deleteGoal('${g.id}')" class="w-full flex items-center justify-center gap-2 bg-surface hover:bg-red-500/20 border border-border text-red-400 font-medium py-3 rounded-xl transition-colors active:scale-[0.98]">
+          <span class="material-icons-round text-lg">delete</span> Delete Goal
+        </button>
+      </div>
+    </div>`;
+}
+
+function goalStepCard(step, goalId) {
+  const sourceCount = (step.source_content_ids || []).length;
+  return `
+    <div class="bg-surface rounded-xl p-3.5 flex items-start gap-3 transition-colors ${step.is_completed ? 'opacity-60' : ''}">
+      <button onclick="event.stopPropagation(); toggleGoalStep('${goalId}', '${step.id}', ${!step.is_completed})" class="mt-0.5 flex-shrink-0 w-6 h-6 rounded-lg border-2 ${step.is_completed ? 'bg-accent border-accent' : 'border-border hover:border-accent'} flex items-center justify-center transition-colors">
+        ${step.is_completed ? '<span class="material-icons-round text-sm text-white">check</span>' : ''}
+      </button>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm font-medium leading-snug ${step.is_completed ? 'line-through' : ''}">${esc(step.title)}</p>
+        ${step.description ? `<p class="text-muted text-xs mt-1 leading-relaxed">${esc(step.description)}</p>` : ''}
+        <div class="flex items-center gap-2 mt-1.5">
+          <span class="text-muted text-[10px]">Step ${step.step_index + 1}</span>
+          ${sourceCount > 0 ? `<span class="text-muted text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-[10px]">link</span>${sourceCount} source${sourceCount !== 1 ? 's' : ''}</span>` : ''}
+          ${step.is_completed && step.completed_at ? `<span class="text-green-400/60 text-[10px]">Done</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function toggleGoalStep(goalId, stepId, newValue) {
+  const res = await api('PATCH', `/api/goals/${goalId}/steps/${stepId}`, { is_completed: newValue });
+  if (res.ok) {
+    await renderGoalDetail(document.getElementById('page'), goalId);
+  } else {
+    toast(res.data?.detail || 'Failed to update step', true);
+  }
+}
+
+async function updateGoalStatus(goalId, status) {
+  const res = await api('PATCH', `/api/goals/${goalId}`, { status });
+  if (res.ok) {
+    toast(`Goal ${status === 'completed' ? 'completed' : status === 'dismissed' ? 'dismissed' : 'reactivated'}!`);
+    await renderGoalDetail(document.getElementById('page'), goalId);
+  } else {
+    toast(res.data?.detail || 'Failed to update goal', true);
+  }
+}
+
+async function deleteGoal(goalId) {
+  if (!confirm('Delete this goal and all its steps?')) return;
+  const res = await api('DELETE', `/api/goals/${goalId}`);
+  if (res.ok) { toast('Goal deleted'); navigate('#goals'); }
   else toast(res.data?.detail || 'Failed to delete', true);
 }
 

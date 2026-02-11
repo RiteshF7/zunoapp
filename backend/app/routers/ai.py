@@ -4,7 +4,7 @@ import logging
 import re
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from supabase import Client
 
 from app.config import Settings, get_settings
@@ -27,6 +27,7 @@ from app.services.metadata_service import fetch_url_metadata
 from app.services.collection_manager import ensure_category_collection
 from app.services.feed_generator import get_top_n, generate_rule_feed
 from app.services.chunking_service import chunk_text
+from app.services.goal_engine import analyze_and_update_goals
 from app.utils.rate_limit import limiter, RATE_AI_PROCESS, RATE_AI_EMBEDDING, RATE_AI_FEED
 from app.utils.cache import bust_cache
 
@@ -43,6 +44,7 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 async def process_content(
     request: Request,
     body: ProcessContentRequest,
+    background_tasks: BackgroundTasks,
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
     settings: Settings = Depends(get_settings),
@@ -163,7 +165,23 @@ async def process_content(
         content.get("content_type", "post"),
     )
 
-    # 8. Bust caches that may be stale now
+    # 8. Schedule goal analysis as a background task so the response returns
+    #    immediately — goal processing happens after the HTTP response is sent.
+    async def _run_goal_analysis() -> None:
+        try:
+            await analyze_and_update_goals(
+                db=db,
+                user_id=content["user_id"],
+                new_content=content,
+                ai_result=ai_result,
+                settings=settings,
+            )
+        except Exception as exc:
+            logger.warning("Goal analysis failed for %s (non-fatal): %s", content_id, exc)
+
+    background_tasks.add_task(_run_goal_analysis)
+
+    # 9. Bust caches that may be stale now
     bust_cache("popular_tags:*")
     bust_cache("categories:*")
 

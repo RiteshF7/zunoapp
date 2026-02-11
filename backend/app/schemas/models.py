@@ -271,6 +271,55 @@ class ReindexResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Goals
+# ---------------------------------------------------------------------------
+class GoalStepOut(BaseModel):
+    """A single step within a goal."""
+    id: str
+    goal_id: str
+    step_index: int = 0
+    title: str
+    description: str = ""
+    source_content_ids: list[str] = []
+    is_completed: bool = False
+    completed_at: str | None = None
+    created_at: str
+    updated_at: str
+
+
+class GoalOut(BaseModel):
+    """Goal summary (without steps — used in list views)."""
+    id: str
+    user_id: str
+    title: str
+    description: str = ""
+    category: str = ""
+    status: str = "active"
+    confidence: float = 0.5
+    evidence_content_ids: list[str] = []
+    created_at: str
+    updated_at: str
+
+
+class GoalDetailOut(GoalOut):
+    """Goal with all steps included."""
+    steps: list[GoalStepOut] = []
+    ai_reasoning: str = ""
+
+
+class GoalUpdate(BaseModel):
+    """Updatable fields for a goal."""
+    title: str | None = None
+    description: str | None = None
+    status: str | None = None  # "active" | "completed" | "dismissed"
+
+
+class GoalStepUpdate(BaseModel):
+    """Toggle step completion."""
+    is_completed: bool
+
+
+# ---------------------------------------------------------------------------
 # App Config (global — same for all users)
 # ---------------------------------------------------------------------------
 class FeatureFlags(BaseModel):

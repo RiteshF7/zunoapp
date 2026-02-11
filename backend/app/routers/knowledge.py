@@ -147,6 +147,7 @@ async def ask_knowledge(
             settings=settings,
             temperature=prompt_config.get("temperature", 0.3),
             max_output_tokens=prompt_config.get("max_output_tokens", 2048),
+            expanded_query=expanded_query,
         )
     except Exception as exc:
         logger.error("Answer generation failed: %s", exc)

@@ -169,11 +169,14 @@ async def generate_rag_answer(
     settings: Settings,
     temperature: float = 0.3,
     max_output_tokens: int = 2048,
+    expanded_query: str | None = None,
 ) -> str:
     """Generate a grounded answer from retrieved context chunks.
 
     Builds a formatted context block and passes it together with the
-    query to the LLM.
+    query to the LLM.  When *expanded_query* differs from *query* it is
+    included as an interpretation hint so the LLM can connect typos /
+    abbreviations with the actual terms found in the context.
     """
     provider = _get_provider(settings)
 
@@ -196,9 +199,19 @@ async def generate_rag_answer(
         )
 
     context_block = "\n\n---\n\n".join(context_parts)
+
+    # Include an interpretation hint when the query was expanded
+    interpretation_hint = ""
+    if expanded_query and expanded_query != query:
+        interpretation_hint = (
+            f"\n\n## Query Interpretation\n\n"
+            f"The user typed \"{query}\" which likely refers to: {expanded_query}. "
+            f"Use this interpretation to connect the question with the retrieved context."
+        )
+
     user_message = (
         f"## Retrieved Context\n\n{context_block}\n\n"
-        f"---\n\n"
+        f"---{interpretation_hint}\n\n"
         f"## User Question\n\n{query}"
     )
 

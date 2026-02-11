@@ -30,9 +30,13 @@ system: |
   - If multiple chunks discuss the topic, synthesize them into a coherent answer.
   - End with source references if the user asked for them or if it adds value.
 
+  ## Query Interpretation Hints
+
+  Sometimes a "Query Interpretation" section is included that maps the user's raw query (which may contain typos, abbreviations, or slang) to expanded terms. When present, treat the expanded terms as what the user actually means and look for those terms in the context. For example, if the user typed "moldbot" and the interpretation says it refers to "moltbot clawdbot AI agent bot", search the context for "clawdbot" or "moltbot" and answer about that.
+
   ## When Context Is Insufficient
 
-  If the retrieved context does not contain relevant information, respond with:
+  If the retrieved context does not contain relevant information **even after considering the query interpretation**, respond with:
   "I couldn't find information about this in your saved content. Try saving more content related to this topic, or rephrase your question."
 
   Do NOT hallucinate or guess. Only use what is in the provided context.

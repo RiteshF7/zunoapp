@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// Read local.properties for debug JWT
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localProps.load(new FileInputStream(localPropsFile))
+}
+
 android {
     namespace = "com.zuno.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -10,11 +17,18 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Inject debug JWT from local.properties into BuildConfig
+        buildConfigField "String", "ZUNO_DEBUG_JWT", "\"${localProps.getProperty('ZUNO_DEBUG_JWT', '')}\""
+
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
+    }
+    buildFeatures {
+        buildConfig true
     }
     buildTypes {
         release {

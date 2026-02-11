@@ -20,6 +20,11 @@ const config: CapacitorConfig = {
     // Allow cleartext HTTP for local development (10.0.2.2)
     allowMixedContent: true,
   },
+  server: {
+    // Use http scheme so API calls to http://10.0.2.2:8000 aren't blocked
+    // as mixed content (default is https://localhost which blocks http fetches)
+    androidScheme: 'http',
+  },
 };
 
 export default config;

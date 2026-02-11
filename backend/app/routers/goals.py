@@ -10,12 +10,18 @@ from app.config import Settings, get_settings
 from app.dependencies import get_current_user, get_supabase
 from app.schemas.models import (
     GoalDetailOut,
+    GoalMergeSuggestionOut,
     GoalOut,
     GoalStepOut,
     GoalStepUpdate,
     GoalUpdate,
 )
-from app.services.goal_engine import analyze_and_update_goals
+from app.services.goal_engine import (
+    analyze_and_update_goals,
+    apply_consolidation,
+    check_and_suggest_consolidation,
+    dismiss_consolidation,
+)
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 
 logger = logging.getLogger(__name__)
@@ -56,6 +62,116 @@ async def list_goals(
 
 
 # ---------------------------------------------------------------------------
+# POST /api/goals/consolidate — manually trigger consolidation check
+# ---------------------------------------------------------------------------
+@router.post("/consolidate")
+@limiter.limit("3/hour")
+async def consolidate_goals(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+    settings: Settings = Depends(get_settings),
+):
+    """Manually trigger goal consolidation analysis.
+
+    Checks all active goals for possible merges and creates suggestions.
+    """
+    async def _run_consolidation() -> None:
+        try:
+            await check_and_suggest_consolidation(db, user_id, settings)
+        except Exception as exc:
+            logger.warning("Manual consolidation failed for user %s: %s", user_id, exc)
+
+    background_tasks.add_task(_run_consolidation)
+
+    return {
+        "success": True,
+        "message": "Consolidation analysis started. Check suggestions shortly.",
+    }
+
+
+# ---------------------------------------------------------------------------
+# GET /api/goals/suggestions — list pending merge suggestions
+# ---------------------------------------------------------------------------
+@router.get("/suggestions", response_model=list[GoalMergeSuggestionOut])
+@limiter.limit(RATE_READ)
+async def list_suggestions(
+    request: Request,
+    status: str = Query("pending", description="Filter by status: pending, accepted, dismissed"),
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """List goal merge suggestions for the user."""
+    valid_statuses = {"pending", "accepted", "dismissed"}
+    if status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}",
+        )
+
+    result = (
+        db.table("goal_merge_suggestions")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("status", status)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return result.data or []
+
+
+# ---------------------------------------------------------------------------
+# POST /api/goals/suggestions/{suggestion_id}/accept — accept merge
+# ---------------------------------------------------------------------------
+@router.post("/suggestions/{suggestion_id}/accept")
+@limiter.limit(RATE_WRITE)
+async def accept_suggestion(
+    request: Request,
+    suggestion_id: str,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Accept a merge suggestion — creates a parent goal and links children."""
+    try:
+        parent_goal = await apply_consolidation(db, user_id, suggestion_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        logger.error("Failed to apply consolidation %s: %s", suggestion_id, exc)
+        raise HTTPException(status_code=500, detail="Failed to apply consolidation")
+
+    return {
+        "success": True,
+        "message": "Goals merged successfully!",
+        "parent_goal_id": parent_goal["id"],
+    }
+
+
+# ---------------------------------------------------------------------------
+# POST /api/goals/suggestions/{suggestion_id}/dismiss — reject merge
+# ---------------------------------------------------------------------------
+@router.post("/suggestions/{suggestion_id}/dismiss")
+@limiter.limit(RATE_WRITE)
+async def dismiss_suggestion(
+    request: Request,
+    suggestion_id: str,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Dismiss a merge suggestion so it won't be re-suggested."""
+    try:
+        await dismiss_consolidation(db, user_id, suggestion_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        logger.error("Failed to dismiss suggestion %s: %s", suggestion_id, exc)
+        raise HTTPException(status_code=500, detail="Failed to dismiss suggestion")
+
+    return {"success": True, "message": "Suggestion dismissed."}
+
+
+# ---------------------------------------------------------------------------
 # GET /api/goals/{goal_id} — goal detail with steps
 # ---------------------------------------------------------------------------
 @router.get("/{goal_id}", response_model=GoalDetailOut)
@@ -66,7 +182,7 @@ async def get_goal(
     user_id: str = Depends(get_current_user),
     db: Client = Depends(get_supabase),
 ):
-    """Get a single goal with all its steps."""
+    """Get a single goal with all its steps and child goals."""
     goal_result = (
         db.table("user_goals")
         .select("*")
@@ -89,6 +205,17 @@ async def get_goal(
         .execute()
     )
     goal["steps"] = steps_result.data or []
+
+    # Fetch child goals (sub-goals linked to this parent)
+    children_result = (
+        db.table("user_goals")
+        .select("*")
+        .eq("parent_goal_id", goal_id)
+        .eq("user_id", user_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+    goal["children"] = children_result.data or []
 
     return goal
 

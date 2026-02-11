@@ -7,6 +7,11 @@ Called after every content save to:
 4. Send everything to Vertex AI for goal analysis.
 5. Apply changes: update personality, create/update goals and steps.
 
+Also provides goal consolidation:
+- Detects when multiple active goals are sub-goals of a bigger goal.
+- Suggests merges to the user (stored as pending suggestions).
+- Applies accepted merges by creating parent-child goal hierarchies.
+
 Optimizations applied:
 - N+1 fix: batch-fetches all goal steps in one query.
 - Parallel context fetching via asyncio.gather / to_thread.
@@ -48,6 +53,8 @@ _MAX_USER_PROMPT_TOKENS = 6000
 _CHARS_PER_TOKEN = 4
 # Similarity threshold for considering two goal titles as duplicates
 _GOAL_DUPLICATE_THRESHOLD = 0.80
+# Minimum number of active goals before running consolidation check
+_MIN_GOALS_FOR_CONSOLIDATION = 3
 
 # ── Personality cache (in-memory, process-local) ─────────────────────────
 _personality_cache: dict[str, tuple[float, dict[str, Any]]] = {}
@@ -215,6 +222,15 @@ async def analyze_and_update_goals(
         len(similar_content),
         len(goal_changes),
     )
+
+    # ── Consolidation check: suggest merges when 3+ active goals exist ────
+    # Re-fetch active goals to include any just-created ones
+    try:
+        updated_goals = await asyncio.to_thread(_fetch_active_goals, db, user_id)
+        if len(updated_goals) >= _MIN_GOALS_FOR_CONSOLIDATION:
+            await check_and_suggest_consolidation(db, user_id, settings)
+    except Exception as exc:
+        logger.warning("Consolidation check failed for user %s: %s", user_id, exc)
 
 
 # ---------------------------------------------------------------------------
@@ -905,3 +921,332 @@ def _resolve_content_ids(
                 if cid:
                     ids.add(cid)
     return list(ids)
+
+
+# ---------------------------------------------------------------------------
+# Goal Consolidation — merge detection & suggestions
+# ---------------------------------------------------------------------------
+async def check_and_suggest_consolidation(
+    db: Client,
+    user_id: str,
+    settings: Settings,
+) -> list[dict[str, Any]]:
+    """Analyze active goals and create merge suggestions if applicable.
+
+    Returns a list of suggestion dicts that were created (may be empty).
+    """
+    if not settings.gcp_project_id:
+        logger.debug("Consolidation skipped — no AI provider configured.")
+        return []
+
+    # Fetch active goals (only top-level — exclude already-parented goals)
+    active_goals = await asyncio.to_thread(_fetch_active_goals, db, user_id)
+    top_level = [g for g in active_goals if not g.get("parent_goal_id")]
+
+    if len(top_level) < _MIN_GOALS_FOR_CONSOLIDATION:
+        logger.debug(
+            "Consolidation skipped for user %s — only %d top-level goals",
+            user_id, len(top_level),
+        )
+        return []
+
+    # Check for existing pending suggestions to avoid spamming
+    existing_pending = await asyncio.to_thread(
+        _fetch_pending_suggestions, db, user_id,
+    )
+    # Build a set of goal-ID frozensets already covered by pending suggestions
+    pending_goal_sets: list[frozenset[str]] = []
+    for suggestion in existing_pending:
+        child_ids = suggestion.get("child_goal_ids") or []
+        if child_ids:
+            pending_goal_sets.append(frozenset(child_ids))
+
+    # Fetch personality for context
+    personality = _fetch_personality_cached(db, user_id)
+
+    # Build prompt
+    prompt_config = get_prompt("goal_consolidation")
+    system_prompt = prompt_config["system"]
+    temperature = prompt_config.get("temperature", 0.3)
+    max_tokens = prompt_config.get("max_output_tokens", 4096)
+
+    goals_ctx = _format_goals_context(top_level)
+    personality_ctx = _format_personality_context(personality)
+
+    user_prompt = prompt_config["user_template"].format(
+        goals_context=goals_ctx,
+        personality_context=personality_ctx,
+    )
+
+    # Call Vertex AI
+    provider = _get_provider(settings)
+    try:
+        raw_json = await provider.generate_text(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            json_mode=True,
+        )
+        ai_response = json.loads(raw_json)
+    except Exception as exc:
+        logger.error("Goal consolidation AI call failed: %s", exc)
+        raise
+
+    suggestions = ai_response.get("consolidation_suggestions", [])
+    if not suggestions:
+        logger.info("No consolidation suggestions for user %s", user_id)
+        return []
+
+    # Validate and store suggestions
+    valid_goal_ids = {g["id"] for g in top_level}
+    created_suggestions: list[dict[str, Any]] = []
+
+    for suggestion in suggestions:
+        child_ids = suggestion.get("child_goal_ids", [])
+
+        # Validate: all child IDs must be real active goals
+        if not child_ids or len(child_ids) < 2:
+            logger.warning("Skipping suggestion with < 2 children: %s", suggestion)
+            continue
+        if not all(cid in valid_goal_ids for cid in child_ids):
+            logger.warning(
+                "Skipping suggestion with invalid goal IDs: %s", child_ids,
+            )
+            continue
+
+        # Skip if a pending suggestion already covers these goals
+        child_set = frozenset(child_ids)
+        if any(child_set == ps for ps in pending_goal_sets):
+            logger.info(
+                "Skipping duplicate consolidation suggestion for goals %s",
+                child_ids,
+            )
+            continue
+
+        # Also skip if there's significant overlap with a dismissed suggestion
+        dismissed = await asyncio.to_thread(
+            _fetch_dismissed_suggestions, db, user_id,
+        )
+        dismissed_sets = [
+            frozenset(d.get("child_goal_ids") or []) for d in dismissed
+        ]
+        if any(child_set == ds for ds in dismissed_sets):
+            logger.info(
+                "Skipping previously dismissed suggestion for goals %s",
+                child_ids,
+            )
+            continue
+
+        # Store the suggestion
+        row = {
+            "user_id": user_id,
+            "suggested_parent_title": suggestion.get("parent_title", "Untitled"),
+            "suggested_parent_description": suggestion.get("parent_description", ""),
+            "suggested_parent_category": suggestion.get("parent_category", ""),
+            "child_goal_ids": child_ids,
+            "ai_reasoning": suggestion.get("reasoning", ""),
+            "new_steps": suggestion.get("new_steps", []),
+            "status": "pending",
+        }
+        try:
+            result = db.table("goal_merge_suggestions").insert(row).execute()
+            if result.data:
+                created_suggestions.append(result.data[0])
+                pending_goal_sets.append(child_set)
+                logger.info(
+                    "Created consolidation suggestion '%s' for user %s "
+                    "merging %d goals",
+                    suggestion.get("parent_title"),
+                    user_id,
+                    len(child_ids),
+                )
+        except Exception as exc:
+            logger.error("Failed to store consolidation suggestion: %s", exc)
+
+    return created_suggestions
+
+
+async def apply_consolidation(
+    db: Client,
+    user_id: str,
+    suggestion_id: str,
+) -> dict[str, Any]:
+    """Accept a merge suggestion: create parent goal, link children, merge steps.
+
+    Returns the created parent goal dict.
+    """
+    # Fetch the suggestion
+    suggestion_result = (
+        db.table("goal_merge_suggestions")
+        .select("*")
+        .eq("id", suggestion_id)
+        .eq("user_id", user_id)
+        .eq("status", "pending")
+        .single()
+        .execute()
+    )
+    if not suggestion_result.data:
+        raise ValueError("Suggestion not found or already processed")
+
+    suggestion = suggestion_result.data
+    child_goal_ids = suggestion.get("child_goal_ids", [])
+
+    # Fetch the child goals with their steps
+    child_goals = []
+    for cid in child_goal_ids:
+        goal_res = (
+            db.table("user_goals")
+            .select("*")
+            .eq("id", cid)
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if goal_res.data:
+            goal = goal_res.data[0]
+            steps_res = (
+                db.table("goal_steps")
+                .select("*")
+                .eq("goal_id", cid)
+                .order("step_index")
+                .execute()
+            )
+            goal["steps"] = steps_res.data or []
+            child_goals.append(goal)
+
+    if len(child_goals) < 2:
+        raise ValueError("Not enough valid child goals to merge")
+
+    # Calculate average confidence from children
+    avg_confidence = sum(g.get("confidence", 0.5) for g in child_goals) / len(child_goals)
+    avg_confidence = min(1.0, math.ceil(avg_confidence * 100) / 100)
+
+    # Merge all evidence content IDs from children
+    all_evidence: set[str] = set()
+    for g in child_goals:
+        for eid in (g.get("evidence_content_ids") or []):
+            all_evidence.add(eid)
+
+    # Create the parent goal
+    parent_result = (
+        db.table("user_goals")
+        .insert({
+            "user_id": user_id,
+            "title": suggestion.get("suggested_parent_title", "Consolidated Goal"),
+            "description": suggestion.get("suggested_parent_description", ""),
+            "category": suggestion.get("suggested_parent_category", ""),
+            "status": "active",
+            "confidence": avg_confidence,
+            "evidence_content_ids": list(all_evidence),
+            "ai_reasoning": suggestion.get("ai_reasoning", ""),
+        })
+        .execute()
+    )
+
+    if not parent_result.data:
+        raise ValueError("Failed to create parent goal")
+
+    parent_goal = parent_result.data[0]
+    parent_id = parent_goal["id"]
+
+    # Link child goals to parent
+    for cid in child_goal_ids:
+        db.table("user_goals").update({
+            "parent_goal_id": parent_id,
+        }).eq("id", cid).eq("user_id", user_id).execute()
+
+    # Carry completed steps from children into the parent goal
+    step_index = 0
+    for child in child_goals:
+        for step in child.get("steps", []):
+            if step.get("is_completed"):
+                db.table("goal_steps").insert({
+                    "goal_id": parent_id,
+                    "step_index": step_index,
+                    "title": step.get("title", ""),
+                    "description": step.get("description", ""),
+                    "source_content_ids": step.get("source_content_ids", []),
+                    "is_completed": True,
+                    "completed_at": step.get("completed_at"),
+                }).execute()
+                step_index += 1
+
+    # Insert AI-generated new steps for the parent
+    new_steps = suggestion.get("new_steps") or []
+    for new_step in new_steps:
+        if isinstance(new_step, dict):
+            db.table("goal_steps").insert({
+                "goal_id": parent_id,
+                "step_index": step_index,
+                "title": new_step.get("title", ""),
+                "description": new_step.get("description", ""),
+                "source_content_ids": [],
+                "is_completed": False,
+            }).execute()
+            step_index += 1
+
+    # Mark the suggestion as accepted
+    db.table("goal_merge_suggestions").update({
+        "status": "accepted",
+    }).eq("id", suggestion_id).execute()
+
+    logger.info(
+        "Applied consolidation '%s' (parent=%s) merging %d goals for user %s",
+        suggestion.get("suggested_parent_title"),
+        parent_id,
+        len(child_goal_ids),
+        user_id,
+    )
+
+    return parent_goal
+
+
+async def dismiss_consolidation(
+    db: Client,
+    user_id: str,
+    suggestion_id: str,
+) -> None:
+    """Dismiss a merge suggestion so it won't be re-suggested."""
+    result = (
+        db.table("goal_merge_suggestions")
+        .update({"status": "dismissed"})
+        .eq("id", suggestion_id)
+        .eq("user_id", user_id)
+        .eq("status", "pending")
+        .execute()
+    )
+    if not result.data:
+        raise ValueError("Suggestion not found or already processed")
+
+    logger.info("Dismissed consolidation suggestion %s for user %s", suggestion_id, user_id)
+
+
+# ---------------------------------------------------------------------------
+# Consolidation helpers
+# ---------------------------------------------------------------------------
+def _fetch_pending_suggestions(
+    db: Client, user_id: str,
+) -> list[dict[str, Any]]:
+    """Fetch all pending merge suggestions for a user."""
+    result = (
+        db.table("goal_merge_suggestions")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("status", "pending")
+        .execute()
+    )
+    return result.data or []
+
+
+def _fetch_dismissed_suggestions(
+    db: Client, user_id: str,
+) -> list[dict[str, Any]]:
+    """Fetch dismissed merge suggestions to avoid re-suggesting."""
+    result = (
+        db.table("goal_merge_suggestions")
+        .select("child_goal_ids")
+        .eq("user_id", user_id)
+        .eq("status", "dismissed")
+        .execute()
+    )
+    return result.data or []

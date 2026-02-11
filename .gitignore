@@ -36,6 +36,12 @@ frontend/ios/
 .metro-health-check*
 
 # ===========================
+# UI (Vite)
+# ===========================
+backend/ui/node_modules/
+backend/ui/dist/
+
+# ===========================
 # Backend (Python / FastAPI)
 # ===========================
 backend/venv/

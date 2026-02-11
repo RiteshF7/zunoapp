@@ -1,0 +1,23 @@
+/* ── Theme Variables ── */
+:root {
+  --c-bg: #F8FAFC;
+  --c-surface: #FFFFFF;
+  --c-surface-hover: #F1F5F9;
+  --c-border: #E2E8F0;
+  --c-muted: #64748B;
+  --c-heading: #0f172a;
+  --c-body: #334155;
+  --c-shadow: rgba(0,0,0,0.06);
+  --c-nav-bg: rgba(248,250,252,0.92);
+}
+.dark {
+  --c-bg: #0f1117;
+  --c-surface: #1a1d27;
+  --c-surface-hover: #242836;
+  --c-border: #2a2e3a;
+  --c-muted: #9ca3af;
+  --c-heading: #f1f5f9;
+  --c-body: #cbd5e1;
+  --c-shadow: rgba(0,0,0,0.35);
+  --c-nav-bg: rgba(26,29,39,0.92);
+}

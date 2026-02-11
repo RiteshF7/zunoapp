@@ -1,0 +1,30 @@
+/* ── Base ── */
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--c-bg);
+  color: var(--c-body);
+}
+* { box-sizing: border-box; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+pre { white-space: pre-wrap; word-break: break-word; }
+
+/* ── Focus ── */
+:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; border-radius: 8px; }
+
+/* ── Safe Area ── */
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ── Nav Glass ── */
+.nav-glass {
+  background: var(--c-nav-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }

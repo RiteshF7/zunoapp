@@ -1,0 +1,99 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════════════════════════
+import { navigate, getRoute } from './navigate.js';
+import { _prevPage, setPrevPage } from './state.js';
+import { skeletonCards, skeletonDetail, loadingSpinner } from '../components/skeleton.js';
+
+import { renderAuth } from '../pages/auth.js';
+import { renderHome } from '../pages/home.js';
+import { renderLibrary } from '../pages/library.js';
+import { renderContentDetail } from '../pages/content-detail.js';
+import { renderCollectionDetail } from '../pages/collection-detail.js';
+import { renderGoals } from '../pages/goals.js';
+import { renderGoalDetail } from '../pages/goal-detail.js';
+import { renderSearch } from '../pages/search.js';
+import { renderKnowledge } from '../pages/knowledge.js';
+import { renderProfile } from '../pages/profile.js';
+
+const _detailPages = ['content-detail', 'collection', 'goal-detail'];
+
+function getTransition(page) {
+  if (!_prevPage) return 'fade-in';
+  if (_detailPages.includes(page) && !_detailPages.includes(_prevPage)) return 'slide-in-right';
+  if (_detailPages.includes(_prevPage) && !_detailPages.includes(page)) return 'slide-in-left';
+  return 'fade-in';
+}
+
+export async function router() {
+  const token = localStorage.getItem('zuno_token');
+  const { page, id } = getRoute();
+
+  // Auth guard
+  if (!token && page !== 'auth') { navigate('#auth'); return; }
+  if (token && page === 'auth') { navigate('#home'); return; }
+
+  // Backward compat redirects
+  if (page === 'feed') { navigate('#home'); return; }
+  if (page === 'content') { navigate('#library'); return; }
+  if (page === 'collections') { navigate('#library'); return; }
+  if (page === 'admin') { navigate('#profile'); return; }
+
+  // Show/hide shell
+  const isAuth = page === 'auth';
+  document.getElementById('topnav').classList.toggle('hidden', isAuth);
+  document.getElementById('topnav').classList.toggle('flex', !isAuth);
+  document.getElementById('bottomnav').classList.toggle('hidden', isAuth);
+  document.getElementById('fab-btn').classList.toggle('hidden', page !== 'library');
+
+  // Update active nav tab
+  const tabMap = {
+    home: 'home', library: 'library', 'content-detail': 'library', collection: 'library',
+    goals: 'goals', 'goal-detail': 'goals', knowledge: 'knowledge',
+  };
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    const active = btn.dataset.tab === tabMap[page];
+    btn.classList.toggle('text-accent', active);
+    btn.classList.toggle('text-muted', !active);
+  });
+
+  const main = document.getElementById('page');
+  const transition = getTransition(page);
+  setPrevPage(page);
+
+  // Show skeleton loading
+  const skeletonMap = {
+    home: skeletonCards(3),
+    library: skeletonCards(3),
+    goals: skeletonCards(3),
+    'content-detail': skeletonDetail(),
+    'goal-detail': skeletonDetail(),
+    collection: skeletonDetail(),
+  };
+  main.innerHTML = `<div class="${transition}">${skeletonMap[page] || loadingSpinner()}</div>`;
+
+  try {
+    switch (page) {
+      case 'auth': renderAuth(main); break;
+      case 'home': await renderHome(main); break;
+      case 'library': await renderLibrary(main, id); break;
+      case 'content-detail': await renderContentDetail(main, id); break;
+      case 'collection': await renderCollectionDetail(main, id); break;
+      case 'goals': await renderGoals(main); break;
+      case 'goal-detail': await renderGoalDetail(main, id); break;
+      case 'search': await renderSearch(main); break;
+      case 'knowledge': await renderKnowledge(main); break;
+      case 'profile': await renderProfile(main); break;
+      default: navigate('#home');
+    }
+  } catch (err) {
+    main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in">
+      <span class="material-icons-round text-5xl text-danger/40 mb-3">error_outline</span>
+      <p class="text-heading font-semibold mb-1">Something went wrong</p>
+      <p class="text-muted text-sm">${err.message}</p>
+    </div>`;
+  }
+}
+
+// Expose router globally so pages can call it
+window.router = router;

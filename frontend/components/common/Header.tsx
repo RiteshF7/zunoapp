@@ -64,7 +64,7 @@ export function Header({
       {/* Right side: Action buttons */}
       <View className="flex-row gap-2">
         {actions.map((action, index) => (
-          <IconButton key={index} onPress={action.onPress}>
+          <IconButton key={`${action.icon}-${index}`} onPress={action.onPress}>
             <Icon
               name={action.icon}
               size={22}

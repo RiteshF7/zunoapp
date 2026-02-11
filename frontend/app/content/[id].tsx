@@ -198,7 +198,7 @@ export default function ContentDetailScreen() {
                     </Text>
                   </View>
                   {structured.key_points.map((point, idx) => (
-                    <View key={idx} className="flex-row mb-2.5">
+                    <View key={`kp-${idx}`} className="flex-row mb-2.5">
                       <View
                         className="w-6 h-6 rounded-full items-center justify-center mr-3 mt-0.5"
                         style={{
@@ -235,7 +235,7 @@ export default function ContentDetailScreen() {
                     </Text>
                   </View>
                   {structured.action_items.map((item, idx) => (
-                    <View key={idx} className="flex-row mb-2.5">
+                    <View key={`ai-${idx}`} className="flex-row mb-2.5">
                       <View
                         className="w-6 h-6 rounded-md items-center justify-center mr-3 mt-0.5"
                         style={{

@@ -49,7 +49,10 @@ export function ContentFeedList({
     [onItemPress]
   );
 
-  const keyExtractor = useCallback((item: Content) => item.id, []);
+  const keyExtractor = useCallback(
+    (item: Content, index: number) => item.id ?? `content-${index}`,
+    []
+  );
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

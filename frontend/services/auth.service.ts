@@ -11,6 +11,9 @@ export const authService = {
       options: {
         redirectTo: "zunoapp://auth/callback",
         skipBrowserRedirect: true,
+        queryParams: {
+          prompt: "select_account",
+        },
       },
     });
     return { error: error as Error | null, url: data?.url ?? undefined };

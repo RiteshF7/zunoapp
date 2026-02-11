@@ -39,7 +39,7 @@ export function FeedList({
   return (
     <FlatList
       data={items}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item, index) => item.id ?? `feed-${index}`}
       renderItem={({ item }) => (
         <FeedCard
           item={item}

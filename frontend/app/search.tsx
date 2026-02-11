@@ -126,7 +126,7 @@ export default function SearchScreen() {
           </View>
           {recentSearches.map((term, i) => (
             <Pressable
-              key={i}
+              key={`recent-${term}-${i}`}
               onPress={() => {
                 setQuery(term);
                 search(term);
@@ -221,7 +221,7 @@ export default function SearchScreen() {
       {results.length > 0 ? (
         <FlatList
           data={results}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id ?? `result-${index}`}
           renderItem={renderSearchResult}
           ListHeaderComponent={
             <Text className="px-6 py-2 text-xs text-slate-400 dark:text-slate-500">

@@ -189,7 +189,7 @@ export default function CollectionDetailScreen() {
       ) : (
         <FlatList
           data={feedItems}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id ?? `item-${index}`}
           renderItem={renderItem}
           ListHeaderComponent={ListHeader}
           ListEmptyComponent={EmptyState}

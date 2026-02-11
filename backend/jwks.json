@@ -7,11 +7,11 @@
       "key_ops": [
         "verify"
       ],
-      "kid": "d0217ae4-e839-464e-a526-e20c8461ec29",
+      "kid": "41e9e622-86c2-473b-ac04-e45168fa828d",
       "kty": "EC",
       "use": "sig",
-      "x": "7lhFwVdepCctX1JA6o3btrKjmRb0AYqcnwZuKG2-m3U",
-      "y": "bAnfgtBOdG0xw7Tm663bmBihigW48_0MT2QTVgyp4OQ"
+      "x": "4hR-vpNo-YsvLQjF9XoKjq434gOvUmDEndy7RXK06uU",
+      "y": "l1pBYjpMXnJLrqlRNiYN8rxB4_7nH8E94O8Y66Lkxmk"
     }
   ]
 }

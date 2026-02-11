@@ -1,0 +1,20 @@
+{
+  "name": "zuno-mobile",
+  "version": "1.0.0",
+  "description": "Zuno mobile app — Capacitor wrapper for the HTML UI",
+  "private": true,
+  "scripts": {
+    "sync": "npx cap sync",
+    "open:android": "npx cap open android",
+    "build:android": "npx cap sync android && cd android && ./gradlew assembleDebug",
+    "copy": "npx cap copy"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/core": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.2",
+    "typescript": "^5.9.3"
+  }
+}

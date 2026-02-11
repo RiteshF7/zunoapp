@@ -54,6 +54,10 @@ async def get_user_preferences(
         logger.warning("user_preferences table query failed (table may not exist): %s", exc)
         return _default_prefs(user_id)
 
+    if result is None:
+        logger.warning("user_preferences query returned None (table may not exist)")
+        return _default_prefs(user_id)
+
     if result.data:
         return result.data
 

@@ -807,11 +807,13 @@ def _update_goal(
     if new_description:
         update_payload["description"] = new_description
 
-    # Add new evidence content IDs
+    # Add new evidence content IDs (skip None/non-int values)
     add_indices = change.get("add_evidence_content_indices", [])
     if add_indices:
         new_evidence_ids = []
         for idx in add_indices:
+            if not isinstance(idx, int):
+                continue
             if 0 <= idx < len(related_content):
                 cid = related_content[idx].get("id")
                 if cid:
@@ -865,9 +867,11 @@ def _insert_steps(
 
     rows = []
     for i, step in enumerate(steps):
-        # Resolve source content IDs from indices
+        # Resolve source content IDs from indices (skip None/non-int values)
         source_ids = []
         for idx in step.get("source_content_indices", []):
+            if not isinstance(idx, int):
+                continue
             if 0 <= idx < len(related_content):
                 cid = related_content[idx].get("id")
                 if cid:
@@ -894,6 +898,8 @@ def _resolve_content_ids(
     ids: set[str] = set()
     for step in steps:
         for idx in step.get("source_content_indices", []):
+            if not isinstance(idx, int):
+                continue
             if 0 <= idx < len(related_content):
                 cid = related_content[idx].get("id")
                 if cid:

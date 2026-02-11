@@ -10,6 +10,7 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
 
+        <!-- Main Capacitor activity (launcher + OAuth deep link) -->
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"
@@ -30,21 +31,31 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="com.zuno.app" />
             </intent-filter>
+        </activity>
 
-            <!-- Share target: receive URLs and text from other apps -->
+        <!-- Invisible share-receiver: handles ACTION_SEND from other apps
+             without ever showing the Zuno UI. Shows a native Toast and finishes. -->
+        <activity
+            android:name=".ShareReceiverActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.Transparent"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:exported="true">
+
+            <!-- Receive URLs and text -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
-            <!-- Share target: receive images from other apps -->
+            <!-- Receive images -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
-
         </activity>
 
         <provider

@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 // 1. Import CSS (Vite will bundle these)
+import './styles/splash.css';
 import './styles/theme.css';
 import './styles/base.css';
 import './styles/animations.css';
@@ -60,5 +61,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // If Supabase redirected back with tokens in the hash (web flow), handle them first
   const handled = await handleOAuthCallback();
   // Then run the router (handleOAuthCallback already set the hash to #home if successful)
-  router();
+  await router();
+  // Dismiss the splash screen now that the app is ready
+  if (typeof hideSplash === 'function') hideSplash();
 });

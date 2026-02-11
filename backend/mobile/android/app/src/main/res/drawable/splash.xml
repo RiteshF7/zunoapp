@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple solid-color splash background that matches the HTML splash screen.
+     Off-white (#FAFAF9) blends seamlessly into the WebView splash overlay. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FAFAF9" />
+</shape>

@@ -6,6 +6,7 @@
   <title>Zuno</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
   <script>
     tailwind.config = {
@@ -25,7 +26,9 @@
             warning: '#f59e0b',
             danger: '#ef4444',
           },
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+          },
           borderRadius: { DEFAULT: '1.25rem', xl: '1.5rem', '2xl': '2rem' },
           boxShadow: {
             card: '0 1px 3px var(--c-shadow)',
@@ -35,10 +38,76 @@
       },
     };
   </script>
-  <script type="module" crossorigin src="./assets/index-Bjl5gJ7T.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-CROkThRQ.css">
+  <script type="module" crossorigin src="./assets/index-BmCPzZqM.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-D-DuzcW6.css">
 </head>
 <body class="min-h-screen antialiased">
+
+  <!-- ======================= SPLASH SCREEN ======================= -->
+  <div id="splash-screen"
+       class="fixed inset-0 z-[80] flex flex-col items-center justify-between overflow-hidden transition-opacity duration-500"
+       style="background-color: #FAFAF9;">
+    <div class="h-16 w-full"></div>
+    <div class="flex flex-col items-center justify-center gap-16">
+      <div class="relative w-32 h-32 flex items-center justify-center">
+        <svg class="w-full h-full" viewBox="0 0 100 100">
+          <line class="splash-stroke" x1="50" y1="20" x2="80" y2="40"></line>
+          <line class="splash-stroke" x1="80" y1="40" x2="70" y2="75"></line>
+          <line class="splash-stroke" x1="70" y1="75" x2="30" y2="75"></line>
+          <line class="splash-stroke" x1="30" y1="75" x2="20" y2="40"></line>
+          <line class="splash-stroke" x1="20" y1="40" x2="50" y2="20"></line>
+          <line class="splash-stroke" x1="50" y1="20" x2="70" y2="75"></line>
+          <line class="splash-stroke" x1="50" y1="20" x2="30" y2="75"></line>
+          <line class="splash-stroke" x1="80" y1="40" x2="30" y2="75"></line>
+          <line class="splash-stroke" x1="20" y1="40" x2="70" y2="75"></line>
+          <line class="splash-stroke" x1="20" y1="40" x2="80" y2="40"></line>
+          <circle class="splash-dot" cx="50" cy="20" r="1.5"></circle>
+          <circle class="splash-dot" cx="80" cy="40" r="1.5"></circle>
+          <circle class="splash-dot" cx="70" cy="75" r="1.5"></circle>
+          <circle class="splash-dot" cx="30" cy="75" r="1.5"></circle>
+          <circle class="splash-dot" cx="20" cy="40" r="1.5"></circle>
+          <circle class="splash-dot opacity-40" cx="50" cy="50" r="2"></circle>
+        </svg>
+        <div class="absolute inset-0 splash-icon-glow rounded-full blur-xl"></div>
+      </div>
+      <div class="flex flex-col items-center gap-2">
+        <h1 class="splash-text text-2xl font-extralight uppercase" style="letter-spacing: 0.6em; font-family: 'Plus Jakarta Sans', sans-serif;">ZUNO</h1>
+        <div class="h-[1px] w-8 splash-divider"></div>
+      </div>
+    </div>
+    <div class="w-full max-w-[260px] flex flex-col items-center gap-10 mb-24">
+      <div class="w-full flex flex-col gap-4">
+        <div class="flex justify-center">
+          <p class="splash-loading-text text-[10px] font-light uppercase" style="letter-spacing: 0.3em; font-family: 'Plus Jakarta Sans', sans-serif;">Loading</p>
+        </div>
+        <div class="relative h-[1px] w-full splash-track overflow-hidden">
+          <div class="absolute inset-y-0 left-0 splash-bar animate-splash-progress"></div>
+        </div>
+      </div>
+      <div class="flex flex-col items-center gap-2">
+        <p class="splash-footer-text text-[8px] font-normal uppercase text-center" style="letter-spacing: 0.5em; font-family: 'Plus Jakarta Sans', sans-serif;">Your Knowledge Network</p>
+      </div>
+    </div>
+    <div class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
+      <div class="absolute -top-[15%] -left-[10%] w-[50%] h-[50%] splash-glow-1 rounded-full blur-[120px]"></div>
+      <div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] splash-glow-2 rounded-full blur-[100px]"></div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      var s = document.getElementById('splash-screen');
+      if (s && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        s.classList.add('splash-dark');
+        s.style.backgroundColor = '#121212';
+      }
+    })();
+    function hideSplash() {
+      var s = document.getElementById('splash-screen');
+      if (!s) return;
+      s.style.opacity = '0';
+      setTimeout(function() { s.style.display = 'none'; s.remove(); }, 500);
+    }
+  </script>
 
   <!-- Skip to content (accessibility) -->
   <a href="#page" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-accent focus:text-white focus:px-4 focus:py-2 focus:rounded-xl focus:text-sm focus:font-semibold">
@@ -109,7 +178,6 @@
       <span class="toast-msg"></span>
     </div>
   </div>
-
 
 </body>
 </html>

@@ -24,16 +24,6 @@ const config: CapacitorConfig = {
     // Use http scheme so API calls to http://10.0.2.2:8000 aren't blocked
     // as mixed content (default is https://localhost which blocks http fetches)
     androidScheme: 'http',
-    // Allow OAuth domains to load inside the WebView instead of opening
-    // the system browser. This keeps the Google sign-in flow in-app and
-    // allows Supabase to redirect back to http://localhost after auth.
-    allowNavigation: [
-      'orpdwhqgcthwjnbirizx.supabase.co',
-      '*.supabase.co',
-      'accounts.google.com',
-      '*.google.com',
-      '*.googleapis.com',
-    ],
   },
 };
 

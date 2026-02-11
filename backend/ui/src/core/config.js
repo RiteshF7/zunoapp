@@ -8,19 +8,31 @@ export const SUPABASE_ANON_KEY =
   'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycGR3aHFnY3Rod2puYmlyaXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MjUxMjAsImV4cCI6MjA4NjMwMTEyMH0.' +
   '4RMhxpB6tTSDEKQfubST_TzPhsvx2Z1HT2juHZDD7qM';
 
+// Custom URL scheme for deep links (must match AndroidManifest.xml intent-filter)
+export const APP_SCHEME = 'com.zuno.app';
+export const OAUTH_CALLBACK_URL = `${APP_SCHEME}://callback`;
+
+/**
+ * Detect if we're running inside a Capacitor native shell.
+ * Capacitor sets window.Capacitor when running in a native context.
+ */
+export function isCapacitor() {
+  return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+}
+
 /**
  * Build the OAuth redirect URL based on the current environment.
+ * - Capacitor:  com.zuno.app://callback  (deep link, opens system browser → back to app)
  * - Vite dev:   http://localhost:5173/
  * - FastAPI:    http://localhost:8000/static/index.html
- * - Capacitor:  http://localhost  (WebView with no port)
  *
  * All of these must be added to the Supabase Dashboard under
  * Authentication → URL Configuration → Redirect URLs.
  */
 export function getOAuthRedirectUrl() {
-  // In Capacitor WebView there's no port → just use origin
-  if (window.location.hostname === 'localhost' && !window.location.port) {
-    return window.location.origin;
+  // In Capacitor native app, use the deep link scheme
+  if (isCapacitor()) {
+    return OAUTH_CALLBACK_URL;
   }
   // For normal web, use the full URL (strip any hash)
   return window.location.origin + window.location.pathname;

@@ -5,7 +5,10 @@ import { api } from '../core/api.js';
 import { navigate } from '../core/navigate.js';
 import { setUserProfile } from '../core/state.js';
 import { toast } from '../components/toast.js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, getOAuthRedirectUrl } from '../core/config.js';
+import {
+  SUPABASE_URL, SUPABASE_ANON_KEY,
+  getOAuthRedirectUrl, isCapacitor,
+} from '../core/config.js';
 
 export function renderAuth(el) {
   el.innerHTML = `
@@ -43,30 +46,56 @@ export function renderAuth(el) {
 
 // ─── Google OAuth ────────────────────────────────────────────────────────────
 
-function doGoogleLogin() {
+async function doGoogleLogin() {
   const redirectTo = getOAuthRedirectUrl();
   const authUrl =
     `${SUPABASE_URL}/auth/v1/authorize` +
     `?provider=google` +
     `&redirect_to=${encodeURIComponent(redirectTo)}`;
 
-  // Navigate the browser to Supabase's Google OAuth page
-  window.location.href = authUrl;
+  if (isCapacitor()) {
+    // On native: open in system browser (Chrome Custom Tab) to avoid
+    // Google's "disallowed_useragent" error in embedded WebViews.
+    // After auth, Supabase redirects to com.zuno.app://callback#access_token=...
+    // which Android catches via the intent filter and reopens the app.
+    try {
+      const { Browser } = await import('@capacitor/browser');
+      await Browser.open({ url: authUrl, windowName: '_system' });
+    } catch {
+      // Fallback: open in system browser directly
+      window.open(authUrl, '_system');
+    }
+  } else {
+    // On web: navigate directly (redirect comes back to same origin)
+    window.location.href = authUrl;
+  }
 }
 
 /**
- * Called from main.js on page load to detect an OAuth callback.
- * Supabase redirects back with tokens in the URL hash fragment:
- *   #access_token=...&refresh_token=...&expires_in=3600&token_type=bearer
+ * Handle an OAuth callback from a URL containing tokens.
+ * Works for both:
+ *   - Web: tokens in window.location.hash (#access_token=...&refresh_token=...)
+ *   - Capacitor deep link: tokens in the deep link URL fragment
  *
+ * @param {string} [url] - Optional full URL to parse (for deep links).
+ *                         If omitted, uses window.location.hash.
  * Returns true if a callback was detected and handled, false otherwise.
  */
-export async function handleOAuthCallback() {
-  const hash = window.location.hash;
-  if (!hash || !hash.includes('access_token=')) return false;
+export async function handleOAuthCallback(url) {
+  // Extract the fragment (hash) portion
+  let fragment;
+  if (url) {
+    const hashIdx = url.indexOf('#');
+    fragment = hashIdx >= 0 ? url.substring(hashIdx + 1) : '';
+  } else {
+    const hash = window.location.hash;
+    fragment = hash ? hash.substring(1) : '';
+  }
+
+  if (!fragment || !fragment.includes('access_token=')) return false;
 
   // Parse the fragment params
-  const params = new URLSearchParams(hash.substring(1));
+  const params = new URLSearchParams(fragment);
   const accessToken = params.get('access_token');
   const refreshToken = params.get('refresh_token');
 
@@ -75,6 +104,14 @@ export async function handleOAuthCallback() {
   // Store tokens
   localStorage.setItem('zuno_token', accessToken);
   if (refreshToken) localStorage.setItem('zuno_refresh_token', refreshToken);
+
+  // Close the system browser if it was opened by @capacitor/browser
+  if (isCapacitor()) {
+    try {
+      const { Browser } = await import('@capacitor/browser');
+      await Browser.close();
+    } catch { /* ignore */ }
+  }
 
   // Clear the hash fragment (replace with #home so the router picks up)
   history.replaceState(null, '', window.location.pathname + '#home');
@@ -97,7 +134,6 @@ export async function handleOAuthCallback() {
 
 /**
  * Refresh the access token using the stored refresh token.
- * Called when the access token is expired and a refresh token is available.
  * Returns true if refresh was successful.
  */
 export async function refreshAccessToken() {
@@ -136,14 +172,6 @@ export function doLogout() {
   setUserProfile(null);
   navigate('#auth');
   toast('Signed out');
-}
-
-function showAuthError(msg) {
-  const el = document.getElementById('auth-error');
-  if (el) {
-    el.textContent = msg;
-    el.classList.remove('hidden');
-  }
 }
 
 // Expose globally for onclick handlers

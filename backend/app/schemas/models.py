@@ -96,6 +96,15 @@ class ContentCreate(BaseModel):
     content_type: str = "post"
 
 
+class ContentCreateText(BaseModel):
+    """Schema for saving plain text shared from another app (no URL)."""
+    title: str | None = None
+    source_text: str
+    description: str | None = None
+    platform: str = "other"
+    content_type: str = "note"
+
+
 class ContentUpdate(BaseModel):
     url: str | None = None
     title: str | None = None

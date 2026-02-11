@@ -17,6 +17,9 @@ import { router } from './core/router.js';
 import './components/toast.js';
 import './components/modal.js';
 
+// 3b. Import share handler (registers window.handleSharedContent for native bridge)
+import './core/share-handler.js';
+
 // 4. Import pages (registers window globals for onclick handlers)
 import { handleOAuthCallback } from './pages/auth.js';
 import './pages/home.js';

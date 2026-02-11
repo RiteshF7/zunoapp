@@ -31,6 +31,20 @@
                 <data android:scheme="com.zuno.app" />
             </intent-filter>
 
+            <!-- Share target: receive URLs and text from other apps -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <!-- Share target: receive images from other apps -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
         </activity>
 
         <provider

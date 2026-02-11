@@ -1,12 +1,13 @@
-"""Content CRUD + content-with-tags."""
+"""Content CRUD + content-with-tags + share targets (text & image upload)."""
 
 import logging
+import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
-from app.schemas.models import ContentOut, ContentCreate, ContentUpdate
+from app.schemas.models import ContentOut, ContentCreate, ContentCreateText, ContentUpdate
 from app.services.metadata_service import fetch_url_metadata
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 from app.utils.url_detect import detect_platform_and_type
@@ -137,6 +138,101 @@ async def create_content(
     result = db.table("content").insert(payload).execute()
     if not result.data:
         raise HTTPException(status_code=500, detail="Failed to create content")
+    return result.data[0]
+
+
+@router.post("/text", response_model=ContentOut, status_code=201)
+@limiter.limit(RATE_WRITE)
+async def create_text_content(
+    request: Request,
+    body: ContentCreateText,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Save plain-text content shared from another app (no URL required).
+
+    Uses a placeholder URL (zuno://note/<uuid>) so the existing DB schema
+    is satisfied.  The shared text is stored in `full_text` and a truncated
+    version becomes the description.
+    """
+    note_id = uuid.uuid4().hex[:12]
+    title = body.title
+    if not title:
+        # Auto-generate title from first line of text
+        first_line = body.source_text.split("\n", 1)[0].strip()
+        title = first_line[:80] + ("..." if len(first_line) > 80 else "")
+
+    description = body.description
+    if not description:
+        description = body.source_text[:300] + ("..." if len(body.source_text) > 300 else "")
+
+    payload = {
+        "user_id": user_id,
+        "url": f"zuno://note/{note_id}",
+        "title": title,
+        "description": description,
+        "full_text": body.source_text,
+        "platform": body.platform,
+        "content_type": body.content_type,
+    }
+
+    result = db.table("content").insert(payload).execute()
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Failed to save text content")
+    return result.data[0]
+
+
+@router.post("/upload", response_model=ContentOut, status_code=201)
+@limiter.limit(RATE_WRITE)
+async def upload_image_content(
+    request: Request,
+    file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Upload an image shared from another app and create a content entry.
+
+    The image is stored in Supabase Storage (bucket: ``content-images``)
+    and a content row is created with the public URL.
+    """
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image files are accepted")
+
+    # Read file bytes
+    data = await file.read()
+    if len(data) > 10 * 1024 * 1024:  # 10 MB limit
+        raise HTTPException(status_code=400, detail="Image must be under 10 MB")
+
+    ext = file.filename.rsplit(".", 1)[-1] if file.filename and "." in file.filename else "jpg"
+    storage_path = f"{user_id}/{uuid.uuid4().hex}.{ext}"
+
+    # Upload to Supabase Storage
+    try:
+        db.storage.from_("content-images").upload(
+            path=storage_path,
+            file=data,
+            file_options={"content-type": file.content_type},
+        )
+    except Exception as exc:
+        logger.error("Supabase storage upload failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Image upload failed")
+
+    # Build public URL
+    public_url = db.storage.from_("content-images").get_public_url(storage_path)
+
+    payload = {
+        "user_id": user_id,
+        "url": public_url,
+        "title": file.filename or "Shared Image",
+        "description": "Image shared to Zuno",
+        "thumbnail_url": public_url,
+        "platform": "other",
+        "content_type": "image",
+    }
+
+    result = db.table("content").insert(payload).execute()
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Failed to create content for uploaded image")
     return result.data[0]
 
 

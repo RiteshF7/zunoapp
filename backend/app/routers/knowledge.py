@@ -78,7 +78,7 @@ async def ask_knowledge(
                 "query_embedding": query_embedding,
                 "match_user_id": user_id,
                 "match_count": body.top_k,
-                "similarity_threshold": 0.3,
+                "similarity_threshold": 0.45,
             },
         ).execute()
     except Exception as exc:
@@ -153,11 +153,19 @@ async def ask_knowledge(
         logger.error("Answer generation failed: %s", exc)
         raise HTTPException(status_code=502, detail="Failed to generate answer.")
 
-    # 6. Build source references
+    # 6. Build source references — only include meaningfully relevant sources.
+    #    The top chunk always appears; remaining chunks need >= 70% of the
+    #    top chunk's similarity to be listed as a source.
     sources: list[KnowledgeSourceOut] = []
-    if body.include_sources:
-        seen_content_ids = set()
+    if body.include_sources and enriched_chunks:
+        top_similarity = max(c.get("similarity", 0) for c in enriched_chunks)
+        relevance_floor = top_similarity * 0.70  # at least 70 % of best match
+
+        seen_content_ids: set[str] = set()
         for chunk in enriched_chunks:
+            similarity = chunk.get("similarity", 0)
+            if similarity < relevance_floor:
+                continue
             cid = chunk["content_id"]
             if cid in seen_content_ids:
                 continue
@@ -169,7 +177,7 @@ async def ask_knowledge(
                 url=chunk["metadata"].get("url"),
                 timestamp=chunk.get("created_at"),
                 chunk_text=chunk["chunk_text"][:200] + "..." if len(chunk["chunk_text"]) > 200 else chunk["chunk_text"],
-                relevance_score=chunk.get("similarity"),
+                relevance_score=similarity,
             ))
 
     return KnowledgeQueryResponse(

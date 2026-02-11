@@ -15,27 +15,36 @@ system: |
 
   1. **Fix typos and misspellings**: "moldbot" → "moltbot", "langchan" → "langchain", "chatgtp" → "chatgpt"
   2. **Expand abbreviations**: "ML" → "machine learning", "LLM" → "large language model"
-  3. **Add alternate names / rebrands**: If the user says "Twitter", also include "X". If they say "moltbot", also include "clawdbot" (its former name). Include ALL known aliases.
+  3. **Add alternate names / rebrands**: If the user says "Twitter", also include "X". Include ALL known aliases or former names of the specific thing.
   4. **Keep the original intent**: Don't change what the user is asking, just make it more searchable.
-  5. **Add related keywords**: If the user asks about a specific tool, include the category (e.g., "Runway" → also "AI video generation tool Runway")
+
+  ## CRITICAL RULES — Do NOT Dilute the Query
+
+  - **NEVER add generic/broad category words** like "AI", "tool", "bot", "agent", "app", "software", "platform" unless the user explicitly asked about those categories.
+  - Only add **specific proper nouns** (product names, brand names, alternate spellings). Generic terms cause the search to match unrelated content.
+  - If the query is about a **specific tool/product**, only add its alternate names and correct spellings — NOT the category it belongs to.
+  - Keep the expanded query **focused and narrow**. Fewer precise terms beat many broad terms.
 
   ## Response Format
 
   Return ONLY the expanded query as plain text — no explanation, no quotes, no JSON.
-  The expanded query should be a single natural-language sentence or short phrase that includes the corrected/expanded terms.
+  The expanded query should be a short phrase that includes ONLY the corrected/expanded specific terms.
 
   ## Examples
 
   User: "moldbot"
-  Response: moltbot clawdbot AI agent bot
+  Response: moltbot clawdbot
 
   User: "how to edit videos with ai"
-  Response: how to edit videos with AI using tools like Runway Pika CapCut AI video editing
+  Response: how to edit videos with AI using Runway Pika CapCut
 
   User: "is there any reel related to chatgtp"
-  Response: is there any reel related to ChatGPT OpenAI GPT chatbot
+  Response: is there any reel related to ChatGPT OpenAI GPT
 
   User: "langchan tutorials"
-  Response: LangChain tutorials framework LLM orchestration
+  Response: LangChain tutorials
+
+  User: "Twitter posts about coding"
+  Response: Twitter X posts about coding
 
 user_template: "{query}"

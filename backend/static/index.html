@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zuno</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0f1117',
+            surface: '#1a1d27',
+            surfaceHover: '#242836',
+            border: '#2a2e3a',
+            accent: '#6366f1',
+            accentHover: '#818cf8',
+            muted: '#9ca3af',
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .fade-in { animation: fadeIn .2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .spinner { border: 3px solid #2a2e3a; border-top-color: #6366f1; border-radius: 50%; width: 24px; height: 24px; animation: spin .6s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    pre { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body class="bg-bg text-gray-100 min-h-screen">
+
+  <!-- ======================= APP SHELL ======================= -->
+  <div id="app" class="max-w-2xl mx-auto min-h-screen flex flex-col relative">
+    <!-- Top Nav (hidden on auth) -->
+    <header id="topnav" class="hidden sticky top-0 z-30 bg-bg/80 backdrop-blur-md border-b border-border px-5 py-3 flex items-center justify-between">
+      <span class="text-lg font-bold tracking-tight text-white">Zuno</span>
+      <div class="flex items-center gap-2">
+        <button onclick="navigate('#search')" class="p-2 rounded-xl hover:bg-surfaceHover transition-colors">
+          <span class="material-icons-round text-xl text-muted">search</span>
+        </button>
+        <button onclick="navigate('#profile')" class="p-2 rounded-xl hover:bg-surfaceHover transition-colors">
+          <span class="material-icons-round text-xl text-muted">person</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main id="page" class="flex-1 px-5 py-4 pb-24"></main>
+
+    <!-- Bottom Nav (hidden on auth) -->
+    <nav id="bottomnav" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-surface/95 backdrop-blur-md border-t border-border z-30">
+      <div class="flex justify-around py-2">
+        <button onclick="navigate('#feed')" data-tab="feed" class="nav-btn flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors">
+          <span class="material-icons-round text-xl">dynamic_feed</span>
+          <span class="text-[10px] font-medium">Feed</span>
+        </button>
+        <button onclick="navigate('#content')" data-tab="content" class="nav-btn flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors">
+          <span class="material-icons-round text-xl">bookmark</span>
+          <span class="text-[10px] font-medium">Content</span>
+        </button>
+        <button onclick="navigate('#collections')" data-tab="collections" class="nav-btn flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors">
+          <span class="material-icons-round text-xl">folder</span>
+          <span class="text-[10px] font-medium">Collections</span>
+        </button>
+        <button onclick="navigate('#knowledge')" data-tab="knowledge" class="nav-btn flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors">
+          <span class="material-icons-round text-xl">psychology</span>
+          <span class="text-[10px] font-medium">Ask</span>
+        </button>
+        <button onclick="navigate('#admin')" data-tab="admin" class="nav-btn flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors">
+          <span class="material-icons-round text-xl">settings</span>
+          <span class="text-[10px] font-medium">Admin</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ======================= MODAL OVERLAY ======================= -->
+  <div id="modal-overlay" class="hidden fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center" onclick="if(event.target===this)closeModal()">
+    <div id="modal-content" class="bg-surface rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto no-scrollbar p-6 fade-in"></div>
+  </div>
+
+  <!-- ======================= TOAST ======================= -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden">
+    <div class="bg-surface border border-border rounded-xl px-4 py-2.5 shadow-lg text-sm font-medium"></div>
+  </div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// API HELPER
+// ═══════════════════════════════════════════════════════════════════════════
+const API_BASE = window.location.origin;
+
+async function api(method, path, body = null, params = null) {
+  const token = localStorage.getItem('zuno_token');
+  const headers = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  let url = `${API_BASE}${path}`;
+  if (params) {
+    const sp = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v !== '' && v != null) sp.append(k, v); });
+    const qs = sp.toString();
+    if (qs) url += '?' + qs;
+  }
+
+  const opts = { method, headers };
+  if (body && ['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
+    headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+
+  try {
+    const res = await fetch(url, opts);
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = text; }
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    return { ok: false, status: 0, data: { error: err.message } };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOAST / MODAL HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  const inner = el.querySelector('div');
+  inner.textContent = msg;
+  inner.className = `bg-surface border rounded-xl px-4 py-2.5 shadow-lg text-sm font-medium ${isError ? 'border-red-500/50 text-red-400' : 'border-border text-green-400'}`;
+  el.classList.remove('hidden');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+function openModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════════════════════════
+function navigate(hash) {
+  window.location.hash = hash;
+}
+
+function getRoute() {
+  const h = window.location.hash || '#auth';
+  const parts = h.replace('#', '').split('/');
+  return { page: parts[0], id: parts[1] || null };
+}
+
+async function router() {
+  const token = localStorage.getItem('zuno_token');
+  const { page, id } = getRoute();
+
+  // Auth guard
+  if (!token && page !== 'auth') { navigate('#auth'); return; }
+  if (token && page === 'auth') { navigate('#feed'); return; }
+
+  // Show/hide shell
+  const isAuth = page === 'auth';
+  document.getElementById('topnav').classList.toggle('hidden', isAuth);
+  document.getElementById('topnav').classList.toggle('flex', !isAuth);
+  document.getElementById('bottomnav').classList.toggle('hidden', isAuth);
+
+  // Update active nav tab
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    const tab = btn.dataset.tab;
+    const active = tab === page || (page === 'collection' && tab === 'collections') || (page === 'content-detail' && tab === 'content');
+    btn.classList.toggle('text-accent', active);
+    btn.classList.toggle('text-muted', !active);
+  });
+
+  const main = document.getElementById('page');
+  main.innerHTML = '<div class="flex justify-center py-12"><div class="spinner"></div></div>';
+
+  try {
+    switch (page) {
+      case 'auth': renderAuth(main); break;
+      case 'feed': await renderFeed(main); break;
+      case 'content': await renderContent(main); break;
+      case 'content-detail': await renderContentDetail(main, id); break;
+      case 'collections': await renderCollections(main); break;
+      case 'collection': await renderCollectionDetail(main, id); break;
+      case 'search': await renderSearch(main); break;
+      case 'knowledge': await renderKnowledge(main); break;
+      case 'profile': await renderProfile(main); break;
+      case 'admin': await renderAdmin(main); break;
+      default: navigate('#feed');
+    }
+  } catch (err) {
+    main.innerHTML = `<div class="text-red-400 py-8 text-center">${err.message}</div>`;
+  }
+}
+
+window.addEventListener('hashchange', router);
+window.addEventListener('DOMContentLoaded', router);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════════════════════════════════════════
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function truncate(s, n = 100) { return s && s.length > n ? s.slice(0, n) + '...' : (s || ''); }
+function badge(text, color = 'indigo') {
+  if (!text) return '';
+  return `<span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-${color}-500/20 text-${color}-400">${esc(text)}</span>`;
+}
+function platformIcon(p) {
+  const icons = { youtube: 'play_circle', instagram: 'camera_alt', x: 'tag', reddit: 'forum', tiktok: 'music_note', spotify: 'headphones', web: 'language' };
+  return icons[p] || 'link';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTH PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+function renderAuth(el) {
+  el.innerHTML = `
+    <div class="flex flex-col items-center justify-center min-h-[80vh] fade-in">
+      <div class="w-full max-w-sm">
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/20 mb-4">
+            <span class="material-icons-round text-3xl text-accent">auto_awesome</span>
+          </div>
+          <h1 class="text-2xl font-bold text-white">Zuno</h1>
+          <p class="text-muted text-sm mt-1">Paste your JWT token to continue</p>
+        </div>
+        <div class="space-y-4">
+          <textarea id="jwt-input" rows="4" placeholder="eyJhbGciOi..." class="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-accent resize-none"></textarea>
+          <div id="auth-error" class="hidden text-red-400 text-sm text-center"></div>
+          <button id="auth-btn" onclick="doLogin()" class="w-full bg-accent hover:bg-accentHover text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]">
+            Sign In
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function doLogin() {
+  const token = document.getElementById('jwt-input').value.trim();
+  if (!token) { document.getElementById('auth-error').textContent = 'Please enter a token'; document.getElementById('auth-error').classList.remove('hidden'); return; }
+
+  const btn = document.getElementById('auth-btn');
+  btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  localStorage.setItem('zuno_token', token);
+  const res = await api('GET', '/api/profile');
+
+  if (res.ok) {
+    toast('Signed in as ' + (res.data.display_name || res.data.email || 'user'));
+    navigate('#feed');
+  } else {
+    localStorage.removeItem('zuno_token');
+    document.getElementById('auth-error').textContent = 'Invalid token: ' + (res.data?.detail || res.status);
+    document.getElementById('auth-error').classList.remove('hidden');
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('zuno_token');
+  navigate('#auth');
+  toast('Signed out');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FEED PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderFeed(el) {
+  // Get preferences to know which feed type
+  const prefRes = await api('GET', '/api/user-preferences');
+  const feedType = prefRes.ok ? prefRes.data.feed_type : 'usersaved';
+
+  const endpoint = feedType === 'suggestedcontent' ? '/api/suggested-feed' : '/api/feed';
+  const [feedRes, bookmarkRes] = await Promise.all([
+    api('GET', endpoint, null, { limit: 30 }),
+    api('GET', '/api/bookmarks'),
+  ]);
+
+  const items = feedRes.ok ? (Array.isArray(feedRes.data) ? feedRes.data : feedRes.data.items || []) : [];
+  const bookmarks = bookmarkRes.ok ? (Array.isArray(bookmarkRes.data) ? bookmarkRes.data : []) : [];
+  const bookmarkSet = new Set(bookmarks);
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-xl font-bold text-white">Feed</h1>
+        <div class="flex bg-surface rounded-xl p-1 gap-1">
+          <button onclick="switchFeedType('usersaved')" class="feed-type-btn px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${feedType === 'usersaved' ? 'bg-accent text-white' : 'text-muted hover:text-white'}">My Feed</button>
+          <button onclick="switchFeedType('suggestedcontent')" class="feed-type-btn px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${feedType === 'suggestedcontent' ? 'bg-accent text-white' : 'text-muted hover:text-white'}">Suggested</button>
+        </div>
+      </div>
+      ${items.length === 0 ? '<p class="text-muted text-center py-12">No feed items yet</p>' : ''}
+      <div class="space-y-3" id="feed-list">
+        ${items.map(item => feedCard(item, bookmarkSet.has(item.id))).join('')}
+      </div>
+    </div>`;
+}
+
+function feedCard(item, isBookmarked) {
+  const id = item.id;
+  return `
+    <div class="bg-surface rounded-2xl p-4 hover:bg-surfaceHover transition-colors cursor-pointer" onclick="if(!event.target.closest('.bm-btn'))navigate('#content-detail/${item.content_id || id}')">
+      <div class="flex gap-3">
+        ${item.image_url || item.thumbnail_url ? `<img src="${esc(item.image_url || item.thumbnail_url)}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0" onerror="this.style.display='none'"/>` : ''}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="font-semibold text-white text-sm leading-snug line-clamp-2">${esc(item.title || 'Untitled')}</h3>
+            <button class="bm-btn flex-shrink-0 p-1 rounded-lg hover:bg-border transition-colors" onclick="toggleBookmark('${id}', this)">
+              <span class="material-icons-round text-lg ${isBookmarked ? 'text-accent' : 'text-muted'}">${isBookmarked ? 'bookmark' : 'bookmark_border'}</span>
+            </button>
+          </div>
+          <p class="text-muted text-xs mt-1 line-clamp-2">${esc(truncate(item.description || item.ai_summary, 120))}</p>
+          <div class="flex items-center gap-2 mt-2">
+            ${badge(item.category || item.ai_category)}
+            ${item.platform ? `<span class="text-muted text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">${platformIcon(item.platform)}</span>${esc(item.platform)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function switchFeedType(type) {
+  await api('PATCH', '/api/user-preferences', { feed_type: type });
+  await router();
+}
+
+async function toggleBookmark(feedItemId, btn) {
+  const res = await api('POST', `/api/bookmarks/${feedItemId}/toggle`);
+  if (res.ok) {
+    const icon = btn.querySelector('span');
+    const isNow = res.data?.bookmarked ?? !icon.textContent.includes('border');
+    icon.textContent = isNow ? 'bookmark' : 'bookmark_border';
+    icon.classList.toggle('text-accent', isNow);
+    icon.classList.toggle('text-muted', !isNow);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTENT PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderContent(el) {
+  const res = await api('GET', '/api/content', null, { limit: 50 });
+  const items = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-xl font-bold text-white">My Content</h1>
+        <button onclick="openSaveContentModal()" class="flex items-center gap-1.5 bg-accent hover:bg-accentHover text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors active:scale-95">
+          <span class="material-icons-round text-lg">add</span> Save
+        </button>
+      </div>
+      ${items.length === 0 ? '<p class="text-muted text-center py-12">No saved content yet. Click Save to add your first item.</p>' : ''}
+      <div class="space-y-3" id="content-list">
+        ${items.map(contentCard).join('')}
+      </div>
+    </div>`;
+}
+
+function contentCard(item) {
+  return `
+    <div class="bg-surface rounded-2xl p-4 hover:bg-surfaceHover transition-colors cursor-pointer active:scale-[0.98]" onclick="navigate('#content-detail/${item.id}')">
+      <div class="flex gap-3">
+        ${item.thumbnail_url ? `<img src="${esc(item.thumbnail_url)}" class="w-16 h-16 rounded-xl object-cover flex-shrink-0" onerror="this.style.display='none'"/>` : `<div class="w-16 h-16 rounded-xl bg-border flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-2xl text-muted">${platformIcon(item.platform)}</span></div>`}
+        <div class="flex-1 min-w-0">
+          <h3 class="font-semibold text-white text-sm leading-snug line-clamp-1">${esc(item.title || item.url)}</h3>
+          <p class="text-muted text-xs mt-0.5 truncate">${esc(item.url)}</p>
+          <div class="flex items-center gap-2 mt-2">
+            ${badge(item.ai_category)}
+            ${item.ai_processed ? '<span class="text-green-400 text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">check_circle</span>AI</span>' : '<span class="text-muted text-[10px]">Not processed</span>'}
+            <span class="text-muted text-[10px]">${esc(item.platform)}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openSaveContentModal() {
+  openModal(`
+    <h2 class="text-lg font-bold text-white mb-4">Save Content</h2>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">URL *</label>
+        <input id="m-url" type="url" placeholder="https://..." class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+      </div>
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">Title</label>
+        <input id="m-title" placeholder="Optional title" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+      </div>
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">Description</label>
+        <textarea id="m-desc" rows="2" placeholder="Optional description" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-muted font-medium mb-1 block">Platform</label>
+          <select id="m-platform" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent">
+            <option value="web">Web</option>
+            <option value="youtube">YouTube</option>
+            <option value="instagram">Instagram</option>
+            <option value="x">X / Twitter</option>
+            <option value="reddit">Reddit</option>
+            <option value="tiktok">TikTok</option>
+            <option value="spotify">Spotify</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-muted font-medium mb-1 block">Type</label>
+          <select id="m-type" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent">
+            <option value="article">Article</option>
+            <option value="video">Video</option>
+            <option value="post">Post</option>
+            <option value="podcast">Podcast</option>
+            <option value="image">Image</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="doSaveContent()" id="save-content-btn" class="w-full bg-accent hover:bg-accentHover text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98] mt-2">Save Content</button>
+    </div>
+  `);
+}
+
+async function doSaveContent() {
+  const url = document.getElementById('m-url').value.trim();
+  if (!url) { toast('URL is required', true); return; }
+
+  const btn = document.getElementById('save-content-btn');
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const body = {
+    url,
+    title: document.getElementById('m-title').value.trim() || null,
+    description: document.getElementById('m-desc').value.trim() || null,
+    platform: document.getElementById('m-platform').value,
+    content_type: document.getElementById('m-type').value,
+  };
+  const res = await api('POST', '/api/content', body);
+  if (res.ok) {
+    closeModal();
+    toast('Content saved!');
+    navigate('#content-detail/' + res.data.id);
+  } else {
+    toast(res.data?.detail || 'Failed to save', true);
+    btn.textContent = 'Save Content';
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTENT DETAIL PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderContentDetail(el, id) {
+  if (!id) { navigate('#content'); return; }
+
+  const [res, tagRes] = await Promise.all([
+    api('GET', `/api/content/${id}`),
+    api('GET', `/api/content/${id}/tags`),
+  ]);
+
+  if (!res.ok) { el.innerHTML = `<p class="text-red-400 py-8 text-center">Content not found</p>`; return; }
+  const c = res.data;
+  const tags = tagRes.ok && tagRes.data.content_tags ? tagRes.data.content_tags.map(t => t.tags || t) : [];
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <button onclick="navigate('#content')" class="flex items-center gap-1 text-muted text-sm mb-4 hover:text-white transition-colors">
+        <span class="material-icons-round text-lg">arrow_back</span> Back
+      </button>
+
+      ${c.thumbnail_url ? `<img src="${esc(c.thumbnail_url)}" class="w-full h-48 object-cover rounded-2xl mb-4" onerror="this.style.display='none'" />` : ''}
+
+      <h1 class="text-xl font-bold text-white mb-1">${esc(c.title || 'Untitled')}</h1>
+      <a href="${esc(c.url)}" target="_blank" class="text-accent text-sm hover:underline break-all">${esc(c.url)}</a>
+
+      <div class="flex items-center gap-2 mt-3 flex-wrap">
+        ${badge(c.platform, 'blue')}
+        ${badge(c.content_type, 'purple')}
+        ${badge(c.ai_category, 'emerald')}
+        ${c.ai_processed ? '<span class="text-green-400 text-xs flex items-center gap-0.5"><span class="material-icons-round text-sm">check_circle</span>AI Processed</span>' : '<span class="text-muted text-xs">Not AI processed</span>'}
+      </div>
+
+      ${c.description ? `<p class="text-muted text-sm mt-4">${esc(c.description)}</p>` : ''}
+
+      ${c.ai_summary ? `
+        <div class="mt-4 bg-surface rounded-xl p-4 border border-border">
+          <h3 class="text-xs font-semibold text-accent uppercase tracking-wide mb-2">AI Summary</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">${esc(c.ai_summary)}</p>
+        </div>` : ''}
+
+      ${tags.length > 0 ? `
+        <div class="mt-4">
+          <h3 class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Tags</h3>
+          <div class="flex flex-wrap gap-1.5">
+            ${tags.map(t => `<span class="px-2.5 py-1 rounded-lg bg-border text-xs text-gray-300">${esc(t.name || t.slug || '')}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <!-- Actions -->
+      <div class="mt-6 space-y-2">
+        ${!c.ai_processed ? `
+          <button onclick="processWithAI('${c.id}')" id="ai-btn" class="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accentHover text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]">
+            <span class="material-icons-round text-lg">auto_awesome</span> Process with AI
+          </button>` : ''}
+
+        <button onclick="openAddToCollectionModal('${c.id}')" class="w-full flex items-center justify-center gap-2 bg-surface hover:bg-surfaceHover border border-border text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98]">
+          <span class="material-icons-round text-lg">folder</span> Add to Collection
+        </button>
+
+        <div class="flex gap-2">
+          <button onclick="openEditContentModal('${c.id}')" class="flex-1 flex items-center justify-center gap-1.5 bg-surface hover:bg-surfaceHover border border-border text-white text-sm font-medium py-2.5 rounded-xl transition-colors">
+            <span class="material-icons-round text-base">edit</span> Edit
+          </button>
+          <button onclick="deleteContent('${c.id}')" class="flex-1 flex items-center justify-center gap-1.5 bg-surface hover:bg-red-500/20 border border-border text-red-400 text-sm font-medium py-2.5 rounded-xl transition-colors">
+            <span class="material-icons-round text-base">delete</span> Delete
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function processWithAI(contentId) {
+  const btn = document.getElementById('ai-btn');
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div> Processing...';
+  btn.disabled = true;
+
+  const res = await api('POST', '/api/ai/process-content', { content_id: contentId });
+  if (res.ok) {
+    toast('AI processing complete!');
+    await renderContentDetail(document.getElementById('page'), contentId);
+  } else {
+    toast(res.data?.detail || 'AI processing failed', true);
+    btn.innerHTML = '<span class="material-icons-round text-lg">auto_awesome</span> Process with AI';
+    btn.disabled = false;
+  }
+}
+
+async function openAddToCollectionModal(contentId) {
+  const res = await api('GET', '/api/collections');
+  const cols = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
+
+  openModal(`
+    <h2 class="text-lg font-bold text-white mb-4">Add to Collection</h2>
+    ${cols.length === 0 ? '<p class="text-muted text-sm">No collections yet. Create one first.</p>' : `
+      <div class="space-y-2">
+        ${cols.map(c => `
+          <button onclick="addToCollection('${c.id}', '${contentId}')" class="w-full text-left bg-bg hover:bg-surfaceHover border border-border rounded-xl px-4 py-3 transition-colors">
+            <div class="flex items-center gap-3">
+              <span class="material-icons-round text-xl text-accent">${esc(c.icon || 'folder')}</span>
+              <div>
+                <p class="text-white text-sm font-medium">${esc(c.title)}</p>
+                <p class="text-muted text-xs">${c.item_count} items</p>
+              </div>
+            </div>
+          </button>
+        `).join('')}
+      </div>`}
+  `);
+}
+
+async function addToCollection(collectionId, contentId) {
+  const res = await api('POST', `/api/collections/${collectionId}/items`, { content_id: contentId });
+  if (res.ok) { closeModal(); toast('Added to collection!'); }
+  else toast(res.data?.detail || 'Failed to add', true);
+}
+
+async function openEditContentModal(contentId) {
+  const res = await api('GET', `/api/content/${contentId}`);
+  if (!res.ok) return;
+  const c = res.data;
+
+  openModal(`
+    <h2 class="text-lg font-bold text-white mb-4">Edit Content</h2>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">Title</label>
+        <input id="e-title" value="${esc(c.title || '')}" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+      </div>
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">Description</label>
+        <textarea id="e-desc" rows="3" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent resize-none">${esc(c.description || '')}</textarea>
+      </div>
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">URL</label>
+        <input id="e-url" value="${esc(c.url || '')}" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+      </div>
+      <button onclick="doEditContent('${contentId}')" id="edit-btn" class="w-full bg-accent hover:bg-accentHover text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98] mt-2">Save Changes</button>
+    </div>
+  `);
+}
+
+async function doEditContent(contentId) {
+  const btn = document.getElementById('edit-btn');
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const body = {
+    title: document.getElementById('e-title').value.trim() || null,
+    description: document.getElementById('e-desc').value.trim() || null,
+    url: document.getElementById('e-url').value.trim() || null,
+  };
+  const res = await api('PATCH', `/api/content/${contentId}`, body);
+  if (res.ok) {
+    closeModal();
+    toast('Content updated!');
+    await renderContentDetail(document.getElementById('page'), contentId);
+  } else {
+    toast(res.data?.detail || 'Failed to update', true);
+    btn.textContent = 'Save Changes';
+    btn.disabled = false;
+  }
+}
+
+async function deleteContent(contentId) {
+  if (!confirm('Delete this content?')) return;
+  const res = await api('DELETE', `/api/content/${contentId}`);
+  if (res.ok) { toast('Deleted!'); navigate('#content'); }
+  else toast(res.data?.detail || 'Failed to delete', true);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COLLECTIONS PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+const themeColors = {
+  blue: 'from-blue-500/20 to-blue-600/5 border-blue-500/20',
+  green: 'from-green-500/20 to-green-600/5 border-green-500/20',
+  purple: 'from-purple-500/20 to-purple-600/5 border-purple-500/20',
+  amber: 'from-amber-500/20 to-amber-600/5 border-amber-500/20',
+  rose: 'from-rose-500/20 to-rose-600/5 border-rose-500/20',
+  indigo: 'from-indigo-500/20 to-indigo-600/5 border-indigo-500/20',
+};
+
+async function renderCollections(el) {
+  const [colRes, catRes] = await Promise.all([
+    api('GET', '/api/collections'),
+    api('GET', '/api/collections/categories'),
+  ]);
+  const cols = colRes.ok ? (Array.isArray(colRes.data) ? colRes.data : []) : [];
+  const cats = catRes.ok ? (Array.isArray(catRes.data) ? catRes.data : []) : [];
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <h1 class="text-xl font-bold text-white">Collections</h1>
+        <button onclick="openCreateCollectionModal()" class="flex items-center gap-1.5 bg-accent hover:bg-accentHover text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors active:scale-95">
+          <span class="material-icons-round text-lg">add</span> New
+        </button>
+      </div>
+
+      ${cats.length > 0 ? `
+        <div class="mb-5">
+          <h2 class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">AI Categories</h2>
+          <div class="flex flex-wrap gap-1.5">
+            ${cats.map(c => `<span class="px-2.5 py-1 rounded-lg bg-surface border border-border text-xs text-gray-300">${esc(typeof c === 'string' ? c : c.name || c.category || '')}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+      ${cols.length === 0 ? '<p class="text-muted text-center py-12">No collections yet</p>' : ''}
+      <div class="grid grid-cols-2 gap-3">
+        ${cols.map(c => {
+          const tc = themeColors[c.theme] || themeColors.blue;
+          return `
+          <div onclick="navigate('#collection/${c.id}')" class="bg-gradient-to-br ${tc} border rounded-2xl p-4 cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]">
+            <span class="material-icons-round text-2xl text-white/80 mb-2">${esc(c.icon || 'folder')}</span>
+            <h3 class="text-white font-semibold text-sm leading-snug line-clamp-1">${esc(c.title)}</h3>
+            <p class="text-white/60 text-xs mt-0.5">${c.item_count} item${c.item_count !== 1 ? 's' : ''}</p>
+            ${c.is_shared ? '<span class="text-[10px] text-accent mt-1 inline-block">Shared</span>' : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function openCreateCollectionModal() {
+  openModal(`
+    <h2 class="text-lg font-bold text-white mb-4">New Collection</h2>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">Title *</label>
+        <input id="c-title" placeholder="Collection name" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+      </div>
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">Description</label>
+        <textarea id="c-desc" rows="2" placeholder="Optional description" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-muted font-medium mb-1 block">Icon</label>
+          <input id="c-icon" value="folder" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+        </div>
+        <div>
+          <label class="text-xs text-muted font-medium mb-1 block">Theme</label>
+          <select id="c-theme" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent">
+            <option value="blue">Blue</option>
+            <option value="green">Green</option>
+            <option value="purple">Purple</option>
+            <option value="amber">Amber</option>
+            <option value="rose">Rose</option>
+            <option value="indigo">Indigo</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="doCreateCollection()" id="create-col-btn" class="w-full bg-accent hover:bg-accentHover text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98] mt-2">Create Collection</button>
+    </div>
+  `);
+}
+
+async function doCreateCollection() {
+  const title = document.getElementById('c-title').value.trim();
+  if (!title) { toast('Title is required', true); return; }
+
+  const btn = document.getElementById('create-col-btn');
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const body = {
+    title,
+    description: document.getElementById('c-desc').value.trim() || null,
+    icon: document.getElementById('c-icon').value.trim() || 'folder',
+    theme: document.getElementById('c-theme').value,
+  };
+  const res = await api('POST', '/api/collections', body);
+  if (res.ok) {
+    closeModal();
+    toast('Collection created!');
+    navigate('#collection/' + res.data.id);
+  } else {
+    toast(res.data?.detail || 'Failed to create', true);
+    btn.textContent = 'Create Collection';
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COLLECTION DETAIL PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderCollectionDetail(el, id) {
+  if (!id) { navigate('#collections'); return; }
+
+  const [colRes, itemsRes] = await Promise.all([
+    api('GET', `/api/collections/${id}`),
+    api('GET', `/api/collections/${id}/items`),
+  ]);
+
+  if (!colRes.ok) { el.innerHTML = '<p class="text-red-400 py-8 text-center">Collection not found</p>'; return; }
+  const c = colRes.data;
+  const items = itemsRes.ok ? (Array.isArray(itemsRes.data) ? itemsRes.data : []) : [];
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <button onclick="navigate('#collections')" class="flex items-center gap-1 text-muted text-sm mb-4 hover:text-white transition-colors">
+        <span class="material-icons-round text-lg">arrow_back</span> Back
+      </button>
+
+      <div class="flex items-start justify-between mb-5">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="material-icons-round text-2xl text-accent">${esc(c.icon || 'folder')}</span>
+            <h1 class="text-xl font-bold text-white">${esc(c.title)}</h1>
+          </div>
+          ${c.description ? `<p class="text-muted text-sm">${esc(c.description)}</p>` : ''}
+          <p class="text-muted text-xs mt-1">${c.item_count} items ${c.is_shared ? '&middot; Shared' : ''}</p>
+        </div>
+        <div class="flex gap-1.5">
+          <button onclick="openEditCollectionModal('${c.id}')" class="p-2 rounded-xl hover:bg-surfaceHover transition-colors">
+            <span class="material-icons-round text-lg text-muted">edit</span>
+          </button>
+          <button onclick="deleteCollection('${c.id}')" class="p-2 rounded-xl hover:bg-red-500/20 transition-colors">
+            <span class="material-icons-round text-lg text-red-400">delete</span>
+          </button>
+        </div>
+      </div>
+
+      <button onclick="openAddContentToCollectionModal('${c.id}')" class="w-full flex items-center justify-center gap-2 bg-surface hover:bg-surfaceHover border border-border text-white text-sm font-medium py-2.5 rounded-xl transition-colors mb-4">
+        <span class="material-icons-round text-base">add</span> Add Content
+      </button>
+
+      ${items.length === 0 ? '<p class="text-muted text-center py-8">No items in this collection</p>' : ''}
+      <div class="space-y-2">
+        ${items.map(item => {
+          const ci = item.content || item;
+          return `
+          <div class="bg-surface rounded-xl p-3 flex items-center gap-3 hover:bg-surfaceHover transition-colors">
+            <div class="flex-1 min-w-0 cursor-pointer" onclick="navigate('#content-detail/${ci.id || item.content_id}')">
+              <p class="text-white text-sm font-medium truncate">${esc(ci.title || ci.url || 'Untitled')}</p>
+              <p class="text-muted text-xs truncate">${esc(ci.url || '')}</p>
+            </div>
+            <button onclick="removeFromCollection('${c.id}', '${ci.id || item.content_id}')" class="p-1.5 rounded-lg hover:bg-red-500/20 transition-colors">
+              <span class="material-icons-round text-base text-red-400">close</span>
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+async function openAddContentToCollectionModal(collectionId) {
+  const res = await api('GET', '/api/content', null, { limit: 50 });
+  const items = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
+
+  openModal(`
+    <h2 class="text-lg font-bold text-white mb-4">Add Content</h2>
+    ${items.length === 0 ? '<p class="text-muted text-sm">No content to add. Save some content first.</p>' : `
+      <div class="space-y-2 max-h-96 overflow-y-auto no-scrollbar">
+        ${items.map(c => `
+          <button onclick="addToCollection('${collectionId}', '${c.id}')" class="w-full text-left bg-bg hover:bg-surfaceHover border border-border rounded-xl px-4 py-3 transition-colors">
+            <p class="text-white text-sm font-medium truncate">${esc(c.title || c.url)}</p>
+            <p class="text-muted text-xs truncate">${esc(c.url)}</p>
+          </button>
+        `).join('')}
+      </div>`}
+  `);
+}
+
+async function removeFromCollection(collectionId, contentId) {
+  const res = await api('DELETE', `/api/collections/${collectionId}/items/${contentId}`);
+  if (res.ok) {
+    toast('Removed from collection');
+    await renderCollectionDetail(document.getElementById('page'), collectionId);
+  } else toast(res.data?.detail || 'Failed to remove', true);
+}
+
+async function openEditCollectionModal(collectionId) {
+  const res = await api('GET', `/api/collections/${collectionId}`);
+  if (!res.ok) return;
+  const c = res.data;
+
+  openModal(`
+    <h2 class="text-lg font-bold text-white mb-4">Edit Collection</h2>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">Title</label>
+        <input id="ec-title" value="${esc(c.title)}" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+      </div>
+      <div>
+        <label class="text-xs text-muted font-medium mb-1 block">Description</label>
+        <textarea id="ec-desc" rows="2" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent resize-none">${esc(c.description || '')}</textarea>
+      </div>
+      <div class="flex items-center gap-3">
+        <label class="text-xs text-muted font-medium">Shared</label>
+        <input id="ec-shared" type="checkbox" ${c.is_shared ? 'checked' : ''} class="accent-accent" />
+      </div>
+      <button onclick="doEditCollection('${collectionId}')" id="edit-col-btn" class="w-full bg-accent hover:bg-accentHover text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98] mt-2">Save Changes</button>
+    </div>
+  `);
+}
+
+async function doEditCollection(collectionId) {
+  const btn = document.getElementById('edit-col-btn');
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const body = {
+    title: document.getElementById('ec-title').value.trim() || null,
+    description: document.getElementById('ec-desc').value.trim() || null,
+    is_shared: document.getElementById('ec-shared').checked,
+  };
+  const res = await api('PATCH', `/api/collections/${collectionId}`, body);
+  if (res.ok) {
+    closeModal();
+    toast('Collection updated!');
+    await renderCollectionDetail(document.getElementById('page'), collectionId);
+  } else {
+    toast(res.data?.detail || 'Failed to update', true);
+    btn.textContent = 'Save Changes';
+    btn.disabled = false;
+  }
+}
+
+async function deleteCollection(id) {
+  if (!confirm('Delete this collection?')) return;
+  const res = await api('DELETE', `/api/collections/${id}`);
+  if (res.ok) { toast('Deleted!'); navigate('#collections'); }
+  else toast(res.data?.detail || 'Failed to delete', true);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEARCH PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderSearch(el) {
+  const tagsRes = await api('GET', '/api/tags/popular');
+  const tags = tagsRes.ok ? (Array.isArray(tagsRes.data) ? tagsRes.data : []) : [];
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <h1 class="text-xl font-bold text-white mb-4">Search</h1>
+
+      <div class="flex gap-2 mb-3">
+        <input id="search-input" type="text" placeholder="Search your content..." class="flex-1 bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" onkeydown="if(event.key==='Enter')doSearch()" />
+        <button onclick="doSearch()" class="bg-accent hover:bg-accentHover text-white px-4 rounded-xl transition-colors active:scale-95">
+          <span class="material-icons-round text-lg">search</span>
+        </button>
+      </div>
+
+      <div class="flex gap-2 mb-4">
+        <button onclick="setSearchType('fts')" id="st-fts" class="search-type px-3 py-1.5 rounded-lg text-xs font-medium bg-accent text-white transition-colors">Full-text</button>
+        <button onclick="setSearchType('hybrid')" id="st-hybrid" class="search-type px-3 py-1.5 rounded-lg text-xs font-medium bg-surface text-muted transition-colors">Hybrid</button>
+        <button onclick="setSearchType('tag')" id="st-tag" class="search-type px-3 py-1.5 rounded-lg text-xs font-medium bg-surface text-muted transition-colors">By Tag</button>
+      </div>
+
+      ${tags.length > 0 ? `
+        <div class="mb-4">
+          <h3 class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Popular Tags</h3>
+          <div class="flex flex-wrap gap-1.5">
+            ${tags.map(t => `<button onclick="searchByTag('${esc(t.slug)}')" class="px-2.5 py-1 rounded-lg bg-surface border border-border text-xs text-gray-300 hover:border-accent transition-colors">${esc(t.name)} <span class="text-muted">${t.count || t.usage_count || ''}</span></button>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <div id="search-results"></div>
+    </div>`;
+
+  window._searchType = 'fts';
+}
+
+function setSearchType(type) {
+  window._searchType = type;
+  document.querySelectorAll('.search-type').forEach(b => {
+    b.classList.toggle('bg-accent', b.id === 'st-' + type);
+    b.classList.toggle('text-white', b.id === 'st-' + type);
+    b.classList.toggle('bg-surface', b.id !== 'st-' + type);
+    b.classList.toggle('text-muted', b.id !== 'st-' + type);
+  });
+}
+
+async function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+
+  const resultsEl = document.getElementById('search-results');
+  resultsEl.innerHTML = '<div class="flex justify-center py-8"><div class="spinner"></div></div>';
+
+  let res;
+  const type = window._searchType || 'fts';
+  if (type === 'hybrid') res = await api('GET', '/api/search/hybrid', null, { q, limit: 20 });
+  else if (type === 'tag') res = await api('GET', `/api/search/tag/${encodeURIComponent(q)}`, null, { limit: 20 });
+  else res = await api('GET', '/api/search', null, { q, limit: 20 });
+
+  const items = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
+
+  if (!res.ok) {
+    resultsEl.innerHTML = `<p class="text-red-400 text-sm text-center py-4">${esc(res.data?.detail || 'Search failed')}</p>`;
+    return;
+  }
+
+  resultsEl.innerHTML = items.length === 0
+    ? '<p class="text-muted text-center py-8">No results found</p>'
+    : `<p class="text-muted text-xs mb-3">${items.length} result${items.length !== 1 ? 's' : ''}</p>
+       <div class="space-y-2">${items.map(i => `
+         <div onclick="navigate('#content-detail/${i.id}')" class="bg-surface rounded-xl p-3 hover:bg-surfaceHover transition-colors cursor-pointer">
+           <h3 class="text-white text-sm font-medium line-clamp-1">${esc(i.title || i.url)}</h3>
+           <p class="text-muted text-xs truncate">${esc(i.url)}</p>
+           <div class="flex gap-2 mt-1.5">${badge(i.ai_category)} ${i.rank ? `<span class="text-muted text-[10px]">rank: ${Number(i.rank).toFixed(2)}</span>` : ''} ${i.combined_score ? `<span class="text-muted text-[10px]">score: ${Number(i.combined_score).toFixed(2)}</span>` : ''}</div>
+         </div>`).join('')}</div>`;
+}
+
+function searchByTag(slug) {
+  setSearchType('tag');
+  document.getElementById('search-input').value = slug;
+  doSearch();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KNOWLEDGE Q&A PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+let _knowledgeHistory = [];
+
+async function renderKnowledge(el) {
+  const statsRes = await api('GET', '/api/knowledge/stats');
+  const stats = statsRes.ok ? statsRes.data : null;
+
+  el.innerHTML = `
+    <div class="fade-in flex flex-col" style="height: calc(100vh - 180px);">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-xl font-bold text-white">Knowledge Q&A</h1>
+        <div class="flex items-center gap-2">
+          ${stats ? `<span class="text-muted text-xs">${stats.total_chunks || stats.chunks || 0} chunks indexed</span>` : ''}
+          <button onclick="doReindex()" id="reindex-btn" class="text-xs text-accent hover:text-accentHover font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-surfaceHover transition-colors">Reindex</button>
+        </div>
+      </div>
+
+      <div id="knowledge-chat" class="flex-1 overflow-y-auto no-scrollbar space-y-4 mb-4">
+        ${_knowledgeHistory.length === 0 ? `
+          <div class="flex flex-col items-center justify-center h-full text-center">
+            <span class="material-icons-round text-5xl text-border mb-3">psychology</span>
+            <p class="text-muted text-sm">Ask anything about your saved content</p>
+            <p class="text-muted/50 text-xs mt-1">Powered by RAG over your knowledge base</p>
+          </div>` : _knowledgeHistory.map(renderKnowledgeMessage).join('')}
+      </div>
+
+      <div class="flex gap-2">
+        <input id="knowledge-input" type="text" placeholder="Ask a question..." class="flex-1 bg-surface border border-border rounded-xl px-4 py-3 text-sm text-gray-100 focus:outline-none focus:border-accent" onkeydown="if(event.key==='Enter')doAsk()" />
+        <button onclick="doAsk()" class="bg-accent hover:bg-accentHover text-white px-4 rounded-xl transition-colors active:scale-95">
+          <span class="material-icons-round text-lg">send</span>
+        </button>
+      </div>
+    </div>`;
+
+  // Scroll to bottom
+  const chat = document.getElementById('knowledge-chat');
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function renderKnowledgeMessage(msg) {
+  if (msg.role === 'user') {
+    return `<div class="flex justify-end"><div class="bg-accent/20 text-white rounded-2xl rounded-br-md px-4 py-2.5 max-w-[80%] text-sm">${esc(msg.text)}</div></div>`;
+  }
+  // assistant
+  return `
+    <div class="flex justify-start">
+      <div class="bg-surface border border-border rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]">
+        <p class="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">${esc(msg.text)}</p>
+        ${msg.sources && msg.sources.length > 0 ? `
+          <div class="mt-3 pt-3 border-t border-border">
+            <p class="text-muted text-[10px] uppercase tracking-wide font-semibold mb-1.5">Sources</p>
+            <div class="space-y-1.5">
+              ${msg.sources.map(s => `
+                <div class="bg-bg rounded-lg px-3 py-2 cursor-pointer hover:bg-surfaceHover transition-colors" onclick="navigate('#content-detail/${s.content_id}')">
+                  <p class="text-white text-xs font-medium line-clamp-1">${esc(s.title || s.url || s.content_id)}</p>
+                  ${s.chunk_text ? `<p class="text-muted text-[11px] line-clamp-2 mt-0.5">${esc(truncate(s.chunk_text, 100))}</p>` : ''}
+                </div>`).join('')}
+            </div>
+          </div>` : ''}
+      </div>
+    </div>`;
+}
+
+async function doAsk() {
+  const input = document.getElementById('knowledge-input');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+
+  _knowledgeHistory.push({ role: 'user', text: q });
+
+  const chat = document.getElementById('knowledge-chat');
+  // Remove empty state
+  if (_knowledgeHistory.length === 1) chat.innerHTML = '';
+  chat.innerHTML += renderKnowledgeMessage({ role: 'user', text: q });
+  chat.innerHTML += '<div id="thinking" class="flex justify-start"><div class="bg-surface border border-border rounded-2xl rounded-bl-md px-4 py-3"><div class="spinner" style="width:16px;height:16px;border-width:2px;"></div></div></div>';
+  chat.scrollTop = chat.scrollHeight;
+
+  const res = await api('POST', '/api/knowledge/ask', { query: q, include_sources: true });
+  document.getElementById('thinking')?.remove();
+
+  if (res.ok) {
+    const msg = { role: 'assistant', text: res.data.answer, sources: res.data.sources || [] };
+    _knowledgeHistory.push(msg);
+    chat.innerHTML += renderKnowledgeMessage(msg);
+  } else {
+    const msg = { role: 'assistant', text: `Error: ${res.data?.detail || 'Failed to get answer'}`, sources: [] };
+    _knowledgeHistory.push(msg);
+    chat.innerHTML += renderKnowledgeMessage(msg);
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function doReindex() {
+  const btn = document.getElementById('reindex-btn');
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const res = await api('POST', '/api/knowledge/reindex', {});
+  if (res.ok) {
+    toast(`Reindexed: ${res.data.content_processed} items, ${res.data.chunks_created} chunks`);
+  } else {
+    toast(res.data?.detail || 'Reindex failed', true);
+  }
+  btn.textContent = 'Reindex';
+  btn.disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROFILE PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderProfile(el) {
+  const [profileRes, prefRes, configRes] = await Promise.all([
+    api('GET', '/api/profile'),
+    api('GET', '/api/user-preferences'),
+    api('GET', '/api/config'),
+  ]);
+
+  const p = profileRes.ok ? profileRes.data : {};
+  const pref = prefRes.ok ? prefRes.data : {};
+  const config = configRes.ok ? configRes.data : null;
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <h1 class="text-xl font-bold text-white mb-5">Profile</h1>
+
+      <div class="bg-surface rounded-2xl p-5 mb-4">
+        <div class="flex items-center gap-4 mb-4">
+          <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+            ${p.avatar_url ? `<img src="${esc(p.avatar_url)}" class="w-full h-full object-cover" onerror="this.style.display='none'"/>` : `<span class="material-icons-round text-3xl text-accent">person</span>`}
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-white">${esc(p.display_name || 'No name')}</h2>
+            <p class="text-muted text-sm">${esc(p.email || p.phone || p.id || '')}</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs text-muted font-medium mb-1 block">Display Name</label>
+            <input id="p-name" value="${esc(p.display_name || '')}" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+          </div>
+          <div>
+            <label class="text-xs text-muted font-medium mb-1 block">Avatar URL</label>
+            <input id="p-avatar" value="${esc(p.avatar_url || '')}" class="w-full bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+          </div>
+          <button onclick="doUpdateProfile()" id="profile-btn" class="w-full bg-accent hover:bg-accentHover text-white font-semibold py-2.5 rounded-xl transition-colors active:scale-[0.98]">Update Profile</button>
+        </div>
+      </div>
+
+      <div class="bg-surface rounded-2xl p-5 mb-4">
+        <h3 class="text-sm font-semibold text-white mb-3">Feed Preference</h3>
+        <div class="flex gap-2">
+          <button onclick="updateFeedPref('usersaved')" class="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${pref.feed_type === 'usersaved' ? 'bg-accent text-white' : 'bg-bg border border-border text-muted hover:text-white'}">My Saved</button>
+          <button onclick="updateFeedPref('suggestedcontent')" class="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${pref.feed_type === 'suggestedcontent' ? 'bg-accent text-white' : 'bg-bg border border-border text-muted hover:text-white'}">Suggested</button>
+        </div>
+      </div>
+
+      ${config ? `
+        <div class="bg-surface rounded-2xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-white mb-3">App Config</h3>
+          <pre class="text-xs text-muted bg-bg rounded-xl p-3 overflow-x-auto">${esc(JSON.stringify(config, null, 2))}</pre>
+        </div>` : ''}
+
+      <button onclick="doLogout()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold py-3 rounded-xl transition-colors active:scale-[0.98] mt-2">
+        <span class="material-icons-round text-lg">logout</span> Sign Out
+      </button>
+    </div>`;
+}
+
+async function doUpdateProfile() {
+  const btn = document.getElementById('profile-btn');
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const body = {
+    display_name: document.getElementById('p-name').value.trim() || null,
+    avatar_url: document.getElementById('p-avatar').value.trim() || null,
+  };
+  const res = await api('PATCH', '/api/profile', body);
+  if (res.ok) toast('Profile updated!');
+  else toast(res.data?.detail || 'Failed to update', true);
+  btn.textContent = 'Update Profile';
+  btn.disabled = false;
+}
+
+async function updateFeedPref(type) {
+  await api('PATCH', '/api/user-preferences', { feed_type: type });
+  toast('Feed preference updated!');
+  await renderProfile(document.getElementById('page'));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN PAGE
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderAdmin(el) {
+  const statsRes = await api('GET', '/api/admin/cache/stats');
+  const stats = statsRes.ok ? statsRes.data : null;
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <h1 class="text-xl font-bold text-white mb-5">Admin</h1>
+
+      <div class="bg-surface rounded-2xl p-5 mb-4">
+        <h3 class="text-sm font-semibold text-white mb-3">Cache Stats</h3>
+        ${stats ? `<pre class="text-xs text-muted bg-bg rounded-xl p-3 overflow-x-auto">${esc(JSON.stringify(stats, null, 2))}</pre>` : '<p class="text-muted text-sm">Could not load cache stats</p>'}
+      </div>
+
+      <div class="bg-surface rounded-2xl p-5 mb-4">
+        <h3 class="text-sm font-semibold text-white mb-3">Bust Cache</h3>
+        <div class="flex gap-2">
+          <input id="cache-pattern" placeholder="Pattern (optional)" class="flex-1 bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+          <button onclick="doBustCache()" id="bust-btn" class="bg-accent hover:bg-accentHover text-white text-sm font-semibold px-4 rounded-xl transition-colors active:scale-95">Bust</button>
+        </div>
+      </div>
+
+      <div class="bg-surface rounded-2xl p-5 mb-4">
+        <h3 class="text-sm font-semibold text-white mb-3">Prompts</h3>
+        <button onclick="doReloadPrompts()" id="prompts-btn" class="w-full bg-surface hover:bg-surfaceHover border border-border text-white text-sm font-medium py-2.5 rounded-xl transition-colors active:scale-[0.98]">
+          <span class="material-icons-round text-base align-middle mr-1">refresh</span> Reload Prompts
+        </button>
+      </div>
+
+      <div class="bg-surface rounded-2xl p-5 mb-4">
+        <h3 class="text-sm font-semibold text-white mb-3">AI Tools</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs text-muted font-medium mb-1 block">Generate Embedding</label>
+            <div class="flex gap-2">
+              <input id="embed-text" placeholder="Text to embed..." class="flex-1 bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-accent" />
+              <button onclick="doGenerateEmbedding()" id="embed-btn" class="bg-accent hover:bg-accentHover text-white text-sm font-semibold px-4 rounded-xl transition-colors active:scale-95">Go</button>
+            </div>
+            <div id="embed-result" class="mt-2"></div>
+          </div>
+          <div>
+            <label class="text-xs text-muted font-medium mb-1 block">Generate AI Feed</label>
+            <button onclick="doGenerateFeed()" id="gen-feed-btn" class="w-full bg-surface hover:bg-surfaceHover border border-border text-white text-sm font-medium py-2.5 rounded-xl transition-colors active:scale-[0.98]">
+              <span class="material-icons-round text-base align-middle mr-1">auto_awesome</span> Generate Feed
+            </button>
+            <div id="gen-feed-result" class="mt-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-surface rounded-2xl p-5 mb-4">
+        <h3 class="text-sm font-semibold text-white mb-3">Health Check</h3>
+        <button onclick="doHealthCheck()" id="health-btn" class="w-full bg-surface hover:bg-surfaceHover border border-border text-white text-sm font-medium py-2.5 rounded-xl transition-colors active:scale-[0.98]">
+          <span class="material-icons-round text-base align-middle mr-1">monitor_heart</span> Check Health
+        </button>
+        <div id="health-result" class="mt-2"></div>
+      </div>
+    </div>`;
+}
+
+async function doBustCache() {
+  const btn = document.getElementById('bust-btn');
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const pattern = document.getElementById('cache-pattern').value.trim();
+  const res = await api('POST', '/api/admin/cache/bust', null, pattern ? { pattern } : null);
+  if (res.ok) toast('Cache busted!');
+  else toast(res.data?.detail || 'Failed', true);
+  btn.textContent = 'Bust';
+  btn.disabled = false;
+}
+
+async function doReloadPrompts() {
+  const btn = document.getElementById('prompts-btn');
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const res = await api('POST', '/api/admin/prompts/reload');
+  if (res.ok) toast('Prompts reloaded!');
+  else toast(res.data?.detail || 'Failed', true);
+  btn.innerHTML = '<span class="material-icons-round text-base align-middle mr-1">refresh</span> Reload Prompts';
+  btn.disabled = false;
+}
+
+async function doGenerateEmbedding() {
+  const text = document.getElementById('embed-text').value.trim();
+  if (!text) { toast('Enter text', true); return; }
+
+  const btn = document.getElementById('embed-btn');
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const res = await api('POST', '/api/ai/generate-embedding', { text });
+  const resultEl = document.getElementById('embed-result');
+  if (res.ok) {
+    const dim = res.data.embedding?.length || 0;
+    resultEl.innerHTML = `<p class="text-green-400 text-xs">Embedding generated (${dim} dimensions)</p><pre class="text-xs text-muted bg-bg rounded-lg p-2 mt-1 max-h-24 overflow-y-auto">[${res.data.embedding?.slice(0, 5).map(n => n.toFixed(6)).join(', ')}... ]</pre>`;
+  } else {
+    resultEl.innerHTML = `<p class="text-red-400 text-xs">${esc(res.data?.detail || 'Failed')}</p>`;
+  }
+  btn.textContent = 'Go';
+  btn.disabled = false;
+}
+
+async function doGenerateFeed() {
+  const btn = document.getElementById('gen-feed-btn');
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Generating...';
+  btn.disabled = true;
+
+  const res = await api('POST', '/api/ai/generate-feed');
+  const resultEl = document.getElementById('gen-feed-result');
+  if (res.ok) {
+    const count = res.data.items?.length || 0;
+    resultEl.innerHTML = `<p class="text-green-400 text-xs">${count} feed items generated</p>`;
+    if (res.data.message) resultEl.innerHTML += `<p class="text-muted text-xs mt-1">${esc(res.data.message)}</p>`;
+  } else {
+    resultEl.innerHTML = `<p class="text-red-400 text-xs">${esc(res.data?.detail || 'Failed')}</p>`;
+  }
+  btn.innerHTML = '<span class="material-icons-round text-base align-middle mr-1">auto_awesome</span> Generate Feed';
+  btn.disabled = false;
+}
+
+async function doHealthCheck() {
+  const btn = document.getElementById('health-btn');
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>';
+  btn.disabled = true;
+
+  const res = await api('GET', '/health');
+  const resultEl = document.getElementById('health-result');
+  resultEl.innerHTML = `<pre class="text-xs ${res.ok ? 'text-green-400' : 'text-red-400'} bg-bg rounded-lg p-2 mt-1">${esc(JSON.stringify(res.data, null, 2))}</pre>`;
+  btn.innerHTML = '<span class="material-icons-round text-base align-middle mr-1">monitor_heart</span> Check Health';
+  btn.disabled = false;
+}
+</script>
+
+</body>
+</html>

@@ -2,8 +2,12 @@
 
 import logging
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
@@ -82,6 +86,18 @@ app.include_router(admin.router)             # cache bust, prompt reload, stats
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "zuno-api"}
+
+
+# ── Root redirect ─────────────────────────────────────────────────────────
+@app.get("/", include_in_schema=False)
+async def root_redirect():
+    return RedirectResponse(url="/static/index.html")
+
+
+# ── Static files (test UI) ────────────────────────────────────────────────
+_static_dir = Path(__file__).resolve().parent.parent / "static"
+if _static_dir.is_dir():
+    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 
 if __name__ == "__main__":

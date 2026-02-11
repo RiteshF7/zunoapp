@@ -3,9 +3,10 @@
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from supabase import Client
 
+from app.config import Settings, get_settings
 from app.dependencies import get_current_user, get_supabase
 from app.schemas.models import (
     GoalDetailOut,
@@ -14,6 +15,7 @@ from app.schemas.models import (
     GoalStepUpdate,
     GoalUpdate,
 )
+from app.services.goal_engine import analyze_and_update_goals
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 
 logger = logging.getLogger(__name__)
@@ -226,3 +228,105 @@ async def update_step(
         raise HTTPException(status_code=500, detail="Failed to update step")
 
     return result.data[0]
+
+
+# ---------------------------------------------------------------------------
+# POST /api/goals/reanalyze — re-run goal analysis on existing content
+# ---------------------------------------------------------------------------
+@router.post("/reanalyze")
+@limiter.limit("3/hour")
+async def reanalyze_goals(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    force: bool = Query(False, description="If true, re-analyze ALL content including already-analyzed"),
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+    settings: Settings = Depends(get_settings),
+):
+    """Analyze content for goals — only unanalyzed items by default.
+
+    Finds all AI-processed content that hasn't been analyzed for goals yet
+    and runs the goal engine on each one. If ``force=true``, re-analyzes
+    ALL content regardless of previous analysis. Runs in the background so
+    the response returns immediately.
+    """
+    # Build query for content to analyze
+    query = (
+        db.table("content")
+        .select(
+            "id, user_id, url, title, description, platform, content_type, "
+            "ai_category, ai_summary, ai_structured_content, embedding, "
+            "created_at"
+        )
+        .eq("user_id", user_id)
+        .eq("ai_processed", True)
+    )
+
+    # Only fetch unanalyzed content unless force=true
+    if not force:
+        query = query.eq("goals_analyzed", False)
+
+    content_result = query.order("created_at", desc=False).execute()
+    items = content_result.data or []
+
+    # Also count how many are already analyzed (for the response message)
+    if not force:
+        already_result = (
+            db.table("content")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .eq("ai_processed", True)
+            .eq("goals_analyzed", True)
+            .execute()
+        )
+        already_count = already_result.count or 0
+    else:
+        already_count = 0
+
+    if not items:
+        if already_count > 0:
+            return {
+                "success": True,
+                "message": f"All {already_count} content items have already been analyzed for goals. Use force=true to re-analyze.",
+                "content_count": 0,
+                "already_analyzed": already_count,
+            }
+        return {
+            "success": False,
+            "message": "No processed content found. Save and process content first.",
+            "content_count": 0,
+            "already_analyzed": 0,
+        }
+
+    async def _run_batch_analysis() -> None:
+        """Run goal analysis for each content item sequentially."""
+        for item in items:
+            ai_result = {
+                "category": item.get("ai_category", ""),
+                "summary": item.get("ai_summary", ""),
+                "tags": [],
+                "structured_content": item.get("ai_structured_content") or {},
+                "embedding": item.get("embedding"),
+            }
+            try:
+                await analyze_and_update_goals(
+                    db=db,
+                    user_id=user_id,
+                    new_content=item,
+                    ai_result=ai_result,
+                    settings=settings,
+                    skip_debounce=True,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Reanalysis failed for content %s: %s", item.get("id"), exc,
+                )
+
+    background_tasks.add_task(_run_batch_analysis)
+
+    return {
+        "success": True,
+        "message": f"Goal analysis started for {len(items)} unanalyzed content items. Goals will appear shortly.",
+        "content_count": len(items),
+        "already_analyzed": already_count,
+    }

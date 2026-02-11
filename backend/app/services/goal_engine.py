@@ -63,12 +63,20 @@ async def analyze_and_update_goals(
     new_content: dict[str, Any],
     ai_result: dict[str, Any],
     settings: Settings,
+    *,
+    skip_debounce: bool = False,
 ) -> None:
     """Analyze saved content patterns and update user goals.
 
     Uses the new content's embedding to find semantically similar past
     content via pgvector (RAG search), giving the AI a precise view of
     related content rather than a blind chronological window.
+
+    Parameters
+    ----------
+    skip_debounce : bool
+        If True, bypass the 30-second debounce window. Used by the
+        ``/api/goals/reanalyze`` batch endpoint.
     """
     if not settings.gcp_project_id:
         logger.debug("Goal analysis skipped — no AI provider configured.")
@@ -78,7 +86,7 @@ async def analyze_and_update_goals(
 
     # ── Debounce: skip if analysis ran very recently ──────────────────────
     personality = _fetch_personality_cached(db, user_id)
-    if personality and personality.get("updated_at"):
+    if not skip_debounce and personality and personality.get("updated_at"):
         try:
             last_run = datetime.fromisoformat(
                 personality["updated_at"].replace("Z", "+00:00"),
@@ -188,6 +196,17 @@ async def analyze_and_update_goals(
                 logger.warning("Unknown goal action: %s", action)
         except Exception as exc:
             logger.error("Failed to apply goal change %s: %s", change, exc)
+
+    # ── Mark content as goals-analyzed ──────────────────────────────────
+    content_id = new_content.get("id")
+    if content_id:
+        try:
+            db.table("content").update({
+                "goals_analyzed": True,
+                "goals_analyzed_at": datetime.now(timezone.utc).isoformat(),
+            }).eq("id", content_id).execute()
+        except Exception as exc:
+            logger.warning("Failed to stamp goals_analyzed for %s: %s", content_id, exc)
 
     logger.info(
         "Goal analysis complete for user %s: %d similar items found, "

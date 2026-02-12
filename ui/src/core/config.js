@@ -55,6 +55,8 @@ export function getApiBase() {
  *
  * All of these must be added to the Supabase Dashboard under
  * Authentication → URL Configuration → Redirect URLs.
+ * If Google login works on production but not locally, add your local origin
+ * (e.g. http://localhost:5173/ or http://localhost:8000/app/) to that list.
  */
 export function getOAuthRedirectUrl() {
   // In Capacitor native app, use the deep link scheme

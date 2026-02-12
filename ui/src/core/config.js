@@ -38,7 +38,7 @@ export function isCapacitor() {
  * Build the OAuth redirect URL based on the current environment.
  * - Capacitor:  com.zuno.app://callback  (deep link, opens system browser → back to app)
  * - Vite dev:   http://localhost:5173/
- * - FastAPI:    http://localhost:8000/static/index.html
+ * - FastAPI:    http://localhost:8000/app/ or http://localhost:8000/app/#auth
  *
  * All of these must be added to the Supabase Dashboard under
  * Authentication → URL Configuration → Redirect URLs.

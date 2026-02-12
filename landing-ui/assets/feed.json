@@ -1,0 +1,76 @@
+{
+  "feed": [
+    {
+      "id": "1",
+      "title": "Understanding Modern Web Development",
+      "description": "A comprehensive guide to modern web development practices, covering React, TypeScript, and best practices for building scalable applications.",
+      "imageUrl": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=450&fit=crop",
+      "sourceUrl": "https://example.com/web-dev-guide",
+      "category": "Tutorial",
+      "likes": 2854
+    },
+    {
+      "id": "2",
+      "title": "AI and Machine Learning Resources",
+      "description": "Curated collection of the best AI and ML resources, including courses, papers, and tools for developers and researchers.",
+      "imageUrl": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop",
+      "sourceUrl": "https://example.com/ai-resources",
+      "category": "Resource",
+      "likes": 1923
+    },
+    {
+      "id": "3",
+      "title": "Design Systems in Practice",
+      "description": "Learn how to build and maintain design systems that scale, with real-world examples from leading tech companies.",
+      "imageUrl": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=450&fit=crop",
+      "sourceUrl": "https://example.com/design-systems",
+      "category": "Article",
+      "likes": 3421
+    },
+    {
+      "id": "4",
+      "title": "Getting Started with TypeScript",
+      "description": "A beginner-friendly introduction to TypeScript, covering types, interfaces, and how to migrate from JavaScript.",
+      "imageUrl": "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&h=450&fit=crop",
+      "sourceUrl": "https://example.com/typescript-guide",
+      "category": "Tutorial",
+      "likes": 4567
+    },
+    {
+      "id": "5",
+      "title": "Best Practices for API Design",
+      "description": "Essential guidelines for designing RESTful APIs that are intuitive, maintainable, and developer-friendly.",
+      "imageUrl": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=450&fit=crop",
+      "sourceUrl": "https://example.com/api-design",
+      "category": "Article",
+      "likes": 2891
+    },
+    {
+      "id": "6",
+      "title": "CSS Grid Layout Mastery",
+      "description": "Master CSS Grid with practical examples and advanced techniques for creating complex, responsive layouts.",
+      "imageUrl": "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&h=450&fit=crop",
+      "sourceUrl": "https://example.com/css-grid",
+      "category": "Tutorial",
+      "likes": 3124
+    },
+    {
+      "id": "7",
+      "title": "Open Source Tools for Developers",
+      "description": "A curated list of essential open source tools that every developer should know about, from code editors to deployment tools.",
+      "imageUrl": "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=450&fit=crop",
+      "sourceUrl": "https://example.com/oss-tools",
+      "category": "Resource",
+      "likes": 1789
+    },
+    {
+      "id": "8",
+      "title": "Building Accessible Web Applications",
+      "description": "Learn how to create web applications that are accessible to everyone, following WCAG guidelines and best practices.",
+      "imageUrl": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=450&fit=crop",
+      "sourceUrl": "https://example.com/accessibility",
+      "category": "Article",
+      "likes": 2234
+    }
+  ]
+}

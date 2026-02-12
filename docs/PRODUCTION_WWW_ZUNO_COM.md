@@ -15,8 +15,14 @@
 
 4. **Supabase Dashboard** → Authentication → URL Configuration → Redirect URLs: add  
    - `https://www.zuno.com/`  
+   - `https://www.zuno.com/app/`  
+   - `https://www.zuno.com/app`  
    - `https://zuno.com/`  
+   - `https://zuno.com/app/`  
+   - `https://zuno.com/app`  
+   - `http://localhost:8000/app/` (local dev)  
+   - `http://localhost:8000/app`  
    - `com.zuno.app://callback`
 
-5. Build UI: from repo root run `.\scripts\build-ui.ps1` or `cd ui && npm run build`.  
+5. Build UI and landing: from repo root run `.\scripts\build-ui.ps1` or `./scripts/build-ui.sh`.  
    Deploy over HTTPS.

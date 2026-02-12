@@ -1,0 +1,9 @@
+{
+  "name": "zuno-landing-ui",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Zuno public landing page",
+  "scripts": {
+    "build": "node build.js"
+  }
+}

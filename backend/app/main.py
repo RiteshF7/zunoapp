@@ -9,7 +9,7 @@ import jwt as pyjwt
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
@@ -245,16 +245,22 @@ async def health_ready(db=Depends(get_supabase)):
         )
 
 
-# ── Root redirect ─────────────────────────────────────────────────────────
-@app.get("/", include_in_schema=False)
-async def root_redirect():
-    return RedirectResponse(url="/static/index.html")
-
-
-# ── Static files (test UI) ────────────────────────────────────────────────
+# ── Static files (landing at /, app at /app/) ──────────────────────────────
 _static_dir = Path(__file__).resolve().parent.parent / "static"
+_app_index = _static_dir / "app" / "index.html"
+
+
+@app.get("/app", include_in_schema=False)
+@app.get("/app/", include_in_schema=False)
+async def serve_app_spa():
+    """Serve app SPA index.html for /app and /app/. Hash routes (#auth, #home) are client-side."""
+    if _app_index.is_file():
+        return FileResponse(str(_app_index))
+    raise StarletteHTTPException(status_code=404, detail="App not built. Run scripts/build-ui.ps1")
+
+
 if _static_dir.is_dir():
-    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+    app.mount("/", StaticFiles(directory=str(_static_dir), html=True), name="static")
 
 
 if __name__ == "__main__":

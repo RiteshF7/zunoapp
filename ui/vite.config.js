@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/static/',
+  base: '/app/',
   build: {
-    outDir: '../backend/static',
+    outDir: '../backend/static/app',
     emptyOutDir: true,
   },
   server: {
@@ -11,7 +11,6 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:8000',
       '/health': 'http://localhost:8000',
-      '/static': 'http://localhost:8000',
     },
   },
 });

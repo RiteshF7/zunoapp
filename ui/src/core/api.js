@@ -2,13 +2,13 @@
 // API HELPER
 // ═══════════════════════════════════════════════════════════════════════════
 
-// In Capacitor's WebView the origin is "http://localhost" (no port),
-// which doesn't reach the backend. Detect this and use the Android
-// emulator-to-host alias instead. A global override takes priority.
-const API_BASE = window.ZUNO_API_BASE
-  || (window.location.hostname === 'localhost' && !window.location.port
-      ? 'http://10.0.2.2:8000'
-      : window.location.origin);
+// API base: build-time VITE_API_BASE, or runtime ZUNO_API_BASE, or origin / emulator alias.
+const API_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE) ||
+  window.ZUNO_API_BASE ||
+  (window.location.hostname === 'localhost' && !window.location.port
+    ? 'http://10.0.2.2:8000'
+    : window.location.origin);
 
 let _refreshing = null; // single in-flight refresh promise
 

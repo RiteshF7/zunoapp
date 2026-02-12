@@ -1,12 +1,26 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // APP CONFIGURATION
+// Values come from build-time env (VITE_*) so production can use a different
+// Supabase project and API URL. See ui/.env.example.
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const SUPABASE_URL = 'https://orpdwhqgcthwjnbirizx.supabase.co';
+const _devFallback = {
+  url: 'https://orpdwhqgcthwjnbirizx.supabase.co',
+  anonKey:
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+    'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycGR3aHFnY3Rod2puYmlyaXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MjUxMjAsImV4cCI6MjA4NjMwMTEyMH0.' +
+    '4RMhxpB6tTSDEKQfubST_TzPhsvx2Z1HT2juHZDD7qM',
+};
+
+export const SUPABASE_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.DEV && _devFallback.url) ||
+  '';
+
 export const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-  'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycGR3aHFnY3Rod2puYmlyaXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MjUxMjAsImV4cCI6MjA4NjMwMTEyMH0.' +
-  '4RMhxpB6tTSDEKQfubST_TzPhsvx2Z1HT2juHZDD7qM';
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.DEV && _devFallback.anonKey) ||
+  '';
 
 // Custom URL scheme for deep links (must match AndroidManifest.xml intent-filter)
 export const APP_SCHEME = 'com.zuno.app';

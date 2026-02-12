@@ -230,9 +230,12 @@ async def health_live():
 
 @app.get("/health/ready")
 async def health_ready(db=Depends(get_supabase)):
-    """Readiness probe: DB connectivity. 200 if OK, 503 if not."""
+    """Readiness probe: DB connectivity. 200 if OK, 503 if not.
+    Uses profiles table (exists in all Supabase migrations) so readiness works
+    before any backend-specific migrations are applied.
+    """
     try:
-        db.table("_migrations").select("1").limit(1).execute()
+        db.table("profiles").select("id").limit(1).execute()
         return {"status": "ok", "database": "connected"}
     except Exception as e:
         logger.warning("Health ready check failed: %s", e)

@@ -1,5 +1,7 @@
 # Zuno — Full Concept, Features & Vision
 
+**Note:** This document describes both the **current product** and **future vision**. In the Feature Breakdown, each feature is marked **Implemented** (exists in the app today) or **Planned** (roadmap / not yet built). Only **Implemented** features exist in the app; **Planned** features (e.g. Voice Search, Browser Extension, Weekly Digest) are aspirational and not yet built.
+
 ## Table of Contents
 
 - [The Idea](#the-idea)
@@ -22,6 +24,7 @@
   - [13. Cross-Platform Linking](#13-cross-platform-linking)
   - [14. Browser Extension](#14-browser-extension)
   - [15. Voice Search](#15-voice-search)
+  - [16. Goals](#16-goals-implemented--in-detail)
 - [User Flow (Detailed)](#user-flow-detailed)
 - [Investor Demo Story (6 Steps)](#investor-demo-story-6-steps)
 - [Screens](#screens)
@@ -35,14 +38,17 @@
 
 ## The Idea
 
-**Zuno** is a unified, AI-powered content hub. Users share content directly from any social media app (Instagram, YouTube, Facebook, Twitter/X, LinkedIn, TikTok, etc.) into Zuno using the native Share action. Zuno becomes the single library for all saved digital content — reels, shorts, articles, posts, videos, threads — from every platform.
+**Share from anywhere. Search anytime.**
+
+**Zuno** is a unified, AI-powered content hub. You **share content from anywhere** — from any social media app (Instagram, YouTube, Facebook, Twitter/X, LinkedIn, TikTok, etc.) or by pasting a URL — into Zuno. Zuno becomes the single library for all your saved digital content: reels, shorts, articles, posts, videos, threads. Then you **search anytime** in plain language over that library; results are personalized to *your* saved content.
 
 AI then:
 - **Categorizes** the content automatically (tags, topics, types)
 - **Summarizes** it so you know what you saved at a glance
 - **Organizes** it into smart collections that grow on their own
-- **Enables search** via natural language, questions, and tags
-- **Curates a personalized feed** of related content from across the web based on your personality inferred from what you save
+- **Enables search** via natural language, questions, and tags — personalized to your library
+- **Detects goals** from what you save and suggests actionable steps
+- **Curates a personalized feed** (My Feed + Suggested) based on what you save
 
 The more you save, the smarter Zuno gets.
 
@@ -62,15 +68,19 @@ The more you save, the smarter Zuno gets.
 
 ## The Solution
 
+**Share from anywhere. Search anytime.**
+
 **Zuno = One place. AI organizes. You search in your words. Discover more.**
 
 | What | How |
 |------|-----|
-| **Get content in** | Share from any social app → Zuno (one tap) |
+| **Share from anywhere** | Save from any app (Share → Zuno) or paste a URL; one place for all your content |
+| **Search anytime** | Natural language search over *your* library — ask in plain words, get personalized results |
 | **AI organizes** | Auto-categorize, auto-tag (AI + user tags), auto-summarize |
-| **Find anything** | Natural language search, question-based search, tag search |
-| **Discover more** | Personalized feed from across social media based on your saved content personality |
-| **Stay engaged** | Weekly digest, reminders, insights, collaborative collections |
+| **Find anything** | Natural language search, question-based search (Ask Zuno), tag search — all over your content |
+| **Goals** | AI detects what you're working toward from your saves and suggests actionable steps |
+| **Discover more** | Personalized feed (My Feed + Suggested) based on your saved content |
+| **Stay engaged** | *(Planned)* Weekly digest, reminders, collaborative collections |
 
 ---
 
@@ -113,19 +123,41 @@ The more you save, the smarter Zuno gets.
 
 ## Feature Breakdown
 
-### 1. Share to Zuno
-
-**How it works:** From any social app (Instagram, YouTube, Facebook, Twitter/X, LinkedIn, TikTok, Reddit, Pinterest), tap the native **Share** button and choose **Zuno** as the destination. The content (reel, short, article, post, video, thread) is saved to your Zuno library instantly.
-
-**Key points:**
-- No copy-paste, no switching apps, no manual link entry
-- Works with any app that has a Share action (Android/iOS share sheet)
-- Zuno extracts metadata: title, thumbnail, source URL, platform, content type
-- One tap. Done.
+| # | Feature | Status |
+|---|---------|--------|
+| 1 | Share to Zuno | Implemented (save URL in app; native Share target on mobile) |
+| 2 | AI Categorization & Tagging | Implemented |
+| 3 | AI Summary Cards | Implemented |
+| 4 | Smart Collections | Implemented |
+| 5 | Natural Language Search | Implemented |
+| 6 | Question-Based Search (Ask Zuno) | Implemented |
+| 7 | Tag Search | Implemented |
+| 8 | Personalized Feed | Implemented (My Feed + Suggested) |
+| 9 | "Why This?" Explainability | Planned |
+| 10 | Weekly Digest & Insights | Planned |
+| 11 | Content Reminders | Planned |
+| 12 | Collaborative Collections | Planned (shared collections in progress) |
+| 13 | Cross-Platform Linking | Planned |
+| 14 | Browser Extension | Planned |
+| 15 | Voice Search | Planned |
+| 16 | Goals | Implemented |
 
 ---
 
-### 2. AI Categorization & Tagging
+### 1. Share to Zuno *(Implemented)* — Share from anywhere
+
+**How it works:** Save content **from anywhere**. From any social app (Instagram, YouTube, Facebook, Twitter/X, LinkedIn, TikTok, Reddit, Pinterest), tap the native **Share** button and choose **Zuno** as the destination. You can also paste a URL in the app to save articles, videos, or any link. The content is saved to your Zuno library instantly.
+
+**Key points:**
+- **Share from anywhere** — no copy-paste, no switching apps, no manual filing
+- Works with any app that has a Share action (Android/iOS share sheet)
+- In-app: paste any URL to save (articles, videos, posts)
+- Zuno extracts metadata: title, thumbnail, source URL, platform, content type
+- One tap or one paste. Done.
+
+---
+
+### 2. AI Categorization & Tagging *(Implemented)*
 
 **How it works:** When content is saved, Zuno's AI analyzes it and automatically assigns:
 - **Category** (e.g., Cooking, Tech, Travel, Fitness, Finance)
@@ -142,7 +174,7 @@ The more you save, the smarter Zuno gets.
 
 ---
 
-### 3. AI Summary Cards
+### 3. AI Summary Cards *(Implemented)*
 
 **How it works:** For every saved item, Zuno generates a short AI summary. Examples:
 - "3-min cooking video: Thai green curry recipe with coconut milk"
@@ -156,7 +188,7 @@ The more you save, the smarter Zuno gets.
 
 ---
 
-### 4. Smart Collections
+### 4. Smart Collections *(Implemented)*
 
 **How it works:** Collections are **not static folders**. They are AI-powered groups that auto-populate. When you save a new cooking reel, it automatically appears in your "Recipes" collection. No manual filing.
 
@@ -172,26 +204,28 @@ The more you save, the smarter Zuno gets.
 
 ---
 
-### 5. Natural Language Search
+### 5. Natural Language Search *(Implemented)* — Search anytime, personalized to your content
 
-**How it works:** Type in plain English. Examples:
+**How it works:** **Search anytime** in plain language. You search over *your* saved content — results are **personalized** to your library, not the whole web. Type in natural language. Examples:
 - "that recipe video I saved last month"
 - "articles about TypeScript"
 - "videos about cooking"
 - "saved posts from last week"
 - "travel reels from Instagram"
 
-Zuno understands intent, time references, content types, platforms, and topics. Returns ranked results.
+Zuno uses hybrid search (full-text + semantic embeddings) so it understands intent, time references, content types, platforms, and topics. Results are **personalized**: only *your* saved items, ranked by relevance to your query.
 
 **Key points:**
-- No keywords, no exact matches needed
+- **Search anytime** — over your library, from anywhere in the app
+- **Personalized search content** — every result is from *your* saves; no generic web results
+- **Natural language** — no keywords or exact matches; say it like you'd say it to a friend
 - Understands context: "last month," "from Instagram," "about cooking"
 - Results show AI summary + thumbnail + source + tags
 - Much faster than scrolling through a library
 
 ---
 
-### 6. Question-Based Search (Ask Zuno)
+### 6. Question-Based Search (Ask Zuno) *(Implemented)*
 
 **How it works:** A chat-like interface where you ask questions and Zuno responds with relevant saved content. Examples:
 - "What was that startup video I saved?"
@@ -207,7 +241,7 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 7. Tag Search
+### 7. Tag Search *(Implemented)*
 
 **How it works:** Search by tags — both AI-generated and user-created.
 - Click/tap a tag to see all items with that tag
@@ -222,9 +256,9 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 8. Personalized Feed
+### 8. Personalized Feed *(Implemented)*
 
-**How it works:** Zuno analyzes your saved content to understand your personality and interests. It then curates a feed of **new, related content from across social media** — content you haven't saved yet but are likely to care about.
+**How it works:** Zuno analyzes your saved content to understand your interests. You get **My Feed** (your saves) and **Suggested** (related content from others, ranked by relevance to your categories/tags). Discovery is personalized to what you save.
 
 **Example:** If you save a lot of cooking reels and tech articles, your feed shows trending cooking videos from YouTube, new food blogs, top tech threads from Twitter, etc.
 
@@ -260,7 +294,7 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 9. "Why This?" Explainability
+### 9. "Why This?" Explainability *(Planned)*
 
 **How it works:** On each recommended feed item, a small label explains why it's shown:
 - "Because you saved 12 cooking videos"
@@ -275,7 +309,7 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 10. Weekly Digest & Insights
+### 10. Weekly Digest & Insights *(Planned)*
 
 **How it works:** Every week, Zuno shows a summary:
 - "You saved 23 items this week"
@@ -292,7 +326,7 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 11. Content Reminders
+### 11. Content Reminders *(Planned)*
 
 **How it works:** Zuno nudges you to revisit content:
 - "Revisit this article you saved 2 weeks ago"
@@ -307,7 +341,7 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 12. Collaborative Collections
+### 12. Collaborative Collections *(Planned)*
 
 **How it works:** Share a collection with friends or colleagues. Everyone can add content to it.
 - "Trip Planning" shared with 3 friends — everyone adds travel reels, hotel articles, flight deals
@@ -322,7 +356,7 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 13. Cross-Platform Linking
+### 13. Cross-Platform Linking *(Planned)*
 
 **How it works:** Zuno's AI detects when content from different platforms is about the same topic and links them together.
 - "This YouTube video and this Twitter thread are about the same startup"
@@ -336,7 +370,7 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 14. Browser Extension
+### 14. Browser Extension *(Planned)*
 
 **How it works:** A Chrome/Safari/Firefox extension that adds a "Save to Zuno" button on any webpage. Save articles, blog posts, documentation, news — anything from the web.
 
@@ -348,15 +382,34 @@ Zuno understands intent, time references, content types, platforms, and topics. 
 
 ---
 
-### 15. Voice Search
+### 15. Voice Search *(Planned — not in app)*
 
-**How it works:** "Hey Zuno, find that recipe video I saved last week."
+**How it works (vision):** "Hey Zuno, find that recipe video I saved last week."
 
 **Key points:**
 - Hands-free search
 - Future potential for voice-first interactions
 - Natural extension of natural language search
 - Accessibility benefit
+
+---
+
+### 16. Goals *(Implemented)* — In detail
+
+**How it works:** Zuno analyzes *what* you save to detect **what you're trying to achieve**. The Goals engine runs as part of the AI pipeline whenever new content is processed. It uses RAG (vector similarity over your saved content) plus your existing goals and steps to decide whether to create a new goal, update an existing one, or add new steps. Goals are **actionable**: each goal has a title, a short description (why Zuno detected it), and **steps** tied to specific saved content (e.g. "Watch the saved tutorial on Runway ML," "Apply techniques from the saved article"). You can mark steps complete, dismiss goals, or merge similar goal suggestions.
+
+**In the app:**
+- **Goals tab** — List of goals with status: **Active**, **Completed**, **Dismissed**. An overall progress ring shows completion across all steps.
+- **Goal detail** — Open a goal to see all steps; each step can link to source content. Toggle steps complete/incomplete.
+- **Merge suggestions** — When the AI detects overlapping goals (e.g. "Learn AI video editing" and "Master Runway ML"), you get merge suggestions to consolidate.
+- **Evidence** — Each goal stores which saved content supported it; steps reference specific items so your library and your goals stay connected.
+
+**Key points:**
+- **Automatic** — Goals are inferred from your saves; no manual goal entry required.
+- **Actionable steps** — Each goal has 3–10 steps; steps are tied to your saved content so you know what to read or watch.
+- **RAG-powered** — The engine finds *semantically similar* past saves (not just "last N items") to detect patterns and suggest steps.
+- **Personality + goals** — The same pipeline updates a lightweight "personality" profile (interests, themes) used for feed and future analysis.
+- **You stay in control** — Complete, dismiss, or merge goals; edit title/description if you want.
 
 ---
 

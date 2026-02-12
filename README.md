@@ -65,9 +65,11 @@ supabase functions serve # run edge functions locally
 
 ## Documentation
 
-See the [docs/](docs/) folder for:
+See the [docs/](docs/) folder. Start with [docs/INDEX.md](docs/INDEX.md) for a full index. Main docs:
 
-- [APP_OVERVIEW.md](docs/APP_OVERVIEW.md) — high-level architecture
-- [CONCEPT.md](docs/CONCEPT.md) — product concept
+- [PRODUCT.md](docs/PRODUCT.md) — product overview, concept, features, screens, landing copy
+- [SETUP.md](docs/SETUP.md) — developer setup (EAS, backend deploy, app store)
+- [PRODUCTION.md](docs/PRODUCTION.md) — production runbook
+- [CONFIG_REFERENCE.md](docs/CONFIG_REFERENCE.md) — all config files
 - [UI_STYLE_GUIDE.md](docs/UI_STYLE_GUIDE.md) — design system
 - [Phase plans](docs/phases/) — step-by-step build phases

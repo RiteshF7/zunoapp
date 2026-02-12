@@ -9,6 +9,7 @@ import {
   SUPABASE_URL, SUPABASE_ANON_KEY,
   getOAuthRedirectUrl, isCapacitor,
 } from '../core/config.js';
+import { syncAuthToNativeIfIOS } from '../core/ios-share-sync.js';
 
 export function renderAuth(el) {
   el.innerHTML = `
@@ -120,6 +121,7 @@ export async function handleOAuthCallback(url) {
   const res = await api('GET', '/api/profile');
   if (res.ok) {
     setUserProfile(res.data);
+    syncAuthToNativeIfIOS(); // iOS Share Extension: sync token to App Group
     toast('Signed in as ' + (res.data.display_name || res.data.email || 'user'));
     return true;
   }

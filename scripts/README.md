@@ -23,6 +23,7 @@ This will: copy `.env.example` → `.env` if missing, fetch JWKS, link Supabase 
 | Step | PowerShell | Bash |
 |------|------------|------|
 | Copy .env from examples (if missing) | `.\scripts\setup-env.ps1` | `./scripts/setup-env.sh` |
+| Get Supabase URL from CLI (and update backend/.env) | `.\scripts\get-supabase-url.ps1 -Update` | `./scripts/get-supabase-url.sh --update` |
 | Fetch JWKS (uses `backend/.env` SUPABASE_URL) | `.\scripts\fetch-jwks.ps1` | `./scripts/fetch-jwks.sh` |
 | Link Supabase + push migrations | `.\scripts\supabase-push.ps1` or `.\scripts\supabase-push.ps1 <PROJECT_REF>` | `./scripts/supabase-push.sh` or `./scripts/supabase-push.sh <PROJECT_REF>` |
 | Set Edge Function secrets (from backend/.env) | `.\scripts\set-edge-secrets.ps1` | `./scripts/set-edge-secrets.sh` |

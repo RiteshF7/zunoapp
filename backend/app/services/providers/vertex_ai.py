@@ -38,11 +38,22 @@ def _ensure_init(settings: Settings) -> None:
     }
 
     # Use explicit service-account JSON when provided; fall back to ADC.
+    # Supports: file path (string) or inline JSON (env var paste, starts with '{')
     if settings.gcp_credentials_json:
-        creds = service_account.Credentials.from_service_account_file(
-            settings.gcp_credentials_json,
-            scopes=["https://www.googleapis.com/auth/cloud-platform"],
-        )
+        import json as _json
+
+        raw = settings.gcp_credentials_json.strip()
+        if raw.startswith("{"):
+            info = _json.loads(raw)
+            creds = service_account.Credentials.from_service_account_info(
+                info,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            )
+        else:
+            creds = service_account.Credentials.from_service_account_file(
+                raw,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            )
         init_kwargs["credentials"] = creds
 
     vertexai.init(**init_kwargs)

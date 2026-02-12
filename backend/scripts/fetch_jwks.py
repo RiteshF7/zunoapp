@@ -16,9 +16,25 @@ the URL as the first argument.
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from urllib.request import urlopen
+
+def _normalize_url(raw: str) -> str:
+    """Clean URL: strip markdown links [text](url), duplicates, whitespace."""
+    s = raw.strip().strip("'\"").strip()
+    # Extract first URL (handles markdown [text](url) and concatenated URLs)
+    match = re.search(r"https?://[^\s\]\)\]]+", s)
+    if match:
+        s = match.group(0).rstrip("/")
+        # Truncate at duplicated URL (e.g. url+url pasted twice)
+        for sep in ("https://", "http://"):
+            idx = s.find(sep, 10)
+            if idx > 0:
+                s = s[:idx].rstrip("/")
+                break
+    return s
 
 def _load_dotenv(env_path: Path) -> dict[str, str]:
     """Read key=value from .env file (no external deps)."""
@@ -44,16 +60,17 @@ def main():
     base = Path(__file__).resolve().parent.parent
     env_path = base / ".env"
     dotenv = _load_dotenv(env_path)
-    url = (
-        os.environ.get("SUPABASE_URL")
+    # Explicit CLI arg overrides env (so you can test different URLs)
+    raw = (
+        (sys.argv[1] if len(sys.argv) > 1 else None)
+        or os.environ.get("SUPABASE_URL")
         or dotenv.get("SUPABASE_URL")
-        or (sys.argv[1] if len(sys.argv) > 1 else None)
     )
-    if not url:
+    if not raw:
         print("Usage: SUPABASE_URL=<url> python fetch_jwks.py", file=sys.stderr)
         print("   or: python fetch_jwks.py <SUPABASE_URL>", file=sys.stderr)
         sys.exit(1)
-    url = url.rstrip("/")
+    url = _normalize_url(raw)
     jwks_url = f"{url}/auth/v1/.well-known/jwks.json"
     out_path = base / "jwks.json"
     print(f"Fetching {jwks_url} -> {out_path}")

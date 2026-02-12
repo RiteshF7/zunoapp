@@ -119,13 +119,13 @@ function switchLibraryTab(tab) {
   navigate('#library/' + tab);
 }
 
-function openSaveContentModal() {
+function openSaveContentModal(prefillUrl = '') {
   openModal(`
     <h2 class="text-lg font-bold text-heading mb-4">Save Content</h2>
     <div class="space-y-4">
       <div>
         <label for="m-url" class="text-xs text-muted font-medium mb-1.5 block">URL</label>
-        <input id="m-url" type="url" placeholder="Paste a link..." class="w-full bg-bg border border-border rounded-xl px-4 py-3 text-sm text-heading placeholder-muted/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30" autofocus />
+        <input id="m-url" type="url" placeholder="Paste a link..." value="${esc(prefillUrl)}" class="w-full bg-bg border border-border rounded-xl px-4 py-3 text-sm text-heading placeholder-muted/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30" autofocus />
         <p class="text-[11px] text-muted mt-1.5">Title, description, platform &amp; type are auto-detected</p>
       </div>
       <button onclick="doSaveContent()" id="save-content-btn" class="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.97]">Save Content</button>

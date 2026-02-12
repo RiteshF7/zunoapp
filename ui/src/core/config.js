@@ -35,6 +35,19 @@ export function isCapacitor() {
 }
 
 /**
+ * API base URL (same logic as api.js). Used for iOS Share Extension sync.
+ */
+export function getApiBase() {
+  return (
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE) ||
+    (typeof window !== 'undefined' && window.ZUNO_API_BASE) ||
+    (typeof window !== 'undefined' && window.location?.hostname === 'localhost' && !window.location?.port
+      ? 'http://10.0.2.2:8000'
+      : (typeof window !== 'undefined' && window.location?.origin) || '')
+  );
+}
+
+/**
  * Build the OAuth redirect URL based on the current environment.
  * - Capacitor:  com.zuno.app://callback  (deep link, opens system browser → back to app)
  * - Vite dev:   http://localhost:5173/

@@ -70,6 +70,15 @@ export async function renderProfile(el) {
         </div>
       </section>
 
+      <!-- Chrome Extension -->
+      <section class="bg-surface rounded-2xl p-5 mb-4 shadow-card border border-border" aria-label="Chrome Extension">
+        <h3 class="text-sm font-semibold text-heading mb-2">Chrome Extension</h3>
+        <p class="text-xs text-muted mb-3">Connect the Share to Zuno extension to save links without opening the app.</p>
+        <a href="#connect-extension" target="_blank" rel="noopener" class="block w-full text-center py-2.5 rounded-xl text-sm font-medium bg-bg hover:bg-surface-hover border border-border text-heading transition-colors">
+          <span class="material-icons-round text-base align-middle mr-1">extension</span> Connect Extension
+        </a>
+      </section>
+
       ${isAdmin ? `
       <!-- Admin (only for allowlisted users) -->
       <section class="bg-surface rounded-2xl p-5 mb-4 shadow-card border border-border" aria-label="Admin">

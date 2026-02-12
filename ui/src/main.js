@@ -10,7 +10,8 @@ import './styles/animations.css';
 
 // 2. Import core modules (order matters: theme first, then navigate, then router)
 import { initTheme } from './core/theme.js';
-import { isCapacitor } from './core/config.js';
+import { isCapacitor, getApiBase } from './core/config.js';
+import { syncAuthToNativeIfIOS } from './core/ios-share-sync.js';
 import './core/navigate.js';   // sets window.navigate
 import { router } from './core/router.js';
 import { App } from '@capacitor/app';
@@ -64,9 +65,23 @@ function runWhenReady(fn) {
 window.addEventListener('hashchange', router);
 
 runWhenReady(async () => {
+  // Chrome extension share: capture ?share=url and store for after auth
+  const params = new URLSearchParams(window.location.search);
+  const shareUrl = params.get('share');
+  if (shareUrl) {
+    try { sessionStorage.setItem('zuno_pending_share', shareUrl); } catch (_) {}
+    const u = new URL(window.location.href);
+    u.searchParams.delete('share');
+    window.history.replaceState({}, '', u.pathname + u.search + (u.hash || ''));
+  }
+
   // If Supabase redirected back with tokens in the hash (web flow), handle them first
   await handleOAuthCallback();
   await router();
+
+  // iOS Share Extension: sync token + apiBase to App Group so Share to Zuno works
+  syncAuthToNativeIfIOS();
+
   // Splash: only place that controls duration — change this value to change splash time (ms)
   const MIN_SPLASH_MS = 2000;
   if (typeof hideSplash === 'function') {

@@ -1,0 +1,30 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradientBlack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#121212;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0f1e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Round background - Black gradient -->
+  <circle fill="url(#gradientBlack)" cx="50" cy="50" r="50"/>
+  <!-- Network lines -->
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="50" x2="80" y1="20" y2="40"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="80" x2="70" y1="40" y2="75"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="70" x2="30" y1="75" y2="75"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="30" x2="20" y1="75" y2="40"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="20" x2="50" y1="40" y2="20"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="50" x2="70" y1="20" y2="75"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="50" x2="30" y1="20" y2="75"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="80" x2="30" y1="40" y2="75"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="20" x2="70" y1="40" y2="75"/>
+  <line stroke="#E2E8F0" stroke-width="0.5" x1="20" x2="80" y1="40" y2="40"/>
+  
+  <!-- Network nodes -->
+  <circle fill="#E2E8F0" cx="50" cy="20" r="1.5"/>
+  <circle fill="#E2E8F0" cx="80" cy="40" r="1.5"/>
+  <circle fill="#E2E8F0" cx="70" cy="75" r="1.5"/>
+  <circle fill="#E2E8F0" cx="30" cy="75" r="1.5"/>
+  <circle fill="#E2E8F0" cx="20" cy="40" r="1.5"/>
+  <circle fill="#E2E8F0" opacity="0.5" cx="50" cy="50" r="2"/>
+</svg>

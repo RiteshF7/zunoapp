@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 280px;
+      padding: 12px 16px;
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+    }
+    h3 { margin: 0 0 12px; font-size: 14px; }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #4f46e5; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .url { font-size: 11px; color: #64748b; margin: 8px 0; word-break: break-all; max-height: 48px; overflow: hidden; }
+    .hint { font-size: 11px; color: #94a3b8; margin-top: 10px; }
+    .connect { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div id="content">
+    <h3>Share to Zuno</h3>
+    <div class="url" id="url"></div>
+    <button id="share-btn">Share this page</button>
+    <p class="hint">Right-click a page or link for Share to Zuno</p>
+  </div>
+  <div id="connect" class="connect" style="display:none">
+    <p style="margin:0 0 10px; font-size:12px">Log in to Zuno, then click Connect.</p>
+    <button id="connect-btn">Connect Extension</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

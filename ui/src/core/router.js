@@ -30,9 +30,20 @@ export async function router() {
   const token = localStorage.getItem('zuno_token');
   const { page, id } = getRoute();
 
-  // Auth guard
-  if (!token && page !== 'auth') { navigate('#auth'); return; }
+  // Auth guard (connect-extension allows unauthenticated for content script to read hash)
+  if (!token && page !== 'auth' && page !== 'connect-extension') { navigate('#auth'); return; }
   if (token && page === 'auth') { navigate('#home'); return; }
+
+  // Chrome extension connect - show minimal page, content script will grab token
+  if (page === 'connect-extension') {
+    main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in">
+      <p class="text-heading font-semibold mb-2">Connecting extension…</p>
+      <p class="text-muted text-sm">Make sure you're logged in. If nothing happens, ensure the Share to Zuno extension is installed.</p>
+    </div>`;
+    document.getElementById('topnav').classList.add('hidden');
+    document.getElementById('bottomnav').classList.add('hidden');
+    return;
+  }
 
   // Backward compat redirects
   if (page === 'feed') { navigate('#home'); return; }
@@ -77,7 +88,17 @@ export async function router() {
     switch (page) {
       case 'auth': renderAuth(main); break;
       case 'home': await renderHome(main); break;
-      case 'library': await renderLibrary(main, id); break;
+      case 'library':
+        await renderLibrary(main, id);
+        // Chrome extension share: open save modal if pending share URL
+        try {
+          const pending = sessionStorage.getItem('zuno_pending_share');
+          if (pending) {
+            sessionStorage.removeItem('zuno_pending_share');
+            if (typeof openSaveContentModal === 'function') openSaveContentModal(pending);
+          }
+        } catch (_) {}
+        break;
       case 'content-detail': await renderContentDetail(main, id); break;
       case 'collection': await renderCollectionDetail(main, id); break;
       case 'goals': await renderGoals(main); break;

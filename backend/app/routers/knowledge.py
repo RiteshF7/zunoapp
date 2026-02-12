@@ -12,21 +12,21 @@ from app.schemas.models import (
     KnowledgeQueryRequest,
     KnowledgeQueryResponse,
     KnowledgeSourceOut,
+    KnowledgeStatsOut,
     ReindexRequest,
     ReindexResponse,
 )
 from app.services.ai_service import (
     expand_query,
     generate_query_embedding,
-    generate_embeddings_batch,
     generate_rag_answer,
 )
-from app.services.chunking_service import chunk_text
-from app.utils.rate_limit import limiter, RATE_AI_PROCESS
+from app.services.content_indexing import index_content_batch
+from app.utils.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])
+router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
 RATE_KNOWLEDGE_QUERY = "30/minute"
 RATE_KNOWLEDGE_REINDEX = "5/hour"
@@ -232,85 +232,20 @@ async def reindex_content(
             message="No processed content found to reindex.",
         )
 
-    total_chunks = 0
-    errors = 0
-
-    for item in content_items:
-        try:
-            # Use full_text if available, otherwise fall back to summary + description
-            text = item.get("full_text") or ""
-            if not text:
-                parts = []
-                if item.get("title"):
-                    parts.append(f"Title: {item['title']}")
-                if item.get("ai_summary"):
-                    parts.append(item["ai_summary"])
-                if item.get("description"):
-                    parts.append(item["description"])
-                text = "\n\n".join(parts)
-
-            if not text.strip():
-                continue
-
-            # Chunk
-            chunks = chunk_text(
-                text,
-                max_tokens=settings.rag_chunk_size,
-                overlap_tokens=settings.rag_chunk_overlap,
-            )
-            if not chunks:
-                continue
-
-            # Embed
-            chunk_texts = [c.chunk_text for c in chunks]
-            embeddings = await generate_embeddings_batch(chunk_texts, settings)
-
-            # Delete old chunks
-            db.table("content_chunks").delete().eq("content_id", item["id"]).execute()
-
-            # Build metadata
-            content_metadata = {
-                "title": item.get("title", ""),
-                "platform": item.get("platform", ""),
-                "url": item.get("url", ""),
-                "category": item.get("ai_category", ""),
-            }
-
-            # Insert new chunks
-            rows = []
-            for chunk, embedding in zip(chunks, embeddings):
-                row = {
-                    "content_id": item["id"],
-                    "user_id": user_id,
-                    "chunk_index": chunk.chunk_index,
-                    "chunk_text": chunk.chunk_text,
-                    "token_count": chunk.token_count,
-                    "metadata": content_metadata,
-                }
-                if embedding is not None:
-                    row["embedding"] = embedding
-                rows.append(row)
-
-            if rows:
-                db.table("content_chunks").insert(rows).execute()
-                total_chunks += len(rows)
-
-        except Exception as exc:
-            logger.error("Failed to reindex content %s: %s", item["id"], exc)
-            errors += 1
+    stats = await index_content_batch(db, user_id, content_items, settings)
 
     return ReindexResponse(
-        content_processed=len(content_items),
-        chunks_created=total_chunks,
-        errors=errors,
-        message=f"Reindexed {len(content_items)} content items into {total_chunks} chunks.",
+        content_processed=stats["content_processed"],
+        chunks_created=stats["chunks_created"],
+        errors=stats["errors"],
+        message=f"Reindexed {stats['content_processed']} content items into {stats['chunks_created']} chunks.",
     )
 
 
 # ---------------------------------------------------------------------------
 # GET /api/knowledge/stats — Knowledge base stats for the user
 # ---------------------------------------------------------------------------
-@router.get("/stats")
+@router.get("/stats", response_model=KnowledgeStatsOut)
 @limiter.limit("30/minute")
 async def knowledge_stats(
     request: Request,

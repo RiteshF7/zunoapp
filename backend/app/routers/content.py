@@ -7,17 +7,22 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Upl
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
-from app.schemas.models import ContentOut, ContentCreate, ContentCreateText, ContentUpdate
+from app.schemas.models import ContentOut, ContentCreate, ContentCreateText, ContentUpdate, PaginatedResponse
 from app.services.metadata_service import fetch_url_metadata
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
+from app.utils.upload_validation import (
+    check_extension,
+    check_image_dimensions,
+    check_magic_bytes,
+)
 from app.utils.url_detect import detect_platform_and_type
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/content", tags=["content"])
+router = APIRouter(prefix="/content", tags=["content"])
 
 
-@router.get("", response_model=list[ContentOut])
+@router.get("", response_model=PaginatedResponse[ContentOut])
 @limiter.limit(RATE_READ)
 async def list_content(
     request: Request,
@@ -32,7 +37,7 @@ async def list_content(
     """List content for the current user with optional filters."""
     query = (
         db.table("content")
-        .select("*")
+        .select("*", count="exact")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
     )
@@ -47,7 +52,18 @@ async def list_content(
     query = query.range(offset, offset + limit - 1)
 
     result = query.execute()
-    return result.data or []
+    items = result.data or []
+    total = getattr(result, "count", None)
+    if total is None:
+        total = len(items) if offset == 0 else offset + len(items)
+    has_more = offset + len(items) < total
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=has_more,
+    )
 
 
 @router.get("/{content_id}", response_model=ContentOut)
@@ -198,10 +214,26 @@ async def upload_image_content(
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image files are accepted")
 
+    if not check_extension(file.filename):
+        raise HTTPException(
+            status_code=400,
+            detail="Allowed image extensions are: jpg, jpeg, png, gif, webp",
+        )
+
     # Read file bytes
     data = await file.read()
     if len(data) > 10 * 1024 * 1024:  # 10 MB limit
         raise HTTPException(status_code=400, detail="Image must be under 10 MB")
+
+    if not check_magic_bytes(data, file.content_type):
+        raise HTTPException(
+            status_code=400,
+            detail="File content does not match declared image type",
+        )
+
+    ok, dim_err = check_image_dimensions(data)
+    if not ok:
+        raise HTTPException(status_code=400, detail=dim_err or "Invalid image dimensions")
 
     ext = file.filename.rsplit(".", 1)[-1] if file.filename and "." in file.filename else "jpg"
     storage_path = f"{user_id}/{uuid.uuid4().hex}.{ext}"

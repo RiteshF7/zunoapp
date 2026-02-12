@@ -14,7 +14,7 @@ from app.schemas.models import (
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 from app.utils.cache import cache, bust_cache
 
-router = APIRouter(prefix="/api/collections", tags=["collections"])
+router = APIRouter(prefix="/collections", tags=["collections"])
 
 
 # ---------------------------------------------------------------------------

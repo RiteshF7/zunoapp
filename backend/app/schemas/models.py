@@ -3,8 +3,30 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Generic, TypeVar
 from pydantic import BaseModel, Field
+
+T = TypeVar("T")
+
+
+# ---------------------------------------------------------------------------
+# Standard error response
+# ---------------------------------------------------------------------------
+class ErrorResponse(BaseModel):
+    """Standardised error envelope returned by all error handlers."""
+    error: str
+    code: str
+    detail: str | None = None
+    request_id: str | None = None
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """Paginated list with metadata."""
+    items: list[T]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
 
 
 # ---------------------------------------------------------------------------
@@ -217,24 +239,9 @@ class UserPreferencesUpdate(BaseModel):
 # ---------------------------------------------------------------------------
 # Suggested Feed
 # ---------------------------------------------------------------------------
-class SuggestedContentOut(BaseModel):
-    """A content item from another user's shared collection."""
-    id: str
-    user_id: str
-    url: str
-    title: str | None = None
-    description: str | None = None
-    thumbnail_url: str | None = None
-    platform: str = "other"
-    content_type: str = "post"
-    ai_category: str | None = None
-    ai_summary: str | None = None
-    ai_structured_content: dict[str, Any] | None = None
-    ai_processed: bool = False
-    source_metadata: dict[str, Any] | None = None
+class SuggestedContentOut(ContentOut):
+    """A content item from another user's shared collection, with relevance score."""
     relevance_score: float = 0.0
-    created_at: str
-    updated_at: str
 
 
 # ---------------------------------------------------------------------------
@@ -276,6 +283,23 @@ class ReindexResponse(BaseModel):
     content_processed: int = 0
     chunks_created: int = 0
     errors: int = 0
+    message: str = ""
+
+
+class KnowledgeStatsOut(BaseModel):
+    """Knowledge base statistics for a user."""
+    total_chunks: int = 0
+    indexed_content: int = 0
+    total_processed_content: int = 0
+    needs_reindex: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Generic status message
+# ---------------------------------------------------------------------------
+class StatusMessage(BaseModel):
+    """Simple status response for background tasks."""
+    status: str = "ok"
     message: str = ""
 
 

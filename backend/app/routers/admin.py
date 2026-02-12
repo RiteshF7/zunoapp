@@ -15,7 +15,7 @@ from app.prompts import reload_prompts
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 # ── Cache management ──────────────────────────────────────────────────────

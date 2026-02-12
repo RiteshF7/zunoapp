@@ -9,9 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
-import random
 from typing import Any
-from urllib.parse import quote
 
 from app.config import Settings
 from app.prompts import get_prompt
@@ -228,59 +226,3 @@ async def generate_rag_answer(
         raise RuntimeError(f"Answer generation failed: {exc}") from exc
 
 
-# ---------------------------------------------------------------------------
-# Public API — AI feed generation
-# ---------------------------------------------------------------------------
-async def generate_ai_feed(
-    settings: Settings,
-    top_categories: list[tuple[str, int]],
-    top_tags: list[tuple[str, int]],
-    top_platforms: list[tuple[str, int]],
-    interests: dict[str, Any],
-) -> list[dict[str, Any]]:
-    """Generate personalized feed recommendations via the AI provider."""
-    provider = _get_provider(settings)
-    prompt_config = get_prompt("feed_generation")
-    system_prompt = prompt_config["system"]
-    temperature = prompt_config.get("temperature", 0.8)
-
-    user_prompt = prompt_config["user_template"].format(
-        top_categories=", ".join(f"{c} ({n} saved)" for c, n in top_categories),
-        top_tags=", ".join(f"{t} ({n})" for t, n in top_tags),
-        top_platforms=", ".join(p for p, _ in top_platforms),
-        total_saved=interests.get("total_saved", 0),
-    )
-
-    raw_json = await provider.generate_text(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        temperature=temperature,
-        max_tokens=2048,
-        json_mode=True,
-    )
-
-    content = json.loads(raw_json)
-    items = (
-        content
-        if isinstance(content, list)
-        else content.get("items") or content.get("recommendations") or []
-    )
-
-    return [
-        {
-            "title": item.get("title", ""),
-            "description": item.get("description", ""),
-            "image_url": (
-                f"https://picsum.photos/seed/"
-                f"{quote(str(item.get('title', ''))[:10])}/400/250"
-            ),
-            "source_url": item.get("source_url", ""),
-            "category": item.get("category", ""),
-            "content_type": item.get("content_type", "article"),
-            "platform": item.get("platform", "other"),
-            "likes": item.get("likes", random.randint(500, 10000)),
-            "relevance_score": random.random() * 0.5 + 0.5,
-            "reason": item.get("reason", ""),
-        }
-        for item in items
-    ]

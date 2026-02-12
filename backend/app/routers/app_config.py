@@ -20,7 +20,7 @@ from app.utils.rate_limit import limiter, RATE_PUBLIC
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/config", tags=["config"])
+router = APIRouter(prefix="/config", tags=["config"])
 
 # ── Static config (can later be moved to a DB table / env overrides) ──────
 

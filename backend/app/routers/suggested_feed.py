@@ -10,11 +10,11 @@ from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
 from app.schemas.models import SuggestedContentOut
-from app.services.suggested_feed_service import get_suggested_feed
+from app.services.feed_service import get_suggested_feed
 from app.utils.rate_limit import limiter, RATE_READ
 from app.utils.cache import cache
 
-router = APIRouter(prefix="/api/suggested-feed", tags=["suggested-feed"])
+router = APIRouter(prefix="/suggested-feed", tags=["suggested-feed"])
 
 
 @router.get("", response_model=list[SuggestedContentOut])

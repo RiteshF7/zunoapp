@@ -7,7 +7,7 @@ from app.dependencies import get_current_user, get_supabase
 from app.schemas.models import ProfileOut, ProfileUpdate
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 
-router = APIRouter(prefix="/api/profile", tags=["profile"])
+router = APIRouter(prefix="/profile", tags=["profile"])
 
 
 @router.get("", response_model=ProfileOut)

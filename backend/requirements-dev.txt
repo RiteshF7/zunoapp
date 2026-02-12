@@ -1,0 +1,4 @@
+# Development and quality tools
+ruff>=0.8.0
+mypy>=1.11.0
+pre-commit>=3.7.0

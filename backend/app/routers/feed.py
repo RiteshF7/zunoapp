@@ -4,14 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
-from app.schemas.models import FeedItemOut
+from app.schemas.models import FeedItemOut, PaginatedResponse
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 from app.utils.cache import cache, bust_cache
 
-router = APIRouter(prefix="/api", tags=["feed"])
+router = APIRouter(prefix="/feed", tags=["feed"])
 
 
-@router.get("/feed", response_model=list[FeedItemOut])
+@router.get("", response_model=PaginatedResponse[FeedItemOut])
 @limiter.limit(RATE_READ)
 async def get_feed(
     request: Request,
@@ -41,7 +41,7 @@ async def _get_feed_cached(
     """Inner cached function for feed items."""
     query = (
         db.table("feed_items")
-        .select("*")
+        .select("*", count="exact")
         .order("created_at", desc=True)
     )
 
@@ -53,10 +53,21 @@ async def _get_feed_cached(
     query = query.range(offset, offset + limit - 1)
 
     result = query.execute()
-    return result.data or []
+    items = result.data or []
+    total = getattr(result, "count", None)
+    if total is None:
+        total = len(items) if offset == 0 else offset + len(items)
+    has_more = offset + len(items) < total
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=has_more,
+    )
 
 
-@router.get("/bookmarks", response_model=list[str])
+@router.get("/bookmarks", response_model=list[str], tags=["bookmarks"])
 @limiter.limit(RATE_READ)
 async def get_bookmarks(
     request: Request,
@@ -73,7 +84,7 @@ async def get_bookmarks(
     return [row["feed_item_id"] for row in (result.data or [])]
 
 
-@router.post("/bookmarks/{feed_item_id}/toggle")
+@router.post("/bookmarks/{feed_item_id}/toggle", tags=["bookmarks"])
 @limiter.limit(RATE_WRITE)
 async def toggle_bookmark(
     request: Request,

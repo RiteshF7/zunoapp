@@ -8,6 +8,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 UI_DIR="$SCRIPT_DIR/../ui"
+BACKEND_DIR="$SCRIPT_DIR/../backend"
 MOBILE_DIR="$SCRIPT_DIR"
 ANDROID_DIR="$SCRIPT_DIR/android"
 APK_PATH="$ANDROID_DIR/app/build/outputs/apk/debug/app-debug.apk"
@@ -30,10 +31,10 @@ if [[ "$1" != "--skip-ui" ]]; then
   echo ""
   echo "▸ Copying build output to mobile/www..."
   rm -rf "$MOBILE_DIR/www/assets"
-  cp -r "$SCRIPT_DIR/../static/assets" "$MOBILE_DIR/www/assets"
+  cp -r "$BACKEND_DIR/static/assets" "$MOBILE_DIR/www/assets"
 
   # Copy index.html from static build and fix asset paths for mobile
-  cp "$SCRIPT_DIR/../static/index.html" "$MOBILE_DIR/www/index.html"
+  cp "$BACKEND_DIR/static/index.html" "$MOBILE_DIR/www/index.html"
   sed -i 's|src="/static/assets/|src="./assets/|g' "$MOBILE_DIR/www/index.html"
   sed -i 's|href="/static/assets/|href="./assets/|g' "$MOBILE_DIR/www/index.html"
   echo "  ✓ Assets + index.html copied"

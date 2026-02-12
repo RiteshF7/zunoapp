@@ -1,17 +1,23 @@
 """FastAPI application entry point."""
 
 import logging
-
+import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+import jwt as pyjwt
+from fastapi import APIRouter, Depends, FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import get_settings
+from app.dependencies import get_supabase
+from app.exceptions import ZunoException
 from app.utils.rate_limit import limiter
 from app.routers import (
     profile, collections, content, feed, search, ai,
@@ -19,31 +25,133 @@ from app.routers import (
     knowledge, goals,
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-)
+from app.logging_config import configure_logging
 
 settings = get_settings()
+configure_logging(log_level=settings.log_level, log_format=settings.log_format)
+logger = logging.getLogger(__name__)
+
+APP_VERSION = "1.0.0"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: record start time. Shutdown: clear caches."""
+    app.state.start_time = time.time()
+    logger.info("Zuno API started")
+    yield
+    logger.info("Zuno API shutting down")
+    from app.utils.cache import _store
+    _store.clear()
+
+
+OPENAPI_TAGS = [
+    {"name": "config", "description": "App configuration and feature flags"},
+    {"name": "profile", "description": "User profile"},
+    {"name": "user-preferences", "description": "Per-user preferences"},
+    {"name": "collections", "description": "Content collections"},
+    {"name": "content", "description": "Content CRUD and upload"},
+    {"name": "feed", "description": "Feed and bookmarks"},
+    {"name": "suggested-feed", "description": "Suggested content"},
+    {"name": "search", "description": "Search and popular tags"},
+    {"name": "ai", "description": "AI processing"},
+    {"name": "knowledge", "description": "RAG knowledge engine"},
+    {"name": "goals", "description": "AI-detected goals"},
+    {"name": "admin", "description": "Admin and cache management"},
+]
 
 app = FastAPI(
     title="Zuno API",
     description="Backend API for the Zuno content curation app",
-    version="1.0.0",
+    version=APP_VERSION,
+    lifespan=lifespan,
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None,
+    openapi_tags=OPENAPI_TAGS,
 )
+
+
+# ── Global exception handlers ─────────────────────────────────────────────
+
+@app.exception_handler(ZunoException)
+async def zuno_exception_handler(request: Request, exc: ZunoException):
+    """Handle all custom Zuno domain exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.message,
+            "code": exc.error_code,
+            "detail": exc.detail,
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle Pydantic / FastAPI request validation errors."""
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "Request validation failed",
+            "code": "VALIDATION_ERROR",
+            "detail": str(exc.errors()),
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Handle standard HTTP exceptions (404, 405, etc.) in our format."""
+    detail_str = exc.detail if isinstance(exc.detail, str) else str(exc.detail) if exc.detail else "HTTP error"
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": detail_str,
+            "code": "HTTP_ERROR",
+            "detail": detail_str,
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Catch-all for any unhandled exceptions — return 500 in standard format."""
+    logger.error("Unhandled exception: %s", exc, exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "code": "INTERNAL_ERROR",
+            "detail": None,
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+
 
 # ── Rate limiter ──────────────────────────────────────────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── CORS ──────────────────────────────────────────────────────────────────
+# ── Middleware (order: last added = outermost = runs first) ───────────────
+from fastapi.middleware.gzip import GZipMiddleware
+from app.middleware import SecurityHeadersMiddleware, RequestIDMiddleware, TimingMiddleware
+
+# Innermost → outermost (add order is reversed from execution order)
+app.add_middleware(TimingMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestIDMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
+# ── CORS (must be outermost to handle preflight correctly) ────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=settings.cors_allow_methods,
+    allow_headers=settings.cors_allow_headers,
 )
 
 
@@ -59,7 +167,6 @@ async def inject_user_id_for_rate_limit(request: Request, call_next):
     auth = request.headers.get("authorization", "")
     if auth.startswith("Bearer "):
         try:
-            import jwt as pyjwt
             token = auth[7:]
             # Decode WITHOUT verification just to read 'sub' for rate-limit keying
             payload = pyjwt.decode(token, options={"verify_signature": False})
@@ -69,24 +176,70 @@ async def inject_user_id_for_rate_limit(request: Request, call_next):
     return await call_next(request)
 
 
-# ── Routers ───────────────────────────────────────────────────────────────
-app.include_router(app_config.router)        # public — loaded first at app start
-app.include_router(profile.router)
-app.include_router(user_preferences.router)  # per-user config (feed_type, etc.)
-app.include_router(collections.router)
-app.include_router(content.router)
-app.include_router(feed.router)
-app.include_router(suggested_feed.router)    # interest-based suggestions
-app.include_router(search.router)
-app.include_router(ai.router)
-app.include_router(knowledge.router)         # RAG knowledge engine
-app.include_router(goals.router)             # AI-detected user goals
-app.include_router(admin.router)             # cache bust, prompt reload, stats
+# ── API v1 ────────────────────────────────────────────────────────────────
+v1 = APIRouter(prefix="/api/v1")
+v1.include_router(app_config.router)         # GET /api/v1/config
+v1.include_router(profile.router)            # /api/v1/profile
+v1.include_router(user_preferences.router)   # /api/v1/user-preferences
+v1.include_router(collections.router)        # /api/v1/collections
+v1.include_router(content.router)            # /api/v1/content
+v1.include_router(feed.router)               # /api/v1/feed
+v1.include_router(suggested_feed.router)     # /api/v1/suggested-feed
+v1.include_router(search.router)             # /api/v1/search
+v1.include_router(ai.router)                 # /api/v1/ai
+v1.include_router(knowledge.router)          # /api/v1/knowledge
+v1.include_router(goals.router)              # /api/v1/goals
+v1.include_router(admin.router)              # /api/v1/admin
+
+app.include_router(v1)
+
+
+# ── Legacy redirect: /api/... → /api/v1/... ──────────────────────────────
+@app.api_route(
+    "/api/{path:path}",
+    methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
+    include_in_schema=False,
+)
+async def legacy_api_redirect(path: str, request: Request):
+    """Redirect old /api/... requests to /api/v1/... during migration."""
+    query = f"?{request.url.query}" if request.url.query else ""
+    return RedirectResponse(
+        url=f"/api/v1/{path}{query}",
+        status_code=307,
+    )
 
 
 @app.get("/health")
-async def health_check():
-    return {"status": "ok", "service": "zuno-api"}
+async def health_check(request: Request):
+    """Basic health: status, version, uptime. Always 200."""
+    start = getattr(request.app.state, "start_time", None) or time.time()
+    uptime = time.time() - start
+    return {
+        "status": "ok",
+        "service": "zuno-api",
+        "version": APP_VERSION,
+        "uptime_seconds": round(uptime, 2),
+    }
+
+
+@app.get("/health/live")
+async def health_live():
+    """Liveness probe: process is running. Always 200."""
+    return {"status": "ok"}
+
+
+@app.get("/health/ready")
+async def health_ready(db=Depends(get_supabase)):
+    """Readiness probe: DB connectivity. 200 if OK, 503 if not."""
+    try:
+        db.table("_migrations").select("1").limit(1).execute()
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        logger.warning("Health ready check failed: %s", e)
+        return JSONResponse(
+            status_code=503,
+            content={"status": "unavailable", "database": "disconnected", "detail": str(e)},
+        )
 
 
 # ── Root redirect ─────────────────────────────────────────────────────────

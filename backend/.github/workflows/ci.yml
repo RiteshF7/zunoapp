@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff mypy
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+      - name: Lint with ruff
+        run: ruff check app tests
+        continue-on-error: true
+
+      - name: Type check with mypy
+        run: mypy app --ignore-missing-imports
+        continue-on-error: true
+
+      - name: Run tests
+        run: pytest tests -v --tb=short
+        env:
+          SUPABASE_URL: https://test.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: test-key
+          SUPABASE_JWT_SECRET: test-jwt-secret-at-least-32-characters-long
+
+      - name: Coverage report
+        run: pytest tests --cov=app --cov-report=term-missing --cov-fail-under=0
+        env:
+          SUPABASE_URL: https://test.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: test-key
+          SUPABASE_JWT_SECRET: test-jwt-secret-at-least-32-characters-long

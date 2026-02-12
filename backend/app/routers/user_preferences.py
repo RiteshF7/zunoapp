@@ -16,7 +16,7 @@ from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/user-preferences", tags=["user-preferences"])
+router = APIRouter(prefix="/user-preferences", tags=["user-preferences"])
 
 _VALID_FEED_TYPES = {"usersaved", "suggestedcontent"}
 

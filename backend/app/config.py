@@ -45,13 +45,54 @@ class Settings(BaseSettings):
     rag_chunk_overlap: int = 50     # Overlap tokens between chunks
     rag_top_k: int = 8              # Default number of chunks to retrieve
 
+    # Content processing
+    max_body_chars: int = 8000      # Max chars of body text to extract from URLs
+    max_upload_size_mb: int = 10    # Max file upload size in MB
+
+    # Goal engine
+    goal_max_similar_content: int = 15
+    goal_similarity_threshold: float = 0.3
+    goal_debounce_seconds: int = 30
+
+    # Feed
+    suggested_feed_pool_size: int = 500  # Max candidates fetched before scoring
+
+    # Cache
+    cache_max_entries: int = 2048   # Max in-memory cache entries
+
+    # Knowledge
+    knowledge_similarity_threshold: float = 0.45
+
+    # Logging
+    log_level: str = "INFO"           # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    log_format: str = "plain"         # "plain" or "json"
+
+    # Environment
+    environment: str = "development"   # development, staging, production
+
     # Server
     backend_port: int = 8000
     cors_origins: str = "http://localhost:8081,http://localhost:19006"
 
     @property
+    def debug(self) -> bool:
+        return self.environment == "development"
+
+    @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def cors_allow_methods(self) -> list[str]:
+        if self.environment == "production":
+            return ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"]
+        return ["*"]
+
+    @property
+    def cors_allow_headers(self) -> list[str]:
+        if self.environment == "production":
+            return ["Authorization", "Content-Type", "Accept", "X-Request-ID", "Origin"]
+        return ["*"]
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

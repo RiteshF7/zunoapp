@@ -26,7 +26,7 @@ from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/goals", tags=["goals"])
+router = APIRouter(prefix="/goals", tags=["goals"])
 
 _VALID_STATUSES = {"active", "completed", "dismissed"}
 

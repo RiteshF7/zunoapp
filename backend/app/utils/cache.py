@@ -24,7 +24,6 @@ overhead of Redis while still eliminating redundant DB queries.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 from functools import wraps

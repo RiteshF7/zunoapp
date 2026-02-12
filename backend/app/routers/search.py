@@ -10,10 +10,10 @@ from app.services.ai_service import generate_query_embedding
 from app.utils.rate_limit import limiter, RATE_SEARCH, RATE_READ
 from app.utils.cache import cache
 
-router = APIRouter(tags=["search"])
+router = APIRouter(prefix="/search", tags=["search"])
 
 
-@router.get("/api/search", response_model=list[SearchResultOut])
+@router.get("", response_model=list[SearchResultOut])
 @limiter.limit(RATE_SEARCH)
 async def full_text_search(
     request: Request,
@@ -30,7 +30,7 @@ async def full_text_search(
     return result.data or []
 
 
-@router.get("/api/search/hybrid", response_model=list[SearchResultOut])
+@router.get("/hybrid", response_model=list[SearchResultOut])
 @limiter.limit(RATE_SEARCH)
 async def hybrid_search(
     request: Request,
@@ -58,7 +58,7 @@ async def hybrid_search(
     return result.data or []
 
 
-@router.get("/api/search/tag/{slug}", response_model=list[SearchResultOut])
+@router.get("/tag/{slug}", response_model=list[SearchResultOut])
 @limiter.limit(RATE_SEARCH)
 async def search_by_tag(
     request: Request,
@@ -75,7 +75,7 @@ async def search_by_tag(
     return result.data or []
 
 
-@router.get("/api/tags/popular")
+@router.get("/tags/popular", response_model=list[PopularTagOut], tags=["tags"])
 @limiter.limit(RATE_READ)
 async def get_popular_tags(
     request: Request,

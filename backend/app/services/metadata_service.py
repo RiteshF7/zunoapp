@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import httpx
-from bs4 import BeautifulSoup, NavigableString, Comment
+from bs4 import BeautifulSoup, Comment
 
 logger = logging.getLogger(__name__)
 

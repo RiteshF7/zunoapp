@@ -7,58 +7,37 @@ This script fetches all content that either:
 It re-runs the full AI extraction for each item and updates the DB.
 
 Usage (from the backend directory):
-    python reprocess_content.py            # process items missing structured content
-    python reprocess_content.py --all      # re-process ALL content (even already structured)
+    python scripts/reprocess_content.py            # process items missing structured content
+    python scripts/reprocess_content.py --all      # re-process ALL content (even already structured)
 """
 
 import asyncio
 import logging
-import re
 import sys
 from pathlib import Path
 
-# Ensure app package is importable
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Ensure app package is importable (parent of scripts/ is backend/)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import get_settings
 from app.services.ai_service import process_with_ai
 from app.services.metadata_service import fetch_url_metadata
 from app.services.collection_manager import ensure_category_collection
+from app.services.tag_service import upsert_tags
+from app.utils.url_detect import detect_platform
 from supabase import create_client
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-settings = get_settings()
-db = create_client(settings.supabase_url, settings.supabase_service_role_key)
 
-# Platform detection (same as ai.py)
-_PLATFORM_PATTERNS: list[tuple[str, str]] = [
-    ("instagram.com", "instagram"),
-    ("youtube.com", "youtube"),
-    ("youtu.be", "youtube"),
-    ("twitter.com", "twitter"),
-    ("x.com", "twitter"),
-    ("facebook.com", "facebook"),
-    ("fb.com", "facebook"),
-    ("linkedin.com", "linkedin"),
-    ("tiktok.com", "tiktok"),
-    ("reddit.com", "reddit"),
-    ("pinterest.com", "pinterest"),
-    ("spotify.com", "spotify"),
-    ("medium.com", "medium"),
-]
+def _get_db():
+    """Lazy-init Supabase client for the script."""
+    settings = get_settings()
+    return create_client(settings.supabase_url, settings.supabase_service_role_key), settings
 
 
-def _detect_platform(url: str) -> str:
-    url_lower = url.lower()
-    for domain, platform in _PLATFORM_PATTERNS:
-        if domain in url_lower:
-            return platform
-    return "other"
-
-
-async def reprocess_item(content: dict) -> bool:
+async def reprocess_item(db, settings, content: dict) -> bool:
     """Re-process a single content item. Returns True on success."""
     content_id = content["id"]
     url = content["url"]
@@ -82,7 +61,7 @@ async def reprocess_item(content: dict) -> bool:
         ai_result = await process_with_ai(text_to_analyze, settings)
 
         # 4. Build update payload
-        detected_platform = _detect_platform(url)
+        detected_platform = detect_platform(url)
         update_payload: dict = {
             "title": content.get("title") or metadata.title or ai_result.get("title"),
             "description": content.get("description") or metadata.description,
@@ -106,26 +85,7 @@ async def reprocess_item(content: dict) -> bool:
         )
 
         # 7. Re-create tags
-        for tag_name in ai_result.get("tags", []):
-            slug = re.sub(r"[^a-z0-9]+", "-", tag_name.lower()).strip("-")
-            tag_result = (
-                db.table("tags")
-                .upsert(
-                    {"name": tag_name, "slug": slug, "is_ai_generated": True},
-                    on_conflict="slug",
-                )
-                .execute()
-            )
-            if tag_result.data:
-                tag = tag_result.data[0]
-                db.table("content_tags").upsert(
-                    {
-                        "content_id": content_id,
-                        "tag_id": tag["id"],
-                        "is_ai_assigned": True,
-                    },
-                    on_conflict="content_id,tag_id",
-                ).execute()
+        upsert_tags(db, content_id, ai_result.get("tags", []))
 
         logger.info("  -> OK  category=%s, key_points=%d, action_items=%d",
                      ai_result["category"],
@@ -139,6 +99,7 @@ async def reprocess_item(content: dict) -> bool:
 
 
 async def main():
+    db, settings = _get_db()
     reprocess_all = "--all" in sys.argv
 
     # Fetch content to reprocess
@@ -160,7 +121,7 @@ async def main():
     success = 0
     failed = 0
     for item in items:
-        ok = await reprocess_item(item)
+        ok = await reprocess_item(db, settings, item)
         if ok:
             success += 1
         else:

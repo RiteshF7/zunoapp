@@ -1,14 +1,14 @@
 """One-time migration: add ai_structured_content JSONB column to content table.
 
 Run from the backend directory:
-    python migrate_add_structured_content.py
+    python scripts/migrate_add_structured_content.py
 """
 
 import sys
 from pathlib import Path
 
-# Ensure app package is importable
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Ensure app package is importable (parent of scripts/ is backend/)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import get_settings
 from supabase import create_client

@@ -1,8 +1,6 @@
 """AI endpoints — replaces all 3 Supabase Edge Functions."""
 
 import logging
-import re
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from supabase import Client
@@ -15,18 +13,14 @@ from app.schemas.models import (
     GenerateEmbeddingRequest,
     GenerateEmbeddingResponse,
     GenerateFeedResponse,
-    FeedItemOut,
 )
-from app.services.ai_service import (
-    process_with_ai,
-    generate_embedding,
-    generate_embeddings_batch,
-    generate_ai_feed,
-)
+from app.services.ai_service import process_with_ai, generate_embedding, _get_provider
 from app.services.metadata_service import fetch_url_metadata
 from app.services.collection_manager import ensure_category_collection
-from app.services.feed_generator import get_top_n, generate_rule_feed
-from app.services.chunking_service import chunk_text
+from app.services.content_indexing import index_content_chunks
+from app.services.tag_service import upsert_tags
+from app.services.user_interests import update_user_interests
+from app.services.feed_service import get_top_n, generate_ai_feed, generate_rule_feed
 from app.services.goal_engine import analyze_and_update_goals
 from app.utils.rate_limit import limiter, RATE_AI_PROCESS, RATE_AI_EMBEDDING, RATE_AI_FEED
 from app.utils.cache import bust_cache
@@ -34,7 +28,7 @@ from app.utils.url_detect import detect_platform
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/ai", tags=["ai"])
+router = APIRouter(prefix="/ai", tags=["ai"])
 
 
 # ---------------------------------------------------------------------------
@@ -81,7 +75,7 @@ async def process_content(
         raise HTTPException(status_code=502, detail=f"AI processing failed: {exc}")
 
     # 5. Update content record
-    detected_platform = _detect_platform(content["url"])
+    detected_platform = detect_platform(content["url"])
     update_payload: dict = {
         "title": content.get("title") or metadata.title or ai_result.get("title"),
         "description": content.get("description") or metadata.description,
@@ -110,11 +104,11 @@ async def process_content(
         # Chunk and embed for RAG (only if Vertex AI is configured)
         if settings.gcp_project_id:
             try:
-                await _chunk_and_embed_content(
+                await index_content_chunks(
                     db=db,
                     content_id=content_id,
                     user_id=content["user_id"],
-                    full_text=full_text,
+                    text=full_text,
                     content_metadata={
                         "title": update_payload.get("title", ""),
                         "platform": detected_platform,
@@ -130,34 +124,10 @@ async def process_content(
     ensure_category_collection(db, content["user_id"], ai_result["category"], content_id)
 
     # 6. Create and assign tags
-    for tag_name in ai_result.get("tags", []):
-        slug = re.sub(r"[^a-z0-9]+", "-", tag_name.lower()).strip("-")
-
-        # Upsert tag
-        tag_result = (
-            db.table("tags")
-            .upsert(
-                {"name": tag_name, "slug": slug, "is_ai_generated": True},
-                on_conflict="slug",
-            )
-            .execute()
-        )
-
-        if tag_result.data:
-            tag = tag_result.data[0]
-            # Link tag to content
-            db.table("content_tags").upsert(
-                {"content_id": content_id, "tag_id": tag["id"], "is_ai_assigned": True},
-                on_conflict="content_id,tag_id",
-            ).execute()
-
-            # Increment usage count
-            db.table("tags").update(
-                {"usage_count": (tag.get("usage_count") or 0) + 1}
-            ).eq("id", tag["id"]).execute()
+    upsert_tags(db, content_id, ai_result.get("tags", []))
 
     # 7. Update user interest profile
-    _update_user_interests(
+    update_user_interests(
         db,
         content["user_id"],
         ai_result["category"],
@@ -247,8 +217,9 @@ async def generate_feed(
     # Generate feed items
     if settings.gcp_project_id:
         try:
+            provider = _get_provider(settings)
             feed_items = await generate_ai_feed(
-                settings, top_categories, top_tags, top_platforms, interests
+                settings, provider, top_categories, top_tags, top_platforms, interests
             )
         except Exception as exc:
             logger.warning("AI feed generation failed, using rule-based: %s", exc)
@@ -282,122 +253,3 @@ async def generate_feed(
     )
 
 
-# ---------------------------------------------------------------------------
-# Helper: detect platform from URL (delegated to shared utility)
-# ---------------------------------------------------------------------------
-_detect_platform = detect_platform
-
-
-# ---------------------------------------------------------------------------
-# Helper: chunk content and store Vertex AI embeddings for RAG
-# ---------------------------------------------------------------------------
-async def _chunk_and_embed_content(
-    db: Client,
-    content_id: str,
-    user_id: str,
-    full_text: str,
-    content_metadata: dict,
-    settings: Settings,
-) -> int:
-    """Chunk text, generate Vertex AI embeddings, and store in content_chunks.
-
-    Returns the number of chunks created.
-    """
-    # 1. Chunk the text
-    chunks = chunk_text(
-        full_text,
-        max_tokens=settings.rag_chunk_size,
-        overlap_tokens=settings.rag_chunk_overlap,
-    )
-    if not chunks:
-        return 0
-
-    # 2. Generate embeddings for all chunks (batch)
-    chunk_texts = [c.chunk_text for c in chunks]
-    embeddings = await generate_embeddings_batch(chunk_texts, settings)
-
-    # 3. Delete existing chunks for this content (re-processing support)
-    db.table("content_chunks").delete().eq("content_id", content_id).execute()
-
-    # 4. Insert new chunks with embeddings
-    rows = []
-    for chunk, embedding in zip(chunks, embeddings):
-        row = {
-            "content_id": content_id,
-            "user_id": user_id,
-            "chunk_index": chunk.chunk_index,
-            "chunk_text": chunk.chunk_text,
-            "token_count": chunk.token_count,
-            "metadata": content_metadata,
-        }
-        if embedding is not None:
-            row["embedding"] = embedding
-        rows.append(row)
-
-    # Batch insert (Supabase supports bulk inserts)
-    if rows:
-        db.table("content_chunks").insert(rows).execute()
-
-    logger.info(
-        "Created %d chunks for content %s (%d with embeddings)",
-        len(rows), content_id, sum(1 for e in embeddings if e is not None),
-    )
-    return len(rows)
-
-
-# ---------------------------------------------------------------------------
-# Helper: update user interests
-# ---------------------------------------------------------------------------
-def _update_user_interests(
-    db: Client,
-    user_id: str,
-    category: str,
-    tags: list[str],
-    platform: str,
-    content_type: str,
-) -> None:
-    """Increment user interest counters."""
-    existing_result = (
-        db.table("user_interests")
-        .select("*")
-        .eq("user_id", user_id)
-        .execute()
-    )
-
-    if existing_result.data:
-        existing = existing_result.data[0]
-
-        categories = {**existing.get("categories", {})}
-        categories[category] = categories.get(category, 0) + 1
-
-        tag_counts = {**existing.get("tags", {})}
-        for tag in tags:
-            tag_counts[tag] = tag_counts.get(tag, 0) + 1
-
-        platforms = {**existing.get("platforms", {})}
-        platforms[platform] = platforms.get(platform, 0) + 1
-
-        content_types = {**existing.get("content_types", {})}
-        content_types[content_type] = content_types.get(content_type, 0) + 1
-
-        db.table("user_interests").update(
-            {
-                "categories": categories,
-                "tags": tag_counts,
-                "platforms": platforms,
-                "content_types": content_types,
-                "total_saved": existing.get("total_saved", 0) + 1,
-                "last_updated": datetime.now(timezone.utc).isoformat(),
-            }
-        ).eq("user_id", user_id).execute()
-    else:
-        db.table("user_interests").insert(
-            {
-                "user_id": user_id,
-                "categories": {category: 1},
-                "tags": {t: 1 for t in tags},
-                "platforms": {platform: 1},
-                "content_types": {content_type: 1},
-                "total_saved": 1,
-            }
-        ).execute()

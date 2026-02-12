@@ -29,15 +29,15 @@ if [[ "$1" != "--skip-ui" ]]; then
   echo "  ✓ UI built"
 
   echo ""
-  echo "▸ Copying build output to mobile/www..."
+  echo "▸ Copying app SPA to mobile/www (skip landing page for Android)..."
   rm -rf "$MOBILE_DIR/www/assets"
-  cp -r "$BACKEND_DIR/static/assets" "$MOBILE_DIR/www/assets"
+  cp -r "$BACKEND_DIR/static/app/assets" "$MOBILE_DIR/www/assets"
 
-  # Copy index.html from static build and fix asset paths for mobile
-  cp "$BACKEND_DIR/static/index.html" "$MOBILE_DIR/www/index.html"
-  sed -i 's|src="/static/assets/|src="./assets/|g' "$MOBILE_DIR/www/index.html"
-  sed -i 's|href="/static/assets/|href="./assets/|g' "$MOBILE_DIR/www/index.html"
-  echo "  ✓ Assets + index.html copied"
+  # Copy app SPA index (not landing) and fix asset paths for mobile
+  cp "$BACKEND_DIR/static/app/index.html" "$MOBILE_DIR/www/index.html"
+  sed -i 's|src="/app/assets/|src="./assets/|g' "$MOBILE_DIR/www/index.html"
+  sed -i 's|href="/app/assets/|href="./assets/|g' "$MOBILE_DIR/www/index.html"
+  echo "  ✓ App SPA (assets + index.html) copied"
 else
   echo ""
   echo "▸ Skipping UI build (--skip-ui)"

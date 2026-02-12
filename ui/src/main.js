@@ -55,18 +55,26 @@ if (isCapacitor()) {
   });
 }
 
-// 7. Wire up routing — but first check for a web OAuth callback
+// 7. Wire up routing — run when DOM is ready (module may load after DOMContentLoaded, so don't rely on it)
+function runWhenReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
 window.addEventListener('hashchange', router);
-window.addEventListener('DOMContentLoaded', async () => {
+
+runWhenReady(async () => {
   // If Supabase redirected back with tokens in the hash (web flow), handle them first
-  const handled = await handleOAuthCallback();
-  // Then run the router (handleOAuthCallback already set the hash to #home if successful)
+  await handleOAuthCallback();
   await router();
-  // Keep splash visible for at least 2.5s from when it was shown
-  const MIN_SPLASH_MS = 2500;
-  const elapsed = (typeof window._splashStart === 'number') ? Date.now() - window._splashStart : 0;
-  const wait = Math.max(0, MIN_SPLASH_MS - elapsed);
-  setTimeout(() => {
-    if (typeof hideSplash === 'function') hideSplash();
-  }, wait);
+  // Splash: only place that controls duration — change this value to change splash time (ms)
+  const MIN_SPLASH_MS = 5000;
+  if (typeof hideSplash === 'function') {
+    const elapsed = (typeof window._splashStart === 'number') ? Date.now() - window._splashStart : 0;
+    const wait = Math.max(0, MIN_SPLASH_MS - elapsed);
+    setTimeout(hideSplash, wait);
+  }
 });

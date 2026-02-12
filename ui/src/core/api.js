@@ -12,12 +12,21 @@ const API_BASE = window.ZUNO_API_BASE
 
 let _refreshing = null; // single in-flight refresh promise
 
+// Use /api/v1/ directly to avoid 307 redirect (browsers often drop Authorization on redirect → 401)
+function _normalizePath(path) {
+  if (path.startsWith('/api/') && !path.startsWith('/api/v1/')) {
+    return '/api/v1' + path.slice(4);
+  }
+  return path;
+}
+
 async function _doFetch(method, path, body, params) {
   const token = localStorage.getItem('zuno_token');
   const headers = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  let url = `${API_BASE}${path}`;
+  const normalizedPath = _normalizePath(path);
+  let url = `${API_BASE}${normalizedPath}`;
   if (params) {
     const sp = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => { if (v !== '' && v != null) sp.append(k, v); });

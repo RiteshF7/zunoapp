@@ -88,7 +88,7 @@ async function handleImageShare(base64Data, mimeType) {
         : window.location.origin);
 
   const token = localStorage.getItem('zuno_token');
-  const res = await fetch(`${API_BASE}/api/content/upload`, {
+  const res = await fetch(`${API_BASE}/api/v1/content/upload`, {
     method: 'POST',
     headers: token ? { 'Authorization': `Bearer ${token}` } : {},
     body: formData,

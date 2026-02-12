@@ -62,6 +62,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   const handled = await handleOAuthCallback();
   // Then run the router (handleOAuthCallback already set the hash to #home if successful)
   await router();
-  // Dismiss the splash screen now that the app is ready
-  if (typeof hideSplash === 'function') hideSplash();
+  // Keep splash visible for at least 2.5s from when it was shown
+  const MIN_SPLASH_MS = 2500;
+  const elapsed = (typeof window._splashStart === 'number') ? Date.now() - window._splashStart : 0;
+  const wait = Math.max(0, MIN_SPLASH_MS - elapsed);
+  setTimeout(() => {
+    if (typeof hideSplash === 'function') hideSplash();
+  }, wait);
 });

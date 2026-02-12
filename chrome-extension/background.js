@@ -35,28 +35,23 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 async function shareUrl(urlToShare) {
   const { apiBase, token } = await getConfig();
 
-  if (token && urlToShare) {
-    const ok = await saveViaApi(apiBase, token, urlToShare);
-    if (ok) {
-      showNotification('Shared to Zuno!');
-      return true;
-    }
-  }
-
   if (!urlToShare) {
-    const zunoApp = await getZunoAppUrl();
-    chrome.tabs.create({ url: zunoApp + '#library' });
+    showNotification('This page cannot be shared. Try a normal webpage or link.');
     return false;
   }
 
   if (!token) {
-    const zunoApp = await getZunoAppUrl();
-    chrome.tabs.create({ url: zunoApp + '#connect-extension' });
+    showNotification('Please log in at Zuno to save from this device.');
     return false;
   }
 
-  const zunoApp = await getZunoAppUrl();
-  chrome.tabs.create({ url: zunoApp + '?share=' + encodeURIComponent(urlToShare) + '#library' });
+  const ok = await saveViaApi(apiBase, token, urlToShare);
+  if (ok) {
+    showNotification('Shared to Zuno!');
+    return true;
+  }
+
+  showNotification('Save failed. Check your connection or log in again at Zuno.');
   return false;
 }
 

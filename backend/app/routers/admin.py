@@ -1,4 +1,4 @@
-"""Admin endpoints: cache management, prompt reloading, stats.
+"""Admin endpoints: cache management, prompt reloading, stats, waitlist.
 
 Only users with profile.role = 'admin' can call these endpoints (except /me).
 GET /admin/me returns {"admin": true|false} for any authenticated user.
@@ -8,7 +8,7 @@ import logging
 
 from fastapi import APIRouter, Depends, Query
 
-from app.dependencies import get_current_user_role, get_admin_user
+from app.dependencies import get_current_user_role, get_admin_user, get_supabase
 from app.utils.cache import bust_cache, get_cache_stats
 from app.prompts import reload_prompts
 
@@ -67,3 +67,21 @@ async def prompts_reload(user_id: str = Depends(get_admin_user)):
     reload_prompts()
     logger.info("Admin prompt reload by user=%s", user_id)
     return {"status": "ok", "message": "Prompts reloaded from disk"}
+
+
+# ── Pro waitlist (landing signups) ────────────────────────────────────────
+
+@router.get("/waitlist")
+async def admin_waitlist(
+    user_id: str = Depends(get_admin_user),
+    db=Depends(get_supabase),
+):
+    """Return all Pro/Pro Plus waitlist entries (admin only)."""
+    result = (
+        db.table("pro_waitlist")
+        .select("id, email, tier, discount_code, created_at")
+        .order("created_at", desc=True)
+        .execute()
+    )
+    items = result.data if result.data is not None else []
+    return {"items": items, "total": len(items)}

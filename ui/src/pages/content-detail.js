@@ -138,15 +138,24 @@ async function processWithAI(contentId) {
   const btn = document.getElementById('ai-btn');
   btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div> Processing...';
   btn.disabled = true;
-  const res = await api('POST', '/api/ai/process-content', { content_id: contentId });
-  if (res.ok) {
-    toast('AI processing complete!');
-    setContentDetailTab('summary');
-    await renderContentDetail(document.getElementById('page'), contentId);
-  } else {
-    toast(res.data?.detail || 'AI processing failed', true);
+  if (typeof showProgress === 'function') showProgress();
+  try {
+    const res = await api('POST', '/api/ai/process-content', { content_id: contentId });
+    if (res.ok) {
+      toast('AI processing complete!');
+      setContentDetailTab('summary');
+      await renderContentDetail(document.getElementById('page'), contentId);
+    } else {
+      toast(res.data?.detail || 'AI processing failed', true);
+      btn.innerHTML = '<span class="material-icons-round text-lg">auto_awesome</span> Process with AI';
+      btn.disabled = false;
+    }
+  } catch (_) {
+    toast('AI processing failed', true);
     btn.innerHTML = '<span class="material-icons-round text-lg">auto_awesome</span> Process with AI';
     btn.disabled = false;
+  } finally {
+    if (typeof hideProgress === 'function') hideProgress();
   }
 }
 

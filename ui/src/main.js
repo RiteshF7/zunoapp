@@ -19,6 +19,7 @@ import { App } from '@capacitor/app';
 // 3. Import components (registers window globals)
 import './components/toast.js';
 import './components/modal.js';
+import './components/loading-bar.js';
 
 // 3b. Import share handler (registers window.handleSharedContent for native bridge)
 import './core/share-handler.js';

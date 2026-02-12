@@ -25,6 +25,9 @@
     .url { font-size: 11px; color: #64748b; margin: 8px 0; word-break: break-all; max-height: 48px; overflow: hidden; }
     .hint { font-size: 11px; color: #94a3b8; margin-top: 10px; }
     .connect { margin-bottom: 10px; }
+    .zuno-link { width: 100%; padding: 6px 8px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 8px; box-sizing: border-box; background: #f8fafc; }
+    #copy-btn { margin-top: 0; background: #64748b; }
+    #copy-btn:hover { background: #475569; }
   </style>
 </head>
 <body>
@@ -35,8 +38,10 @@
     <p class="hint">Right-click a page or link for Share to Zuno</p>
   </div>
   <div id="connect" class="connect" style="display:none">
-    <p style="margin:0 0 10px; font-size:12px">Log in to Zuno, then click Connect.</p>
-    <button id="connect-btn">Connect Extension</button>
+    <p style="margin:0 0 8px; font-size:12px">Open Zuno in your browser, log in, then open this popup again to connect.</p>
+    <p class="hint" style="margin:0 0 6px">Copy and open this link:</p>
+    <input type="text" id="zuno-link" readonly class="zuno-link" value="https://zunoapp.onrender.com/app/#connect-extension" />
+    <button id="copy-btn" type="button">Copy link</button>
   </div>
   <script src="popup.js"></script>
 </body>

@@ -9,9 +9,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!zuno_token) {
     contentDiv.style.display = 'none';
     connectDiv.style.display = 'block';
-    document.getElementById('connect-btn').onclick = () => {
-      chrome.tabs.create({ url: ZUNO_APP + '#connect-extension' });
-      window.close();
+    const linkInput = document.getElementById('zuno-link');
+    const copyBtn = document.getElementById('copy-btn');
+    copyBtn.onclick = () => {
+      linkInput.select();
+      document.execCommand('copy');
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => { copyBtn.textContent = 'Copy link'; }, 1500);
     };
     return;
   }

@@ -582,10 +582,10 @@
 
     <!-- ====== PRICING / WAITLIST ====== -->
     <section id="waitlist" class="px-6 py-16 md:py-20">
-      <div class="max-w-4xl mx-auto text-center">
+      <div class="max-w-5xl mx-auto text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 fade-up">Simple pricing. Start free.</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-12 max-w-xl mx-auto fade-up">Join the waitlist today and get early access with special pricing.</p>
-        <div class="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto stagger">
+        <p class="text-slate-600 dark:text-slate-400 mb-12 max-w-xl mx-auto fade-up">Join the waitlist for Pro features. Initial users get a discount — enter a code below if you have one.</p>
+        <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto stagger mb-16">
           <!-- Free tier -->
           <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-7 text-left">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Free</p>
@@ -615,6 +615,50 @@
             </ul>
             <a href="/app/#auth" class="block w-full py-3 rounded-full bg-accent-blue text-white font-bold hover:opacity-90 active:scale-95 transition-all duration-200 text-center">Get Started — Pro</a>
           </div>
+          <!-- Pro Plus tier -->
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-7 text-left">
+            <p class="text-sm font-medium text-purple-500 dark:text-purple-400 mb-2">Pro Plus</p>
+            <p class="text-3xl font-bold text-slate-900 dark:text-white mb-1">$12<span class="text-lg font-normal text-slate-400">/mo</span></p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">Teams & power creators</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Everything in Pro</li>
+              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Shared team libraries</li>
+              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Early access to new features</li>
+              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Dedicated support</li>
+              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Custom integrations</li>
+            </ul>
+            <a href="#waitlist-form" class="block w-full py-3 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 active:scale-95 transition-all duration-200 text-center">Join waitlist</a>
+          </div>
+        </div>
+        <!-- Waitlist form -->
+        <div id="waitlist-form" class="max-w-md mx-auto rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-6 md:p-8 text-left stagger">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Join the Pro waitlist</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Initial users get a discount. Have a referral or discount code? Add it below.</p>
+          <form id="pro-waitlist-form" class="space-y-4">
+            <div>
+              <label for="wl-email" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Email *</label>
+              <input id="wl-email" name="email" type="email" required placeholder="you@example.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Tier</label>
+              <div class="flex gap-3">
+                <label class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer has-[:checked]:border-accent-blue has-[:checked]:bg-accent-blue/10">
+                  <input type="radio" name="tier" value="pro" checked class="sr-only" />
+                  <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Pro</span>
+                </label>
+                <label class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer has-[:checked]:border-accent-blue has-[:checked]:bg-accent-blue/10">
+                  <input type="radio" name="tier" value="pro_plus" class="sr-only" />
+                  <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Pro Plus</span>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label for="wl-code" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Discount / referral code (optional)</label>
+              <input id="wl-code" name="discount_code" type="text" placeholder="e.g. EARLY100" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent text-sm" />
+            </div>
+            <div id="waitlist-msg" class="text-sm hidden"></div>
+            <button type="submit" id="waitlist-submit" class="w-full py-3.5 rounded-full bg-accent-blue text-white font-bold hover:opacity-90 active:scale-95 transition-all duration-200">Join waitlist</button>
+          </form>
         </div>
       </div>
     </section>
@@ -701,6 +745,48 @@
       entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.fade-up, .stagger').forEach(el => observer.observe(el));
+
+    // Pro waitlist form
+    const waitlistForm = document.getElementById('pro-waitlist-form');
+    if (waitlistForm) {
+      waitlistForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msgEl = document.getElementById('waitlist-msg');
+        const btn = document.getElementById('waitlist-submit');
+        const email = (document.getElementById('wl-email') && document.getElementById('wl-email').value || '').trim().toLowerCase();
+        const tier = (waitlistForm.querySelector('input[name="tier"]:checked') && waitlistForm.querySelector('input[name="tier"]:checked').value) || 'pro';
+        const discountCode = (document.getElementById('wl-code') && document.getElementById('wl-code').value || '').trim() || null;
+        if (!email) { msgEl.textContent = 'Please enter your email.'; msgEl.classList.remove('hidden', 'text-green-600', 'text-red-600'); msgEl.classList.add('text-amber-600'); return; }
+        msgEl.classList.add('hidden');
+        btn.disabled = true;
+        btn.textContent = 'Submitting…';
+        const apiBase = window.ZUNO_API_BASE || window.location.origin;
+        try {
+          const res = await fetch(apiBase + '/api/v1/waitlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, tier, discount_code: discountCode || null })
+          });
+          const data = await res.json().catch(() => ({}));
+          msgEl.classList.remove('hidden');
+          if (res.ok && (data.ok || data.message)) {
+            msgEl.textContent = data.message || "You're on the list!";
+            msgEl.classList.remove('text-red-600', 'text-amber-600'); msgEl.classList.add('text-green-600');
+            waitlistForm.reset();
+            if (waitlistForm.querySelector('input[name="tier"][value="pro"]')) waitlistForm.querySelector('input[name="tier"][value="pro"]').checked = true;
+          } else {
+            msgEl.textContent = data.detail || data.error || 'Something went wrong. Try again.';
+            msgEl.classList.remove('text-green-600', 'text-amber-600'); msgEl.classList.add('text-red-600');
+          }
+        } catch (err) {
+          msgEl.classList.remove('hidden');
+          msgEl.textContent = 'Network error. Check your connection and try again.';
+          msgEl.classList.remove('text-green-600', 'text-amber-600'); msgEl.classList.add('text-red-600');
+        }
+        btn.disabled = false;
+        btn.textContent = 'Join waitlist';
+      });
+    }
   </script>
 </body>
 </html>

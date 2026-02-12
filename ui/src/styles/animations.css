@@ -43,3 +43,28 @@
 
 /* ── Progress Ring ── */
 .progress-ring-circle { transition: stroke-dashoffset 0.5s ease; }
+
+/* ── Global loading bar (save / AI) ── */
+.global-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 90;
+  overflow: hidden;
+  background: var(--c-border);
+}
+.global-loading-bar.hidden { display: none; }
+.global-loading-bar-inner {
+  height: 100%;
+  width: 40%;
+  max-width: 200px;
+  background: var(--c-accent, #6366f1);
+  animation: loadingBarSlide 1.2s ease-in-out infinite;
+}
+@keyframes loadingBarSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(350%); }
+  100% { transform: translateX(-100%); }
+}

@@ -27,14 +27,20 @@ export async function handleIncomingShare(data) {
   }
 
   try {
-    if (data.type === 'text') {
-      await handleTextShare(data.content);
-    } else if (data.type === 'image') {
-      await handleImageShare(data.content, data.mimeType || 'image/jpeg');
+    if (typeof showProgress === 'function') showProgress();
+    try {
+      if (data.type === 'text') {
+        await handleTextShare(data.content);
+      } else if (data.type === 'image') {
+        await handleImageShare(data.content, data.mimeType || 'image/jpeg');
+      }
+    } finally {
+      if (typeof hideProgress === 'function') hideProgress();
     }
   } catch (err) {
     console.error('[ShareHandler]', err);
     toast('Failed to save shared content', true);
+    if (typeof hideProgress === 'function') hideProgress();
   }
 }
 

@@ -114,8 +114,16 @@ export async function handleOAuthCallback(url) {
     } catch { /* ignore */ }
   }
 
-  // Clear the hash fragment (replace with #home so the router picks up)
-  history.replaceState(null, '', window.location.pathname + '#home');
+  // Clear the hash fragment; restore intended route if we had one (e.g. 401 on collection)
+  let targetHash = '#home';
+  try {
+    const intended = sessionStorage.getItem('zuno_intended_route');
+    if (intended && intended.startsWith('#')) {
+      targetHash = intended;
+      sessionStorage.removeItem('zuno_intended_route');
+    }
+  } catch (_) {}
+  history.replaceState(null, '', window.location.pathname + targetHash);
 
   // Validate the token by fetching the profile
   const res = await api('GET', '/api/profile');

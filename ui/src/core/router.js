@@ -28,7 +28,19 @@ function getTransition(page) {
 
 export async function router() {
   const token = localStorage.getItem('zuno_token');
-  const { page, id } = getRoute();
+  let { page, id } = getRoute();
+
+  // Empty or invalid page → deterministic redirect
+  if (!page) {
+    navigate(token ? '#home' : '#auth');
+    return;
+  }
+
+  // Collection without id → avoid wrong default
+  if (page === 'collection' && !id) {
+    navigate('#library/collections');
+    return;
+  }
 
   // Auth guard (connect-extension allows unauthenticated for content script to read hash)
   if (!token && page !== 'auth' && page !== 'connect-extension') { navigate('#auth'); return; }

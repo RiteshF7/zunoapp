@@ -70,6 +70,15 @@ export async function renderAdmin(el) {
             </button>
             <div id="admin-health-result" class="mt-2"></div>
           </div>
+
+          <!-- Pro waitlist -->
+          <div>
+            <h4 class="text-xs text-muted font-semibold uppercase tracking-wide mb-2">Pro waitlist</h4>
+            <button onclick="adminLoadWaitlist()" id="admin-waitlist-btn" class="w-full bg-bg hover:bg-surface-hover border border-border text-heading text-sm font-medium py-2.5 rounded-xl transition-colors active:scale-[0.97] flex items-center justify-center gap-1.5">
+              <span class="material-icons-round text-base">list</span> Load waitlist
+            </button>
+            <div id="admin-waitlist-result" class="mt-2"></div>
+          </div>
         </div>
       </section>
     </div>`;
@@ -146,6 +155,54 @@ async function adminDoHealthCheck() {
   btn.disabled = false;
 }
 
+let _waitlistData = [];
+
+async function adminLoadWaitlist() {
+  const btn = document.getElementById('admin-waitlist-btn');
+  const resultEl = document.getElementById('admin-waitlist-result');
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Loading...';
+  btn.disabled = true;
+  const res = await api('GET', '/api/admin/waitlist');
+  if (!res.ok) {
+    resultEl.innerHTML = `<p class="text-danger text-xs">${esc(res.data?.detail || 'Failed to load waitlist')}</p>`;
+    btn.innerHTML = '<span class="material-icons-round text-base">list</span> Load waitlist';
+    btn.disabled = false;
+    return;
+  }
+  const items = res.data?.items || [];
+  _waitlistData = items;
+  const total = res.data?.total ?? items.length;
+  const rows = items.map(
+    (r) => `<tr class="border-b border-border"><td class="py-2 pr-3 text-sm text-heading">${esc(r.email)}</td><td class="py-2 pr-3 text-xs text-muted">${esc(r.tier)}</td><td class="py-2 pr-3 text-xs text-muted">${esc(r.discount_code || '—')}</td><td class="py-2 text-xs text-muted">${r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td></tr>`
+  ).join('');
+  resultEl.innerHTML = `
+    <p class="text-success text-xs mb-2">${total} signup(s)</p>
+    <div class="overflow-x-auto max-h-48 overflow-y-auto rounded-xl border border-border">
+      <table class="w-full text-left text-sm">
+        <thead><tr class="bg-surface border-b border-border"><th class="py-2 pr-3 font-semibold text-heading">Email</th><th class="py-2 pr-3 font-semibold text-heading">Tier</th><th class="py-2 pr-3 font-semibold text-heading">Code</th><th class="py-2 font-semibold text-heading">Date</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4" class="py-4 text-center text-muted text-xs">No entries</td></tr>'}</tbody>
+      </table>
+    </div>
+    ${items.length > 0 ? '<button type="button" onclick="adminExportWaitlistCsv()" class="mt-2 text-xs text-accent hover:text-accent-hover font-medium">Export CSV</button>' : ''}
+  `;
+  btn.innerHTML = '<span class="material-icons-round text-base">list</span> Load waitlist';
+  btn.disabled = false;
+}
+
+function adminExportWaitlistCsv() {
+  if (_waitlistData.length === 0) return;
+  const headers = ['email', 'tier', 'discount_code', 'created_at'];
+  const csv = [headers.join(',')].concat(
+    _waitlistData.map((r) => headers.map((h) => `"${String(r[h] || '').replace(/"/g, '""')}"`).join(','))
+  ).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `zuno-waitlist-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 window.renderAdmin = renderAdmin;
 window.adminLoadCacheStats = adminLoadCacheStats;
 window.adminDoBustCache = adminDoBustCache;
@@ -153,3 +210,5 @@ window.adminDoReloadPrompts = adminDoReloadPrompts;
 window.adminDoGenerateEmbedding = adminDoGenerateEmbedding;
 window.adminDoGenerateFeed = adminDoGenerateFeed;
 window.adminDoHealthCheck = adminDoHealthCheck;
+window.adminLoadWaitlist = adminLoadWaitlist;
+window.adminExportWaitlistCsv = adminExportWaitlistCsv;

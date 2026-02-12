@@ -61,6 +61,10 @@ export async function api(method, path, body = null, params = null) {
 
       // Still 401 after refresh (or no refresh token) → force logout
       if (result.status === 401) {
+        const currentHash = window.location.hash || '#';
+        if (currentHash !== '#auth' && currentHash !== '#') {
+          try { sessionStorage.setItem('zuno_intended_route', currentHash); } catch (_) {}
+        }
         localStorage.removeItem('zuno_token');
         localStorage.removeItem('zuno_refresh_token');
         if (window.location.hash !== '#auth') {

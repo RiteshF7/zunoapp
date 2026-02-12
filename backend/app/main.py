@@ -22,7 +22,7 @@ from app.utils.rate_limit import limiter
 from app.routers import (
     profile, collections, content, feed, search, ai,
     app_config, user_preferences, suggested_feed, admin,
-    knowledge, goals,
+    knowledge, goals, waitlist,
 )
 
 from app.logging_config import configure_logging
@@ -58,6 +58,7 @@ OPENAPI_TAGS = [
     {"name": "knowledge", "description": "RAG knowledge engine"},
     {"name": "goals", "description": "AI-detected goals"},
     {"name": "admin", "description": "Admin and cache management"},
+    {"name": "waitlist", "description": "Landing page Pro/Pro Plus waitlist signup"},
 ]
 
 app = FastAPI(
@@ -190,6 +191,7 @@ v1.include_router(ai.router)                 # /api/v1/ai
 v1.include_router(knowledge.router)          # /api/v1/knowledge
 v1.include_router(goals.router)              # /api/v1/goals
 v1.include_router(admin.router)              # /api/v1/admin
+v1.include_router(waitlist.router)           # POST /api/v1/waitlist (public)
 
 app.include_router(v1)
 

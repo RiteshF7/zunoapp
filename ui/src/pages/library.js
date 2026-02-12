@@ -139,15 +139,27 @@ async function doSaveContent() {
   const btn = document.getElementById('save-content-btn');
   btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>';
   btn.disabled = true;
-  const res = await api('POST', '/api/content', { url });
-  if (res.ok) {
-    closeModal();
-    toast('Content saved!');
-    navigate('#content-detail/' + res.data.id);
-  } else {
-    toast(res.data?.detail || 'Failed to save', true);
+  if (typeof showProgress === 'function') showProgress();
+  try {
+    const res = await api('POST', '/api/content', { url });
+    if (res.ok) {
+      closeModal();
+      toast('Content saved!');
+      if (res.data?.id) {
+        await api('POST', '/api/ai/process-content', { content_id: res.data.id });
+      }
+      navigate('#content-detail/' + res.data.id);
+    } else {
+      toast(res.data?.detail || 'Failed to save', true);
+      btn.textContent = 'Save Content';
+      btn.disabled = false;
+    }
+  } catch (_) {
+    toast('Failed to save', true);
     btn.textContent = 'Save Content';
     btn.disabled = false;
+  } finally {
+    if (typeof hideProgress === 'function') hideProgress();
   }
 }
 

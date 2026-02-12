@@ -85,6 +85,8 @@ async def get_current_user(
         header = pyjwt.get_unverified_header(token)
         alg = header.get("alg", "unknown")
 
+        # Leeway for iat/exp to tolerate clock skew between this server and Supabase
+        leeway_seconds = 10
         if alg in ("ES256", "ES384", "ES512", "RS256", "RS384", "RS512"):
             # Asymmetric algorithm → verify with local JWKS public key
             signing_key = _get_signing_key(token)
@@ -93,6 +95,7 @@ async def get_current_user(
                 signing_key.key,
                 algorithms=[alg],
                 audience="authenticated",
+                leeway=leeway_seconds,
             )
         else:
             # Symmetric HMAC algorithm → verify with JWT secret
@@ -101,6 +104,7 @@ async def get_current_user(
                 settings.supabase_jwt_secret,
                 algorithms=["HS256", "HS384", "HS512"],
                 audience="authenticated",
+                leeway=leeway_seconds,
             )
 
         user_id: str | None = payload.get("sub")

@@ -13,6 +13,7 @@ import { initTheme } from './core/theme.js';
 import { isCapacitor } from './core/config.js';
 import './core/navigate.js';   // sets window.navigate
 import { router } from './core/router.js';
+import { App } from '@capacitor/app';
 
 // 3. Import components (registers window globals)
 import './components/toast.js';
@@ -36,22 +37,17 @@ import './pages/profile.js';
 // 5. Initialize theme immediately (before DOMContentLoaded)
 initTheme();
 
-// 6. Set up deep link listener for Capacitor OAuth callback.
+// 6. Set up deep link listener for Capacitor OAuth callback (register immediately so we don't miss the event on cold start).
 //    When the system browser redirects to com.zuno.app://callback#access_token=...,
-//    Android opens the app and fires an appUrlOpen event.
+//    Android opens the app and fires an appUrlOpen event — listener must already be registered.
 if (isCapacitor()) {
-  import('@capacitor/app').then(({ App }) => {
-    App.addListener('appUrlOpen', async (event) => {
-      // event.url = "com.zuno.app://callback#access_token=...&refresh_token=..."
-      if (event.url && event.url.includes('access_token')) {
-        const handled = await handleOAuthCallback(event.url);
-        if (handled) {
-          router();
-        }
+  App.addListener('appUrlOpen', async (event) => {
+    if (event.url && event.url.includes('access_token')) {
+      const handled = await handleOAuthCallback(event.url);
+      if (handled) {
+        router();
       }
-    });
-  }).catch(() => {
-    // @capacitor/app not available — ignore
+    }
   });
 }
 
@@ -71,7 +67,7 @@ runWhenReady(async () => {
   await handleOAuthCallback();
   await router();
   // Splash: only place that controls duration — change this value to change splash time (ms)
-  const MIN_SPLASH_MS = 5000;
+  const MIN_SPLASH_MS = 2000;
   if (typeof hideSplash === 'function') {
     const elapsed = (typeof window._splashStart === 'number') ? Date.now() - window._splashStart : 0;
     const wait = Math.max(0, MIN_SPLASH_MS - elapsed);

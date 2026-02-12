@@ -3,6 +3,14 @@
 import pytest
 
 
+def test_get_admin_me_returns_admin_true_when_profile_role_is_admin(client, auth_headers):
+    """GET /api/v1/admin/me returns { admin: true } when profile.role is 'admin'."""
+    res = client.get("/api/v1/admin/me", headers=auth_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data.get("admin") is True
+
+
 def test_get_cache_stats_returns_stats(client, auth_headers):
     """GET /api/v1/admin/cache/stats returns cache statistics."""
     res = client.get("/api/v1/admin/cache/stats", headers=auth_headers)

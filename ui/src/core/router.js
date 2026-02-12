@@ -15,6 +15,7 @@ import { renderGoalDetail } from '../pages/goal-detail.js';
 import { renderSearch } from '../pages/search.js';
 import { renderKnowledge } from '../pages/knowledge.js';
 import { renderProfile } from '../pages/profile.js';
+import { renderAdmin } from '../pages/admin.js';
 
 const _detailPages = ['content-detail', 'collection', 'goal-detail'];
 
@@ -37,7 +38,6 @@ export async function router() {
   if (page === 'feed') { navigate('#home'); return; }
   if (page === 'content') { navigate('#library'); return; }
   if (page === 'collections') { navigate('#library'); return; }
-  if (page === 'admin') { navigate('#profile'); return; }
 
   // Show/hide shell
   const isAuth = page === 'auth';
@@ -49,7 +49,7 @@ export async function router() {
   // Update active nav tab
   const tabMap = {
     home: 'home', library: 'library', 'content-detail': 'library', collection: 'library',
-    goals: 'goals', 'goal-detail': 'goals', knowledge: 'knowledge',
+    goals: 'goals', 'goal-detail': 'goals', knowledge: 'knowledge', profile: 'profile', admin: 'profile',
   };
   document.querySelectorAll('.nav-btn').forEach(btn => {
     const active = btn.dataset.tab === tabMap[page];
@@ -69,6 +69,7 @@ export async function router() {
     'content-detail': skeletonDetail(),
     'goal-detail': skeletonDetail(),
     collection: skeletonDetail(),
+    admin: loadingSpinner(),
   };
   main.innerHTML = `<div class="${transition}">${skeletonMap[page] || loadingSpinner()}</div>`;
 
@@ -84,6 +85,7 @@ export async function router() {
       case 'search': await renderSearch(main); break;
       case 'knowledge': await renderKnowledge(main); break;
       case 'profile': await renderProfile(main); break;
+      case 'admin': await renderAdmin(main); break;
       default: navigate('#home');
     }
   } catch (err) {

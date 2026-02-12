@@ -33,6 +33,7 @@ import './pages/goal-detail.js';
 import './pages/search.js';
 import './pages/knowledge.js';
 import './pages/profile.js';
+import './pages/admin.js';
 
 // 5. Initialize theme immediately (before DOMContentLoaded)
 initTheme();

@@ -177,6 +177,9 @@ def mock_db():
     return MockSupabaseClient()
 
 
+TEST_USER_ID = "test-user-00000000-0000-0000-0000-000000000001"
+
+
 @pytest.fixture
 def test_settings():
     """Returns a Settings object with safe test defaults (no real API keys)."""
@@ -200,9 +203,6 @@ def test_settings_with_ai(test_settings):
     return test_settings
 
 
-TEST_USER_ID = "test-user-00000000-0000-0000-0000-000000000001"
-
-
 @pytest.fixture
 def auth_headers():
     """Returns mock auth headers."""
@@ -216,6 +216,7 @@ def client(mock_db, test_settings):
     from app.dependencies import get_current_user, get_supabase
     from app.config import get_settings
 
+    mock_db.set_table_data("profiles", [{"role": "admin"}])
     app.dependency_overrides[get_current_user] = lambda: TEST_USER_ID
     app.dependency_overrides[get_supabase] = lambda: mock_db
     app.dependency_overrides[get_settings] = lambda: test_settings

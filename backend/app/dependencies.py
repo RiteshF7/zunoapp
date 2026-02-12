@@ -138,3 +138,43 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Authentication failed: {exc}",
         )
+
+
+# ---------------------------------------------------------------------------
+# Admin: require profile.role == 'admin' (DB as source of truth)
+# ---------------------------------------------------------------------------
+async def get_admin_user(
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+) -> str:
+    """Require current user's profile.role to be 'admin'; else 403."""
+    result = (
+        db.table("profiles")
+        .select("role")
+        .eq("id", user_id)
+        .maybe_single()
+        .execute()
+    )
+    role = (result.data or {}).get("role") if result.data is not None else None
+    if role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return user_id
+
+
+async def get_current_user_role(
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+) -> str:
+    """Return current user's profile role ('user' or 'admin'). Defaults to 'user' if no profile."""
+    result = (
+        db.table("profiles")
+        .select("role")
+        .eq("id", user_id)
+        .maybe_single()
+        .execute()
+    )
+    role = (result.data or {}).get("role") if result.data is not None else None
+    return role if role in ("user", "admin") else "user"

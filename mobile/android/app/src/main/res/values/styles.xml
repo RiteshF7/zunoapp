@@ -16,10 +16,12 @@
     </style>
 
 
+    <!-- No native splash: transparent so only the WebView custom splash is shown -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash</item>
-        <item name="android:statusBarColor">#FAFAF9</item>
-        <item name="android:navigationBarColor">#FAFAF9</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <!-- Fully transparent activity for the share receiver -->

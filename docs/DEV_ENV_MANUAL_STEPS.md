@@ -18,12 +18,13 @@ Tasks done in the Dashboard or Console. Create env files manually from `.env.dev
 ## 2. Add Auth redirect URLs (dev Supabase)
 
 - In the **dev** Supabase project: **Authentication → URL Configuration**.
-- Under **Redirect URLs**, add:
+- Under **Redirect URLs**, add **all** origins you might use (the app sends the current origin as `redirect_to`, so each must be allowed):
   - `http://localhost:5173/`
   - `http://localhost:8000/app/`
   - `http://localhost:8000/app`
-  - Your dev Render URL if you use one (e.g. `https://your-dev-service.onrender.com/app/`).
+  - Your dev Render URL if you use one (e.g. `https://your-dev-service.onrender.com/`, `https://your-dev-service.onrender.com/app/`).
   - `com.zuno.app://callback` (for native app).
+- **Site URL**: set to your main dev origin (e.g. `http://localhost:5173` or your dev Render URL). Used as the default redirect and for auth email links; with multiple entries in Redirect URLs, both localhost and Render work for OAuth.
 
 ---
 
@@ -56,7 +57,18 @@ If you want a deployed dev backend (in addition to localhost):
 
 ---
 
-## 5. One-off checks
+## 5. Clone prod DB to dev (optional)
+
+To copy production schema and data into the dev database:
+
+- **Bash**: `./scripts/clone-prod-to-dev-db.sh`  
+- **PowerShell**: `.\scripts\clone-prod-to-dev-db.ps1`
+
+Requires PostgreSQL client tools (`pg_dump`, `psql`) (no Docker), `psql`, and both projects’ DB passwords. Set `SUPABASE_DB_PASSWORD_PROD` and `SUPABASE_DB_PASSWORD_DEV` or enter them when prompted. This overwrites the dev `public` schema.
+
+---
+
+## 6. One-off checks
 
 - **Supabase Edge Functions** (if used): in the dev project, set secrets (e.g. `supabase secrets set ...` after `supabase link --project-ref <dev-ref>`).
 - **Production**: never use dev Supabase or dev OAuth in the production Render service or prod build.

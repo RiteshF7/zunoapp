@@ -37,19 +37,25 @@ export function isCapacitor() {
 
 /**
  * API base URL — single source of truth for the backend base (used by api.js and iOS Share Extension sync).
- * In Vite dev on localhost we use the current origin so the dev server proxy (→ localhost:8000) is used and CORS is avoided.
+ * When the app is loaded from localhost or 127.0.0.1 (Vite dev or backend serving UI), we use same origin
+ * so API calls hit the local backend and CORS is avoided.
  */
 export function getApiBase() {
-  // Local dev: use same origin so Vite proxies /api and /health to backend (avoids CORS when .env points at Render).
-  if (typeof import.meta !== 'undefined' && import.meta.env?.DEV && typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
+  const host = typeof window !== 'undefined' && window.location?.hostname;
+  const isLocal = host === 'localhost' || host === '127.0.0.1';
+  // Local: use same origin so /api goes to the same server (Vite proxy or backend).
+  if (isLocal && typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
+  }
+  // Android emulator: backend often at 10.0.2.2:8000
+  if (host === 'localhost' && !window.location?.port) {
+    return 'http://10.0.2.2:8000';
   }
   return (
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE) ||
     (typeof window !== 'undefined' && window.ZUNO_API_BASE) ||
-    (typeof window !== 'undefined' && window.location?.hostname === 'localhost' && !window.location?.port
-      ? 'http://10.0.2.2:8000'
-      : (typeof window !== 'undefined' && window.location?.origin) || '')
+    (typeof window !== 'undefined' && window.location?.origin) ||
+    ''
   );
 }
 

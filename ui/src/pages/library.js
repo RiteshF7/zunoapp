@@ -44,7 +44,8 @@ function libraryTabsHtml(activeTab) {
 async function renderLibrarySaved(el) {
   const res = await api('GET', '/api/content', null, { limit: 50 });
   if (!res.ok) showApiError(res);
-  const items = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
+  const raw = res.ok ? res.data : null;
+  const items = Array.isArray(raw) ? raw : (raw?.items ?? []);
 
   el.innerHTML = `
     <div class="fade-in">

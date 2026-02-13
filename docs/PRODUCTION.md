@@ -2,6 +2,8 @@
 
 Single runbook for taking Zuno to production (www.zuno.com or your domain). Excludes app store submission. Use with [scripts/README.md](../scripts/README.md) for CLI steps (e.g. `.\scripts\production.ps1` or `./scripts/production.sh`).
 
+**Production** means: backend with `ENVIRONMENT=production`, a **separate** production Supabase project, production Render service, and production Google OAuth client. UI build uses production `VITE_SUPABASE_*` and optional `VITE_API_BASE`. No code or deploy flow changes—only env and Dashboard configuration.
+
 ---
 
 ## Table of Contents

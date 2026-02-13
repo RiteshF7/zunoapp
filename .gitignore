@@ -4,6 +4,9 @@
 .env
 .env.*
 !.env.example
+!.env.development.example
+!.env.production.example
+config/env-mode
 *.pem
 *.key
 *.jks
@@ -14,6 +17,7 @@
 google-services.json
 vertex-ai-key.json
 *-service-account*.json
+backend/jwks.json
 
 # ===========================
 # Frontend (Expo / React Native)

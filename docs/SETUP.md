@@ -6,17 +6,52 @@ Steps to get the app running locally and deploy the backend. For full config ref
 
 ## Table of Contents
 
-1. [EAS Project ID & First Build (Mobile)](#1-eas-project-id--first-build-mobile)
-2. [Deploy Backend](#2-deploy-backend)
-3. [Production Build & App Store](#3-production-build--app-store)
+1. [Development environment (local + dev branch flow)](#1-development-environment-local--dev-branch-flow)
+2. [EAS Project ID & First Build (Mobile)](#2-eas-project-id--first-build-mobile)
+3. [Deploy Backend](#3-deploy-backend)
+4. [Production Build & App Store](#4-production-build--app-store)
 
 ---
 
-## 1. EAS Project ID & First Build (Mobile)
+## 1. Development environment (local + dev branch flow)
+
+Use a **separate dev Supabase project** and optional **dev Render** service. Flow: develop locally → push to `dev` branch (triggers dev Render deploy) → merge `dev` into `prod` and push (triggers prod deploy).
+
+### 1.1 One-time dev setup
+
+1. **Create env files** from `backend/.env.development.example`, `ui/.env.development.example` (copy to `.env.development` and fill with your dev Supabase credentials).
+
+2. **Set project config to dev**
+   - **PowerShell:** `.\scripts\use-env.ps1 dev`
+   - **Bash:** `./scripts/use-env.sh dev`
+   - Writes `development` to `config/env-mode` so the backend loads `backend/.env.development`.
+
+3. **Create dev Supabase project and dev Google OAuth client**
+   - Follow [DEV_ENV_MANUAL_STEPS.md](DEV_ENV_MANUAL_STEPS.md): create a dev Supabase project, add Auth redirect URLs (localhost:5173, localhost:8000/app/, dev Render URL if used), create a separate Google OAuth 2.0 Client ID for dev and configure it only in the dev Supabase project.
+
+4. **Fill dev env files**
+   - Edit `backend/.env.development` and `ui/.env.development` with your **dev** Supabase URL, anon key, and service role key (from the dev project only).
+   - Run **PowerShell:** `.\scripts\fetch-jwks-dev.ps1` or **Bash:** `./scripts/fetch-jwks-dev.sh` so `backend/jwks.json` is for the dev project.
+   - Optional: run `.\scripts\supabase-push-dev.ps1` or `./scripts/supabase-push-dev.sh` to link to the dev Supabase project and push migrations.
+
+5. **Run locally**
+   - Backend: `cd backend && uvicorn app.main:app --reload --port 8000`
+   - UI: `cd ui && npm run dev` → open http://localhost:5173 (UI uses `ui/.env.development` and proxies `/api` to the local backend).
+
+6. **Optional: dev Render**
+   - If you want a deployed dev backend, create a second Render Web Service from the same repo with **Branch** = `dev`, and set env vars to use the **dev** Supabase project and `ENVIRONMENT=development`. See [DEV_ENV_MANUAL_STEPS.md](DEV_ENV_MANUAL_STEPS.md). Then set `VITE_API_BASE` in `ui/.env.development` to the dev Render URL if you want the local UI to talk to it.
+
+### 1.2 Daily flow
+
+- Make changes locally; run app on localhost (DB = dev Supabase). When good → push to **dev** branch → dev Render auto-deploys (if configured). When dev Render is good → merge **dev** into **prod** and push → prod Render auto-deploys. Test on prod.
+
+---
+
+## 2. EAS Project ID & First Build (Mobile)
 
 *If your Expo app lives in `frontend/`, use that path instead of `mobile/` below.*
 
-### 1.1 Login and Initialize EAS
+### 2.1 Login and Initialize EAS
 
 ```bash
 cd mobile   # or frontend
@@ -37,7 +72,7 @@ After `eas init`, verify `mobile/app.json` (or `frontend/app.json`) has:
 
 Replace `"your-eas-project-id"` manually if needed.
 
-### 1.2 Development Build (required for Google OAuth on device)
+### 2.2 Development Build (required for Google OAuth on device)
 
 Expo Go cannot handle the `zunoapp://` deep link, so OAuth needs a custom dev build.
 
@@ -59,14 +94,14 @@ npx eas build --profile development --platform ios
 
 Simulator builds use `"simulator": true` in the development profile.
 
-### 1.3 Run with development build
+### 2.3 Run with development build
 
 ```bash
 cd mobile
 npx expo start --dev-client
 ```
 
-### 1.4 Test Google OAuth
+### 2.4 Test Google OAuth
 
 1. Open app → login screen
 2. Tap **Continue with Google**
@@ -77,7 +112,7 @@ npx expo start --dev-client
 
 ---
 
-## 2. Deploy Backend
+## 3. Deploy Backend
 
 Backend runs on `localhost:8000` by default. For devices on another network, deploy to a host. Example options:
 
@@ -122,9 +157,9 @@ fly deploy
 
 ---
 
-## 3. Production Build & App Store
+## 4. Production Build & App Store
 
-### 3.1 Build for stores
+### 4.1 Build for stores
 
 ```bash
 cd mobile
@@ -136,21 +171,21 @@ npx eas build --profile production --platform android
 npx eas build --profile production --platform ios
 ```
 
-### 3.2 Google Play
+### 4.2 Google Play
 
 1. [play.google.com/console](https://play.google.com/console) — Google Play Developer account ($25 one-time)
 2. Create app; set up API access / service account for EAS submit
 3. Store listing: name, descriptions, screenshots, feature graphic, icon, privacy policy URL, category
 4. Submit: `npx eas submit --profile production --platform android`
 
-### 3.3 Apple App Store
+### 4.3 Apple App Store
 
 1. [developer.apple.com/programs](https://developer.apple.com/programs) — Apple Developer Program ($99/year)
 2. Create App ID (e.g. `com.zuno.app`); create app in App Store Connect
 3. In `eas.json` submit config, set `appleId` for production iOS
 4. Fill store listing; submit: `npx eas submit --profile production --platform ios`
 
-### 3.4 Privacy policy
+### 4.4 Privacy policy
 
 Both stores require a public privacy policy URL. Include: data collected, storage (Supabase), third parties (Google OAuth, AI providers, Supabase), user rights, contact.
 

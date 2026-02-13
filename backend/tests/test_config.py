@@ -9,53 +9,63 @@ import pytest
 # _read_dotenv
 # ---------------------------------------------------------------------------
 
-def test_read_dotenv_reads_key_value_pairs(tmp_path, monkeypatch):
-    env_file = tmp_path / ".env"
-    env_file.write_text("FOO=bar\nBAZ=qux\n")
+def _patch_backend_dir_and_mode(monkeypatch, tmp_path, mode="development"):
     import app.config
-    monkeypatch.setattr(app.config, "_ENV_FILE", env_file)
+    monkeypatch.setattr(app.config, "_BACKEND_DIR", tmp_path)
+    monkeypatch.setattr(app.config, "_get_mode", lambda: mode)
+
+
+def test_read_dotenv_reads_key_value_pairs(tmp_path, monkeypatch):
+    (tmp_path / ".env").write_text("FOO=bar\nBAZ=qux\n")
+    _patch_backend_dir_and_mode(monkeypatch, tmp_path)
+    import app.config
     values = app.config._read_dotenv()
     assert values["FOO"] == "bar"
     assert values["BAZ"] == "qux"
 
 
 def test_read_dotenv_skips_comments(tmp_path, monkeypatch):
-    env_file = tmp_path / ".env"
-    env_file.write_text("# comment\nFOO=bar\n# another\n")
+    (tmp_path / ".env").write_text("# comment\nFOO=bar\n# another\n")
+    _patch_backend_dir_and_mode(monkeypatch, tmp_path)
     import app.config
-    monkeypatch.setattr(app.config, "_ENV_FILE", env_file)
     values = app.config._read_dotenv()
     assert "FOO" in values
     assert values["FOO"] == "bar"
 
 
 def test_read_dotenv_strips_inline_comments(tmp_path, monkeypatch):
-    env_file = tmp_path / ".env"
-    env_file.write_text("FOO=bar  # inline comment\n")
+    (tmp_path / ".env").write_text("FOO=bar  # inline comment\n")
+    _patch_backend_dir_and_mode(monkeypatch, tmp_path)
     import app.config
-    monkeypatch.setattr(app.config, "_ENV_FILE", env_file)
     values = app.config._read_dotenv()
     assert values["FOO"] == "bar"
 
 
 def test_read_dotenv_returns_empty_when_file_missing(tmp_path, monkeypatch):
+    _patch_backend_dir_and_mode(monkeypatch, tmp_path)
     import app.config
-    fake_path = tmp_path / "nonexistent.env"
-    assert not fake_path.exists()
-    monkeypatch.setattr(app.config, "_ENV_FILE", fake_path)
     values = app.config._read_dotenv()
     assert values == {}
 
 
 def test_read_dotenv_skips_lines_without_equals(tmp_path, monkeypatch):
-    env_file = tmp_path / ".env"
-    env_file.write_text("VALID=yes\ninvalid-line\nANOTHER=ok\n")
+    (tmp_path / ".env").write_text("VALID=yes\ninvalid-line\nANOTHER=ok\n")
+    _patch_backend_dir_and_mode(monkeypatch, tmp_path)
     import app.config
-    monkeypatch.setattr(app.config, "_ENV_FILE", env_file)
     values = app.config._read_dotenv()
     assert values["VALID"] == "yes"
     assert values["ANOTHER"] == "ok"
     assert len(values) == 2
+
+
+def test_read_dotenv_mode_file_overrides(tmp_path, monkeypatch):
+    (tmp_path / ".env").write_text("FOO=first\nBAR=only-in-env\n")
+    (tmp_path / ".env.development").write_text("FOO=second\n")
+    _patch_backend_dir_and_mode(monkeypatch, tmp_path)
+    import app.config
+    values = app.config._read_dotenv()
+    assert values["FOO"] == "second"
+    assert values["BAR"] == "only-in-env"
 
 
 # ---------------------------------------------------------------------------

@@ -4,6 +4,7 @@
 // Supabase project and API URL. See ui/.env.example.
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Dev only when VITE_SUPABASE_URL is unset; use a dedicated dev Supabase in .env.development to avoid hitting production.
 const _devFallback = {
   url: 'https://orpdwhqgcthwjnbirizx.supabase.co',
   anonKey:

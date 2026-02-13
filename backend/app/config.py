@@ -1,18 +1,37 @@
 """Application configuration via environment variables."""
 
+import os
 from pathlib import Path
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
-_ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+_ROOT_DIR = _BACKEND_DIR.parent
 
 
-def _read_dotenv() -> dict[str, str]:
-    """Read key=value pairs from the .env file (authoritative source of truth)."""
+def _get_mode() -> str:
+    """Current environment mode: development or production (and staging).
+    Sources: ZUNO_ENV or ENVIRONMENT env var, then config/env-mode or .env.mode at repo root. Default development.
+    """
+    mode = os.environ.get("ZUNO_ENV") or os.environ.get("ENVIRONMENT")
+    if mode:
+        mode = mode.strip().lower()
+        if mode in ("development", "production", "staging"):
+            return mode
+    for path in (_ROOT_DIR / "config" / "env-mode", _ROOT_DIR / ".env.mode"):
+        if path.exists():
+            raw = path.read_text(encoding="utf-8").strip().lower()
+            if raw in ("development", "production", "staging"):
+                return raw
+    return "development"
+
+
+def _read_dotenv_file(path: Path) -> dict[str, str]:
+    """Read key=value pairs from a .env-style file."""
     values: dict[str, str] = {}
-    if not _ENV_FILE.exists():
+    if not path.exists():
         return values
-    for line in _ENV_FILE.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
@@ -20,11 +39,19 @@ def _read_dotenv() -> dict[str, str]:
             continue
         key, _, val = line.partition("=")
         key = key.strip()
-        # Strip inline comments (e.g.  value  # comment)
         if "#" in val:
             val = val[: val.index("#")]
         values[key.upper()] = val.strip()
     return values
+
+
+def _read_dotenv() -> dict[str, str]:
+    """Load env from backend/.env then backend/.env.<mode>; latter overrides. Mode from env or config/env-mode."""
+    mode = _get_mode()
+    combined: dict[str, str] = {}
+    for env_file in (_BACKEND_DIR / ".env", _BACKEND_DIR / f".env.{mode}"):
+        combined.update(_read_dotenv_file(env_file))
+    return combined
 
 
 class Settings(BaseSettings):

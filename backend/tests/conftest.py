@@ -193,6 +193,7 @@ def test_settings():
         gcp_location="us-central1",
         backend_port=8000,
         cors_origins="http://localhost:3000",
+        environment="development",
     )
 
 

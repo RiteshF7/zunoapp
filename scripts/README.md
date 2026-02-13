@@ -2,7 +2,21 @@
 
 Use these to do production-prep steps from the terminal. On Windows use the `.ps1` scripts in PowerShell; on macOS/Linux use the `.sh` scripts (or Git Bash on Windows).
 
-## One-shot: run everything
+## Development environment
+
+| Step | PowerShell | Bash |
+|------|------------|------|
+| Set project config to dev or prod | `.\scripts\use-env.ps1 dev` or `.\scripts\use-env.ps1 prod` | `./scripts/use-env.sh dev` or `./scripts/use-env.sh prod` |
+| Link to **dev** Supabase + push migrations | `.\scripts\supabase-push-dev.ps1` | `./scripts/supabase-push-dev.sh` |
+| Fetch JWKS for **dev** project | `.\scripts\fetch-jwks-dev.ps1` | `./scripts/fetch-jwks-dev.sh` |
+
+- **use-env**: Writes `development` or `production` to `config/env-mode`. Backend then loads `backend/.env.development` or `backend/.env.production`. Restart the backend after switching. Create env files manually from `.env.development.example` and `.env.production.example`.
+- **supabase-push-dev**: Uses `SUPABASE_URL` from `backend/.env.development` to link and push migrations.
+- Dev setup (Supabase, OAuth, redirect URLs): see [docs/DEV_ENV_MANUAL_STEPS.md](../docs/DEV_ENV_MANUAL_STEPS.md).
+
+---
+
+## One-shot: run everything (production)
 
 **PowerShell (Windows):**
 ```powershell
@@ -18,7 +32,7 @@ This will: copy `.env.example` → `.env` if missing, fetch JWKS, link Supabase 
 
 ---
 
-## Step-by-step
+## Step-by-step (production / generic)
 
 | Step | PowerShell | Bash |
 |------|------------|------|
@@ -35,4 +49,5 @@ This will: copy `.env.example` → `.env` if missing, fetch JWKS, link Supabase 
 ## Still manual (Dashboard)
 
 - **Auth redirect URLs**: Supabase Dashboard → Authentication → URL Configuration → add production app URL and `com.zuno.app://callback`.
+- **Dev environment**: See [docs/DEV_ENV_MANUAL_STEPS.md](../docs/DEV_ENV_MANUAL_STEPS.md) for creating dev Supabase project, dev Google OAuth client, dev Render service, and redirect URLs.
 - **Set admin user**: In SQL Editor: `UPDATE public.profiles SET role = 'admin' WHERE id = '<user-uuid>';`

@@ -20,9 +20,15 @@ This document covers **configuration files** for the current stack: **Vite** (`u
 
 ## 1. Environment Variables
 
-### UI (`ui/.env`)
+### Environments (dev vs prod)
 
-**File:** `ui/.env` (git-ignored). Copy from `ui/.env.example`.
+- **Production**: Use a **separate** Supabase project, Render service, and Google OAuth client. Backend on Render sets `ENVIRONMENT=production` and prod env vars; UI build uses `ui/.env.production` or `ui/.env` with prod `VITE_*` (e.g. in Render build step).
+- **Development**: Use a **separate** dev Supabase project and optional dev Render. Locally: set project config to dev (e.g. `.\scripts\use-env.ps1 dev`), which writes to `config/env-mode`; backend then loads `backend/.env.development`. UI: when running `npm run dev`, Vite loads `ui/.env.development`; when running `npm run build`, Vite uses `ui/.env.production` or `ui/.env`.
+- **Project config switch**: Run `.\scripts\use-env.ps1 dev` or `.\scripts\use-env.ps1 prod` (or `./scripts/use-env.sh dev|prod`) to set the active mode. Backend reads `config/env-mode` or `ZUNO_ENV`/`ENVIRONMENT` and loads `backend/.env.development` or `backend/.env.production` accordingly. See [SETUP.md](SETUP.md) and [DEV_ENV_MANUAL_STEPS.md](DEV_ENV_MANUAL_STEPS.md).
+
+### UI (`ui/.env`, `ui/.env.development`, `ui/.env.production`)
+
+**Files:** `ui/.env` (generic), `ui/.env.development` (for `npm run dev`), `ui/.env.production` (for `npm run build`). All git-ignored. Copy from `ui/.env.example` or `ui/.env.development.example` / `ui/.env.production.example`.
 
 | Variable | Description | Where to find |
 |----------|-------------|---------------|
@@ -32,10 +38,11 @@ This document covers **configuration files** for the current stack: **Vite** (`u
 
 - **Build-time**: Vite inlines `VITE_*` at build; production builds must set these when running `npm run build`.
 - **Runtime override**: You can set `window.ZUNO_API_BASE` before the app loads to override API base (e.g. in Capacitor).
+- **Local development**: Set `VITE_SUPABASE_*` in `ui/.env.development` to a **dev** Supabase project. Do not rely on the in-code dev fallback for production data; use a dedicated dev Supabase in `.env.development`.
 
-### Backend (`backend/.env`)
+### Backend (`backend/.env`, `backend/.env.development`, `backend/.env.production`)
 
-**File:** `backend/.env` (git-ignored). Copy from `backend/.env.example`.
+**Files:** Backend loads `backend/.env` then `backend/.env.<mode>` (mode from `config/env-mode` or `ENVIRONMENT`). Use `backend/.env.development.example` and `backend/.env.production.example` as templates.
 
 | Variable | Description | Where to find |
 |----------|-------------|---------------|
@@ -45,6 +52,7 @@ This document covers **configuration files** for the current stack: **Vite** (`u
 | `OPENAI_API_KEY` / Vertex AI | AI features (categorize, summarize, embed, RAG, goals) | Your AI provider |
 | `BACKEND_PORT` | Port for uvicorn (default 8000) | — |
 | `CORS_ORIGINS` | Allowed origins for CORS (comma-separated) | e.g. `http://localhost:5173,https://app.zuno.com` |
+| `ENVIRONMENT` | `development`, `staging`, or `production` | Controls /docs, /redoc, CORS strictness |
 
 ---
 
@@ -109,7 +117,7 @@ See [docs/SETUP.md](docs/SETUP.md) and [docs/IOS_SHARE_EXTENSION_SETUP.md](docs/
 
 **File:** `backend/app/config.py`
 
-Backend uses Pydantic Settings (or equivalent) to load from environment: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, JWKS path or JWT secret, CORS origins, log level, etc. See `backend/.env.example` for required variables.
+Backend reads the current mode from `config/env-mode` or `ZUNO_ENV`/`ENVIRONMENT`, then loads `backend/.env` and `backend/.env.<mode>` (e.g. `.env.development` or `.env.production`), with the mode file overriding. So credentials and CORS come from the active environment. See `backend/.env.development.example` and `backend/.env.production.example` for required variables.
 
 ### 4.2 Running the Backend
 
@@ -168,7 +176,8 @@ Backend has replaced the original Edge Functions (process-content, generate-embe
 |---------|---------|
 | `node_modules/` | Dependencies |
 | `dist/`, `build/`, backend `static/` contents as needed | Build artifacts |
-| `.env`, `.env.local`, `*.env` | Environment secrets (never commit) |
+| `.env`, `.env.development`, `.env.production`, `config/env-mode` | Environment secrets (never commit) |
+| `!.env.example`, `!.env.development.example`, `!.env.production.example` | Example env templates (committed) |
 | `backend/jwks.json` | JWKS file (optional; can be generated; do not commit if it contains sensitive metadata) |
 | `.DS_Store` | macOS metadata |
 | `*.pem`, `*.jks`, `*.p8`, `*.p12`, `*.key`, `*.mobileprovision` | Signing keys (never commit) |

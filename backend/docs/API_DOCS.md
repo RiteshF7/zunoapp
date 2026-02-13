@@ -113,8 +113,9 @@ graph LR
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/api/feed` | Yes | Feed items (cached 5m) |
-| GET | `/api/bookmarks` | Yes | Bookmarked feed_item_ids |
-| POST | `/api/bookmarks/{id}/toggle` | Yes | Toggle bookmark |
+| GET | `/api/feed/bookmarks` | Yes | Bookmarked feed_item_ids |
+| GET | `/api/feed/bookmarks/items` | Yes | Full feed items for bookmarks (for Library Bookmarks tab) |
+| POST | `/api/feed/bookmarks/{id}/toggle` | Yes | Toggle bookmark |
 
 ### Suggested Feed
 

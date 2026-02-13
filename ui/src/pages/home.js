@@ -23,7 +23,7 @@ export async function renderHome(el) {
   const endpoint = feedType === 'suggestedcontent' ? '/api/suggested-feed' : '/api/feed';
   const [feedRes, bookmarkRes] = await Promise.all([
     api('GET', endpoint, null, { limit: 30 }),
-    api('GET', '/api/bookmarks'),
+    api('GET', '/api/feed/bookmarks'),
   ]);
   if (!feedRes.ok) showApiError(feedRes);
   if (!bookmarkRes.ok) showApiError(bookmarkRes);
@@ -69,7 +69,7 @@ async function switchFeedType(type) {
 }
 
 async function toggleBookmark(feedItemId, btn) {
-  const res = await api('POST', `/api/bookmarks/${feedItemId}/toggle`);
+  const res = await api('POST', `/api/feed/bookmarks/${feedItemId}/toggle`);
   if (res.ok) {
     const icon = btn.querySelector('span');
     const isNow = res.data?.bookmarked ?? !icon.textContent.includes('border');

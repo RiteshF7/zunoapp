@@ -203,7 +203,11 @@ app.include_router(v1)
     include_in_schema=False,
 )
 async def legacy_api_redirect(path: str, request: Request):
-    """Redirect old /api/... requests to /api/v1/... during migration."""
+    """Redirect old /api/... requests to /api/v1/... during migration.
+    Skip when path already starts with v1/ to avoid redirect loops (e.g. /api/v1/bookmarks).
+    """
+    if path.startswith("v1/") or path == "v1":
+        raise StarletteHTTPException(status_code=404, detail="Not found")
     query = f"?{request.url.query}" if request.url.query else ""
     return RedirectResponse(
         url=f"/api/v1/{path}{query}",

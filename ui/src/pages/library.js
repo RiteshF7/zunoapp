@@ -11,20 +11,34 @@ import { esc } from '../utils/helpers.js';
 import { showApiError } from '../utils/api-error.js';
 
 /**
- * Renders the library page (saved content or collections). Fetches content list or collections + categories.
- * res.data for content: array. res.data for collections/categories: array.
+ * Renders the library page (saved content, collections, or bookmarks). Fetches content list, collections + categories, or bookmarked feed items.
  * @param {HTMLElement} el - Container element
- * @param {string} [subTab] - 'saved' or 'collections'
+ * @param {string} [subTab] - 'saved', 'collections', or 'bookmarks'
  */
 export async function renderLibrary(el, subTab) {
-  if (subTab === 'saved' || subTab === 'collections') setLibraryTab(subTab);
+  if (subTab === 'saved' || subTab === 'collections' || subTab === 'bookmarks') setLibraryTab(subTab);
   const isSaved = _libraryTab === 'saved';
+  const isBookmarks = _libraryTab === 'bookmarks';
 
   if (isSaved) {
     await renderLibrarySaved(el);
+  } else if (isBookmarks) {
+    await renderLibraryBookmarks(el);
   } else {
     await renderLibraryCollections(el);
   }
+}
+
+function libraryTabsHtml(activeTab) {
+  const t = (name, tab) => {
+    const isActive = activeTab === tab;
+    return `<button onclick="switchLibraryTab('${tab}')" role="tab" aria-selected="${isActive}" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${isActive ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-heading'}">${name}</button>`;
+  };
+  return `<div class="flex bg-surface rounded-xl p-1 gap-1 mb-5 shadow-card" role="tablist" aria-label="Library view">
+    ${t('Saved', 'saved')}
+    ${t('Collections', 'collections')}
+    ${t('Bookmarks', 'bookmarks')}
+  </div>`;
 }
 
 async function renderLibrarySaved(el) {
@@ -35,12 +49,7 @@ async function renderLibrarySaved(el) {
   el.innerHTML = `
     <div class="fade-in">
       <h1 class="text-xl font-bold text-heading mb-4">Library</h1>
-
-      <!-- Tabs -->
-      <div class="flex bg-surface rounded-xl p-1 gap-1 mb-5 shadow-card" role="tablist" aria-label="Library view">
-        <button onclick="switchLibraryTab('saved')" role="tab" aria-selected="true" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 bg-accent text-white shadow-sm">Saved</button>
-        <button onclick="switchLibraryTab('collections')" role="tab" aria-selected="false" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 text-muted hover:text-heading">Collections</button>
-      </div>
+      ${libraryTabsHtml('saved')}
 
       ${items.length === 0 ? `
         <div class="flex flex-col items-center justify-center py-16 text-center">
@@ -52,6 +61,31 @@ async function renderLibrarySaved(el) {
         </div>` : `
         <div class="space-y-3" id="content-list">
           ${items.map(item => contentCardHtml(item, { showAiStatus: true })).join('')}
+        </div>`}
+    </div>`;
+}
+
+async function renderLibraryBookmarks(el) {
+  const res = await api('GET', '/api/feed/bookmarks/items');
+  if (!res.ok) showApiError(res);
+  const items = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
+
+  el.innerHTML = `
+    <div class="fade-in">
+      <h1 class="text-xl font-bold text-heading mb-4">Library</h1>
+      ${libraryTabsHtml('bookmarks')}
+
+      ${items.length === 0 ? `
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <div class="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center mb-4">
+            <span class="material-icons-round text-4xl text-accent/60">bookmark</span>
+          </div>
+          <p class="text-heading font-semibold mb-1">No bookmarks yet</p>
+          <p class="text-muted text-sm mb-4">Bookmark items from Home (My Feed or Suggested) to see them here</p>
+          <button onclick="navigate('#home')" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Go to Home</button>
+        </div>` : `
+        <div class="space-y-3" id="bookmarks-list">
+          ${items.map(item => contentCardHtml(item, { showBookmark: true, isBookmarked: true })).join('')}
         </div>`}
     </div>`;
 }
@@ -78,12 +112,7 @@ async function renderLibraryCollections(el) {
   el.innerHTML = `
     <div class="fade-in">
       <h1 class="text-xl font-bold text-heading mb-4">Library</h1>
-
-      <!-- Tabs -->
-      <div class="flex bg-surface rounded-xl p-1 gap-1 mb-5 shadow-card" role="tablist" aria-label="Library view">
-        <button onclick="switchLibraryTab('saved')" role="tab" aria-selected="false" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 text-muted hover:text-heading">Saved</button>
-        <button onclick="switchLibraryTab('collections')" role="tab" aria-selected="true" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 bg-accent text-white shadow-sm">Collections</button>
-      </div>
+      ${libraryTabsHtml('collections')}
 
       ${cats.length > 0 ? `
         <div class="mb-5">

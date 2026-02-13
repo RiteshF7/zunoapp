@@ -84,6 +84,35 @@ async def get_bookmarks(
     return [row["feed_item_id"] for row in (result.data or [])]
 
 
+@router.get("/bookmarks/items", response_model=list[FeedItemOut], tags=["bookmarks"])
+@limiter.limit(RATE_READ)
+async def get_bookmarked_feed_items(
+    request: Request,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Get full feed items for the current user's bookmarks (for Library Bookmarks tab)."""
+    bk_result = (
+        db.table("bookmarks")
+        .select("feed_item_id")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    feed_item_ids = [row["feed_item_id"] for row in (bk_result.data or [])]
+    if not feed_item_ids:
+        return []
+    # Fetch feed items; preserve bookmark order (newest bookmark first if we had created_at on bookmarks)
+    items_result = (
+        db.table("feed_items")
+        .select("*")
+        .in_("id", feed_item_ids)
+        .execute()
+    )
+    items = items_result.data or []
+    items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    return [FeedItemOut(**item) for item in items]
+
+
 @router.post("/bookmarks/{feed_item_id}/toggle", tags=["bookmarks"])
 @limiter.limit(RATE_WRITE)
 async def toggle_bookmark(

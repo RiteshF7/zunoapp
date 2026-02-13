@@ -50,6 +50,13 @@ Zuno uses a modern, clean design system built on Tailwind CSS with:
 - **Display Font**: `Inter, sans-serif`
 - **Weights**: 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
 
+### Where tokens live (implementation)
+
+- **App (ui/)**: CSS variables are defined in [ui/src/styles/theme.css](ui/src/styles/theme.css) (`--c-bg`, `--c-surface`, `--c-surface-hover`, `--c-border`, `--c-muted`, `--c-heading`, `--c-body`, `--c-accent`, `--c-accent-hover`, `--c-shadow`, `--c-nav-bg`). Tailwind theme (colors, fontFamily, borderRadius, boxShadow) is configured inline in [ui/index.html](ui/index.html); `accent` and other colors reference these CSS variables where applicable.
+- **Landing (landing-ui/)**: Tailwind and design tokens are configured in [landing-ui/index.html](landing-ui/index.html) (e.g. `accent-blue`). No shared package; keep app and landing tokens in sync manually when changing the design system.
+
+To change colors or spacing for the app, edit `theme.css` and/or the Tailwind config in `ui/index.html`. For the landing page, edit `landing-ui/index.html`.
+
 ---
 
 ## Typography

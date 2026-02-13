@@ -10,6 +10,8 @@ All endpoints require `Authorization: Bearer <JWT>` except `GET /health` and `GE
 
 JWT is a Supabase-issued token verified via JWKS or HMAC.
 
+**Response headers**: Every API response includes `X-Request-ID` (UUID4) and `X-Response-Time` (e.g. `12.3ms`). Use `X-Request-ID` in support or logs to correlate client requests with server-side entries. Error responses also include `request_id` in the JSON body.
+
 ---
 
 ## Architecture

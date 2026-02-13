@@ -4,6 +4,7 @@
 import { navigate, getRoute } from './navigate.js';
 import { _prevPage, setPrevPage } from './state.js';
 import { skeletonCards, skeletonDetail, loadingSpinner } from '../components/skeleton.js';
+import { esc } from '../utils/helpers.js';
 
 import { renderAuth } from '../pages/auth.js';
 import { renderHome } from '../pages/home.js';
@@ -122,10 +123,12 @@ export async function router() {
       default: navigate('#home');
     }
   } catch (err) {
-    main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in">
+    const errMsg = typeof err?.message === 'string' ? err.message : 'Something went wrong';
+    main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in" role="alert" aria-live="assertive">
       <span class="material-icons-round text-5xl text-danger/40 mb-3">error_outline</span>
       <p class="text-heading font-semibold mb-1">Something went wrong</p>
-      <p class="text-muted text-sm">${err.message}</p>
+      <p class="text-muted text-sm mb-4">${esc(errMsg)}</p>
+      <button type="button" onclick="router()" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Try again</button>
     </div>`;
   }
 }

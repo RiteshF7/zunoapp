@@ -10,6 +10,7 @@ import {
   getOAuthRedirectUrl, isCapacitor,
 } from '../core/config.js';
 import { syncAuthToNativeIfIOS } from '../core/ios-share-sync.js';
+import { showApiError } from '../utils/api-error.js';
 
 export function renderAuth(el) {
   el.innerHTML = `
@@ -138,7 +139,7 @@ export async function handleOAuthCallback(url) {
   localStorage.removeItem('zuno_token');
   localStorage.removeItem('zuno_refresh_token');
   history.replaceState(null, '', window.location.pathname + '#auth');
-  toast('Sign-in failed. Please try again.', 'error');
+  showApiError(res);
   return false;
 }
 

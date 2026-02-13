@@ -7,10 +7,17 @@ import { getUserProfile } from '../core/state.js';
 import { router } from '../core/router.js';
 import { contentCardHtml } from '../components/ui.js';
 import { esc, getGreeting, formatDate } from '../utils/helpers.js';
+import { showApiError } from '../utils/api-error.js';
 
+/**
+ * Renders the home (feed) page. Fetches profile, user preferences, feed items, and bookmarks.
+ * res.data for feed: array of items or { items: Array }. res.data for bookmarks: array of feed_item_ids.
+ * @param {HTMLElement} el - Container element
+ */
 export async function renderHome(el) {
   const profile = await getUserProfile();
   const prefRes = await api('GET', '/api/user-preferences');
+  if (!prefRes.ok) showApiError(prefRes);
   const feedType = prefRes.ok ? prefRes.data.feed_type : 'usersaved';
 
   const endpoint = feedType === 'suggestedcontent' ? '/api/suggested-feed' : '/api/feed';
@@ -18,6 +25,8 @@ export async function renderHome(el) {
     api('GET', endpoint, null, { limit: 30 }),
     api('GET', '/api/bookmarks'),
   ]);
+  if (!feedRes.ok) showApiError(feedRes);
+  if (!bookmarkRes.ok) showApiError(bookmarkRes);
 
   const items = feedRes.ok ? (Array.isArray(feedRes.data) ? feedRes.data : feedRes.data.items || []) : [];
   const bookmarks = bookmarkRes.ok ? (Array.isArray(bookmarkRes.data) ? bookmarkRes.data : []) : [];

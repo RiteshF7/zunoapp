@@ -9,6 +9,8 @@
   --c-body: #334155;
   --c-shadow: rgba(0,0,0,0.06);
   --c-nav-bg: rgba(248,250,252,0.92);
+  --c-accent: #4D96FF;
+  --c-accent-hover: #3b7ad6;
 }
 .dark {
   --c-bg: #0f1117;
@@ -20,4 +22,6 @@
   --c-body: #cbd5e1;
   --c-shadow: rgba(0,0,0,0.35);
   --c-nav-bg: rgba(26,29,39,0.92);
+  --c-accent: #4D96FF;
+  --c-accent-hover: #6ba8ff;
 }

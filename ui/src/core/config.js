@@ -35,9 +35,14 @@ export function isCapacitor() {
 }
 
 /**
- * API base URL (same logic as api.js). Used for iOS Share Extension sync.
+ * API base URL — single source of truth for the backend base (used by api.js and iOS Share Extension sync).
+ * In Vite dev on localhost we use the current origin so the dev server proxy (→ localhost:8000) is used and CORS is avoided.
  */
 export function getApiBase() {
+  // Local dev: use same origin so Vite proxies /api and /health to backend (avoids CORS when .env points at Render).
+  if (typeof import.meta !== 'undefined' && import.meta.env?.DEV && typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
+    return window.location.origin;
+  }
   return (
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE) ||
     (typeof window !== 'undefined' && window.ZUNO_API_BASE) ||

@@ -56,7 +56,7 @@ export function contentCardHtml(item, opts = {}) {
 }
 
 // Progress ring SVG
-export function progressRing(percent, size = 48, stroke = 4, color = '#6366f1') {
+export function progressRing(percent, size = 48, stroke = 4, color = 'var(--c-accent)') {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (circ * percent / 100);

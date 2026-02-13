@@ -8,7 +8,14 @@ import { toast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { contentCardHtml } from '../components/ui.js';
 import { esc } from '../utils/helpers.js';
+import { showApiError } from '../utils/api-error.js';
 
+/**
+ * Renders the library page (saved content or collections). Fetches content list or collections + categories.
+ * res.data for content: array. res.data for collections/categories: array.
+ * @param {HTMLElement} el - Container element
+ * @param {string} [subTab] - 'saved' or 'collections'
+ */
 export async function renderLibrary(el, subTab) {
   if (subTab === 'saved' || subTab === 'collections') setLibraryTab(subTab);
   const isSaved = _libraryTab === 'saved';
@@ -22,6 +29,7 @@ export async function renderLibrary(el, subTab) {
 
 async function renderLibrarySaved(el) {
   const res = await api('GET', '/api/content', null, { limit: 50 });
+  if (!res.ok) showApiError(res);
   const items = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
 
   el.innerHTML = `
@@ -53,6 +61,8 @@ async function renderLibraryCollections(el) {
     api('GET', '/api/collections'),
     api('GET', '/api/collections/categories'),
   ]);
+  if (!colRes.ok) showApiError(colRes);
+  if (!catRes.ok) showApiError(catRes);
   const cols = colRes.ok ? (Array.isArray(colRes.data) ? colRes.data : []) : [];
   const cats = catRes.ok ? (Array.isArray(catRes.data) ? catRes.data : []) : [];
 

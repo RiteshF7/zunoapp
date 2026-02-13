@@ -2,13 +2,7 @@
 // API HELPER
 // ═══════════════════════════════════════════════════════════════════════════
 
-// API base: build-time VITE_API_BASE, or runtime ZUNO_API_BASE, or origin / emulator alias.
-const API_BASE =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE) ||
-  window.ZUNO_API_BASE ||
-  (window.location.hostname === 'localhost' && !window.location.port
-    ? 'http://10.0.2.2:8000'
-    : window.location.origin);
+import { getApiBase } from './config.js';
 
 let _refreshing = null; // single in-flight refresh promise
 
@@ -20,13 +14,29 @@ function _normalizePath(path) {
   return path;
 }
 
+/**
+ * @typedef {Object} ApiResponse
+ * @property {boolean} ok - True if response status is 2xx
+ * @property {number} status - HTTP status code (or 0 on network error)
+ * @property {Object|string} data - Parsed JSON body or error message
+ */
+
+/**
+ * Performs a single fetch to the backend. Path is normalized to /api/v1/.
+ * @param {string} method - HTTP method (GET, POST, PATCH, PUT, DELETE)
+ * @param {string} path - Path (e.g. /api/profile)
+ * @param {Object|null} body - Request body for POST/PATCH/PUT/DELETE
+ * @param {Object|null} params - Query params (key-value)
+ * @returns {Promise<ApiResponse>}
+ */
 async function _doFetch(method, path, body, params) {
   const token = localStorage.getItem('zuno_token');
   const headers = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const normalizedPath = _normalizePath(path);
-  let url = `${API_BASE}${normalizedPath}`;
+  const apiBase = getApiBase();
+  let url = `${apiBase}${normalizedPath}`;
   if (params) {
     const sp = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => { if (v !== '' && v != null) sp.append(k, v); });
@@ -47,6 +57,15 @@ async function _doFetch(method, path, body, params) {
   return { ok: res.ok, status: res.status, data };
 }
 
+/**
+ * Call the backend API. Uses getApiBase(), sends Bearer token, normalizes path to /api/v1/.
+ * On 401, attempts one token refresh and retry; if still 401, clears tokens and redirects to #auth.
+ * @param {string} method - HTTP method
+ * @param {string} path - Path (e.g. /api/profile, /api/content)
+ * @param {Object|null} [body=null] - Request body
+ * @param {Object|null} [params=null] - Query params
+ * @returns {Promise<ApiResponse>}
+ */
 export async function api(method, path, body = null, params = null) {
   try {
     let result = await _doFetch(method, path, body, params);

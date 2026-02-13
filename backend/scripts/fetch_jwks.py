@@ -10,8 +10,8 @@ Usage:
   Or from backend/:
     python scripts/fetch_jwks.py
 
-Writes backend/jwks.json. Create backend/.env with SUPABASE_URL first, or pass
-the URL as the first argument.
+Writes backend/jwks.json. Optional first argument: SUPABASE_URL, or path to .env
+file (e.g. backend/.env.development) to read SUPABASE_URL from.
 """
 
 import json
@@ -58,17 +58,27 @@ def _load_dotenv(env_path: Path) -> dict[str, str]:
 
 def main():
     base = Path(__file__).resolve().parent.parent
-    env_path = base / ".env"
-    dotenv = _load_dotenv(env_path)
-    # Explicit CLI arg overrides env (so you can test different URLs)
-    raw = (
-        (sys.argv[1] if len(sys.argv) > 1 else None)
-        or os.environ.get("SUPABASE_URL")
-        or dotenv.get("SUPABASE_URL")
-    )
+    raw = None
+    if len(sys.argv) > 1:
+        arg = sys.argv[1].strip()
+        if arg.startswith("http://") or arg.startswith("https://"):
+            raw = arg
+        else:
+            env_path = (base.parent / arg).resolve() if not Path(arg).is_absolute() else Path(arg)
+            if not env_path.exists():
+                print(f"Env file not found: {env_path}", file=sys.stderr)
+                sys.exit(1)
+            raw = _load_dotenv(env_path).get("SUPABASE_URL")
+            if not raw:
+                print(f"SUPABASE_URL not set in {env_path}", file=sys.stderr)
+                sys.exit(1)
+    if not raw:
+        env_path = base / ".env"
+        dotenv = _load_dotenv(env_path)
+        raw = os.environ.get("SUPABASE_URL") or dotenv.get("SUPABASE_URL")
     if not raw:
         print("Usage: SUPABASE_URL=<url> python fetch_jwks.py", file=sys.stderr)
-        print("   or: python fetch_jwks.py <SUPABASE_URL>", file=sys.stderr)
+        print("   or: python fetch_jwks.py <SUPABASE_URL|path/to/.env>", file=sys.stderr)
         sys.exit(1)
     url = _normalize_url(raw)
     jwks_url = f"{url}/auth/v1/.well-known/jwks.json"

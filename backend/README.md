@@ -44,15 +44,9 @@ uvicorn app.main:app --reload --port 8000
 
 *Required for AI features (content analysis, embeddings, feed generation, knowledge engine). See [docs/VERTEX_AI_SETUP.md](../docs/VERTEX_AI_SETUP.md) for setup instructions.
 
-### Production: JWKS for JWT validation
+### JWT validation (JWKS)
 
-The backend loads `backend/jwks.json` to verify Supabase JWTs. For **production**, that file must come from your **production** Supabase project (different from dev). From repo root:
-
-```bash
-SUPABASE_URL=https://your-prod-project.supabase.co python backend/scripts/fetch_jwks.py
-```
-
-This writes `backend/jwks.json`. Re-run after any Supabase JWT key rotation. Never commit a `jwks.json` that contains keys from a project you don't control.
+The backend fetches JWKS from `SUPABASE_URL/auth/v1/.well-known/jwks.json` at runtime. No manual download or local file is needed.
 
 ## API Endpoints (25 total)
 

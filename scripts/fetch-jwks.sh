@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Fetch JWKS from Supabase (URL from backend/.env) and write backend/jwks.json.
-# Run from repo root. Requires backend/.env with SUPABASE_URL.
+# Fetch JWKS from prod Supabase and write backend/jwks.json.
+# NOTE: Backend now fetches JWKS from Supabase URL at runtime; this script is optional.
+# Run from repo root. Uses backend/.env.production (run resolve-env.sh first).
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-python backend/scripts/fetch_jwks.py
+"$ROOT/scripts/resolve-env.sh"
+python backend/scripts/fetch_jwks.py backend/.env.production

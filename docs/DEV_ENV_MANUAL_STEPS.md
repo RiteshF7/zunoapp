@@ -61,8 +61,7 @@ If you want a deployed dev backend (in addition to localhost):
 
 To copy production schema and data into the dev database:
 
-- **Bash**: `./scripts/clone-prod-to-dev-db.sh`  
-- **PowerShell**: `.\scripts\clone-prod-to-dev-db.ps1`
+- **Bash**: `./scripts/clone-prod-to-dev-db.sh`
 
 Requires PostgreSQL client tools (`pg_dump`, `psql`) (no Docker), `psql`, and both projects’ DB passwords. Set `SUPABASE_DB_PASSWORD_PROD` and `SUPABASE_DB_PASSWORD_DEV` or enter them when prompted. This overwrites the dev `public` schema.
 

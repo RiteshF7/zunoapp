@@ -23,8 +23,8 @@ This document covers **configuration files** for the current stack: **Vite** (`u
 ### Environments (dev vs prod)
 
 - **Production**: Use a **separate** Supabase project, Render service, and Google OAuth client. Backend on Render sets `ENVIRONMENT=production` and prod env vars; UI build uses `ui/.env.production` or `ui/.env` with prod `VITE_*` (e.g. in Render build step).
-- **Development**: Use a **separate** dev Supabase project and optional dev Render. Locally: set project config to dev (e.g. `.\scripts\use-env.ps1 dev`), which writes to `config/env-mode`; backend then loads `backend/.env.development`. UI: when running `npm run dev`, Vite loads `ui/.env.development`; when running `npm run build`, Vite uses `ui/.env.production` or `ui/.env`.
-- **Project config switch**: Run `.\scripts\use-env.ps1 dev` or `.\scripts\use-env.ps1 prod` (or `./scripts/use-env.sh dev|prod`) to set the active mode. Backend reads `config/env-mode` or `ZUNO_ENV`/`ENVIRONMENT` and loads `backend/.env.development` or `backend/.env.production` accordingly. See [SETUP.md](SETUP.md) and [DEV_ENV_MANUAL_STEPS.md](DEV_ENV_MANUAL_STEPS.md).
+- **Development**: Use a **separate** dev Supabase project and optional dev Render. Locally: set project config to dev (e.g. `./scripts/use-env.sh dev`), which writes to `config/env-mode`; backend then loads `backend/.env.development`. UI: when running `npm run dev`, Vite loads `ui/.env.development`; when running `npm run build`, Vite uses `ui/.env.production` or `ui/.env`.
+- **Project config switch**: Run `./scripts/use-env.sh dev` or `./scripts/use-env.sh prod` to set the active mode. Backend reads `config/env-mode` or `ZUNO_ENV`/`ENVIRONMENT` and loads `backend/.env.development` or `backend/.env.production` accordingly. See [SETUP.md](SETUP.md) and [DEV_ENV_MANUAL_STEPS.md](DEV_ENV_MANUAL_STEPS.md).
 
 ### UI (`ui/.env`, `ui/.env.development`, `ui/.env.production`)
 

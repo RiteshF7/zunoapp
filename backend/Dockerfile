@@ -22,7 +22,6 @@ RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
 
 COPY app ./app
 COPY migrations ./migrations
-COPY jwks.json* ./
 
 RUN chown -R appuser:appuser /app
 

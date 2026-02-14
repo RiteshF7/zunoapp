@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # Link Supabase project and push migrations.
 # Run from repo root: ./scripts/supabase-push.sh [PROJECT_REF]
-# If PROJECT_REF omitted, derived from SUPABASE_URL in backend/.env.
+# If PROJECT_REF omitted, derived from SUPABASE_URL in backend/.env.production.
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+"$ROOT/scripts/resolve-env.sh"
 PROJECT_REF="$1"
-if [ -z "$PROJECT_REF" ] && [ -f backend/.env ]; then
-  PROJECT_REF=$(python backend/scripts/get_env_var.py backend/.env PROJECT_REF 2>/dev/null) || true
+if [ -z "$PROJECT_REF" ] && [ -f backend/.env.production ]; then
+  PROJECT_REF=$(python backend/scripts/get_env_var.py backend/.env.production PROJECT_REF 2>/dev/null) || true
 fi
 if [ -z "$PROJECT_REF" ]; then
   echo "Usage: ./scripts/supabase-push.sh [PROJECT_REF]"
-  echo "  Or set SUPABASE_URL in backend/.env"
+  echo "  Or set SUPABASE_URL_PROD in root .env"
   exit 1
 fi
 echo "Linking project ref: $PROJECT_REF"

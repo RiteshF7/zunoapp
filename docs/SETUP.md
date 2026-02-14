@@ -22,7 +22,6 @@ Use a **separate dev Supabase project** and optional **dev Render** service. Flo
 1. **Create env files** from `backend/.env.development.example`, `ui/.env.development.example` (copy to `.env.development` and fill with your dev Supabase credentials).
 
 2. **Set project config to dev**
-   - **PowerShell:** `.\scripts\use-env.ps1 dev`
    - **Bash:** `./scripts/use-env.sh dev`
    - Writes `development` to `config/env-mode` so the backend loads `backend/.env.development`.
 
@@ -31,8 +30,8 @@ Use a **separate dev Supabase project** and optional **dev Render** service. Flo
 
 4. **Fill dev env files**
    - Edit `backend/.env.development` and `ui/.env.development` with your **dev** Supabase URL, anon key, and service role key (from the dev project only).
-   - Run **PowerShell:** `.\scripts\fetch-jwks-dev.ps1` or **Bash:** `./scripts/fetch-jwks-dev.sh` so `backend/jwks.json` is for the dev project.
-   - Optional: run `.\scripts\supabase-push-dev.ps1` or `./scripts/supabase-push-dev.sh` to link to the dev Supabase project and push migrations.
+   - Run `./scripts/fetch-jwks-dev.sh` so `backend/jwks.json` is for the dev project.
+   - Optional: run `./scripts/supabase-push-dev.sh` to link to the dev Supabase project and push migrations.
 
 5. **Run locally**
    - Backend: `cd backend && uvicorn app.main:app --reload --port 8000`

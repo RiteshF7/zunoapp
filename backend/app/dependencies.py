@@ -1,12 +1,10 @@
 """Shared dependencies: JWT auth middleware and Supabase client (PyJWT)."""
 
-import json
 import logging
-from pathlib import Path
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt as pyjwt
-from jwt import PyJWK
+from jwt import PyJWKClient
 from supabase import create_client, Client
 
 from app.config import Settings, get_settings
@@ -32,44 +30,27 @@ def get_supabase(settings: Settings = Depends(get_settings)) -> Client:
 
 
 # ---------------------------------------------------------------------------
-# JWKS public keys — loaded once from local jwks.json (no network needed)
+# JWKS — fetched from Supabase URL at runtime (cached by PyJWKClient)
 # ---------------------------------------------------------------------------
-_JWKS_PATH = Path(__file__).resolve().parent.parent / "jwks.json"
-_jwks_keys: dict[str, PyJWK] = {}
+_jwks_client: PyJWKClient | None = None
+_jwks_client_url: str | None = None
 
 
-def _load_jwks_keys() -> dict[str, PyJWK]:
-    """Load JWKS public keys from the local jwks.json file."""
-    global _jwks_keys
-    if _jwks_keys:
-        return _jwks_keys
-
-    if not _JWKS_PATH.exists():
-        raise RuntimeError(
-            f"jwks.json not found at {_JWKS_PATH}. "
-            "Download it: curl <SUPABASE_URL>/auth/v1/.well-known/jwks.json > backend/jwks.json"
+def _get_jwks_client(supabase_url: str) -> PyJWKClient:
+    """Get or create a cached PyJWKClient for the given Supabase URL."""
+    global _jwks_client, _jwks_client_url
+    base = supabase_url.rstrip("/")
+    jwks_uri = f"{base}/auth/v1/.well-known/jwks.json"
+    if _jwks_client is None or _jwks_client_url != jwks_uri:
+        logger.info("Creating JWKS client → %s", jwks_uri)
+        _jwks_client = PyJWKClient(
+            jwks_uri,
+            cache_keys=True,
+            cache_jwk_set=True,
+            lifespan=300,
         )
-
-    jwks_data = json.loads(_JWKS_PATH.read_text())
-    for key_data in jwks_data.get("keys", []):
-        kid = key_data.get("kid", "default")
-        _jwks_keys[kid] = PyJWK.from_dict(key_data)
-        logger.info("Loaded JWKS key: kid=%s alg=%s", kid, key_data.get("alg"))
-
-    return _jwks_keys
-
-
-def _get_signing_key(token: str) -> PyJWK:
-    """Get the signing key for a JWT by matching its kid header."""
-    keys = _load_jwks_keys()
-    header = pyjwt.get_unverified_header(token)
-    kid = header.get("kid")
-
-    if kid and kid in keys:
-        return keys[kid]
-    if keys:
-        return next(iter(keys.values()))
-    raise ValueError("No JWKS keys available")
+        _jwks_client_url = jwks_uri
+    return _jwks_client
 
 
 # ---------------------------------------------------------------------------
@@ -88,8 +69,9 @@ async def get_current_user(
         # Leeway for iat/exp to tolerate clock skew between this server and Supabase
         leeway_seconds = 10
         if alg in ("ES256", "ES384", "ES512", "RS256", "RS384", "RS512"):
-            # Asymmetric algorithm → verify with local JWKS public key
-            signing_key = _get_signing_key(token)
+            # Asymmetric algorithm → fetch JWKS from Supabase URL and verify
+            jwks_client = _get_jwks_client(settings.supabase_url)
+            signing_key = jwks_client.get_signing_key_from_jwt(token)
             payload = pyjwt.decode(
                 token,
                 signing_key.key,

@@ -19,6 +19,14 @@ zunoapp/
 
 ## Getting Started
 
+### Quick start
+
+```bash
+./scripts/start.sh dev              # Dev: backend + frontend
+./scripts/start.sh prod             # Prod: build UI, run backend
+./scripts/start.sh prod --prep      # Prod: full prep + run
+```
+
 ### Prerequisites
 
 - **Node.js** >= 18

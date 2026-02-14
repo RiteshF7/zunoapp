@@ -94,6 +94,19 @@ export async function handleOAuthCallback(url) {
     fragment = hash ? hash.substring(1) : '';
   }
 
+  // Check for OAuth error (Supabase redirects with #error=...&error_description=...)
+  if (fragment && fragment.includes('error=')) {
+    const params = new URLSearchParams(fragment);
+    const error = params.get('error') || 'unknown';
+    const desc = params.get('error_description') || params.get('error_description') || error;
+    const msg = `${error}: ${decodeURIComponent(String(desc).replace(/\+/g, ' '))}`;
+    console.error('[OAuth]', msg);
+    toast(msg, true);
+    // Clear hash so user can try again
+    history.replaceState(null, '', window.location.pathname + '#auth');
+    return false;
+  }
+
   if (!fragment || !fragment.includes('access_token=')) return false;
 
   // Parse the fragment params

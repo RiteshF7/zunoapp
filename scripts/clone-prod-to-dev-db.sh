@@ -10,6 +10,7 @@ set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+"$ROOT/scripts/resolve-env.sh"
 PROD_REF=$(python backend/scripts/get_env_var.py backend/.env.production PROJECT_REF 2>/dev/null) || true
 DEV_REF=$(python backend/scripts/get_env_var.py backend/.env.development PROJECT_REF 2>/dev/null) || true
 [ -n "$PROD_REF" ] || { echo "Missing SUPABASE_URL in backend/.env.production"; exit 1; }

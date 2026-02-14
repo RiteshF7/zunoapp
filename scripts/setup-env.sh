@@ -1,22 +1,15 @@
 #!/usr/bin/env bash
-# Copy .env.example -> .env for backend and ui if .env does not exist.
-# Run from repo root. Edit the new .env files with your values.
+# Copy root .env.example -> .env if missing. Run resolve-env to generate backend and ui env files.
+# Run from repo root: ./scripts/setup-env.sh
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if [ ! -f backend/.env ]; then
-  cp backend/.env.example backend/.env
-  echo "Created backend/.env from .env.example"
+if [ ! -f .env ]; then
+  cp .env.example .env
+  echo "Created .env from .env.example. Edit .env with your values (use _DEV and _PROD suffixes)."
 else
-  echo "backend/.env already exists"
+  echo ".env already exists"
 fi
 
-if [ ! -f ui/.env ]; then
-  cp ui/.env.example ui/.env
-  echo "Created ui/.env from .env.example"
-else
-  echo "ui/.env already exists"
-fi
-
-echo "Edit backend/.env and ui/.env with your Supabase URL, keys, and (for prod) ENVIRONMENT and CORS_ORIGINS."
+echo "Run ./scripts/resolve-env.sh to generate backend/.env.development, backend/.env.production, ui/.env.development, ui/.env.production"

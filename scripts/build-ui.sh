@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Build UI and landing. Uses ui/.env for VITE_* at build time.
+# Build UI and landing. Resolves root .env first, then uses ui/.env.production for prod build.
 # Output: backend/static/app (main app), backend/static/ (landing)
-# Build order: ui first, then landing (landing overwrites index.html at root)
+# Run from repo root: ./scripts/build-ui.sh
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+"$ROOT/scripts/resolve-env.sh"
 
 # 1. Build main app → backend/static/app/
 cd "$ROOT/ui"

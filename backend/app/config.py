@@ -11,18 +11,23 @@ _ROOT_DIR = _BACKEND_DIR.parent
 
 def _get_mode() -> str:
     """Current environment mode: development or production (and staging).
-    Sources: ZUNO_ENV or ENVIRONMENT env var, then config/env-mode or .env.mode at repo root. Default development.
+    Sources: ZUNO_ENV or ENVIRONMENT env var, then ZUNO_MODE from root .env. Default development.
     """
     mode = os.environ.get("ZUNO_ENV") or os.environ.get("ENVIRONMENT")
     if mode:
-        mode = mode.strip().lower()
+        mode = str(mode).strip().lower()
         if mode in ("development", "production", "staging"):
             return mode
-    for path in (_ROOT_DIR / "config" / "env-mode", _ROOT_DIR / ".env.mode"):
-        if path.exists():
-            raw = path.read_text(encoding="utf-8").strip().lower()
-            if raw in ("development", "production", "staging"):
-                return raw
+        if mode in ("dev", "prod"):
+            return "development" if mode == "dev" else "production"
+    root_env = _ROOT_DIR / ".env"
+    if root_env.exists():
+        root_vars = _read_dotenv_file(root_env)
+        mode = root_vars.get("ZUNO_MODE", "").strip().lower()
+        if mode in ("development", "production", "staging"):
+            return mode
+        if mode in ("dev", "prod"):
+            return "development" if mode == "dev" else "production"
     return "development"
 
 

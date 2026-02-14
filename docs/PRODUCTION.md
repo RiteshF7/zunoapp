@@ -1,6 +1,6 @@
 # Zuno — Production Runbook
 
-Single runbook for taking Zuno to production (www.zuno.com or your domain). Excludes app store submission. Use with [scripts/README.md](../scripts/README.md) for CLI steps (e.g. `.\scripts\production.ps1` or `./scripts/production.sh`).
+Single runbook for taking Zuno to production (www.zuno.com or your domain). Excludes app store submission. Use with [scripts/README.md](../scripts/README.md) for CLI steps (e.g. `./scripts/start.sh prod --prep`).
 
 **Production** means: backend with `ENVIRONMENT=production`, a **separate** production Supabase project, production Render service, and production Google OAuth client. UI build uses production `VITE_SUPABASE_*` and optional `VITE_API_BASE`. No code or deploy flow changes—only env and Dashboard configuration.
 
@@ -72,7 +72,7 @@ Single runbook for taking Zuno to production (www.zuno.com or your domain). Excl
 
 - [ ] Use a **separate production Supabase project** (do not reuse dev)
 - [ ] `supabase link --project-ref <prod-ref>`
-- [ ] `supabase db push` (or run `.\scripts\production.ps1`)
+- [ ] `supabase db push` (or run `./scripts/start.sh prod --prep`)
 
 ### 3.2 Auth redirect URLs
 
@@ -106,7 +106,7 @@ Backend uses `backend/jwks.json` to verify Supabase JWTs. Fetch from **productio
 
 **From repo root:**
 ```powershell
-.\scripts\fetch-jwks.ps1
+./scripts/fetch-jwks.sh
 ```
 
 **Or direct:**
@@ -143,7 +143,7 @@ Commit `backend/jwks.json` so Render (or your host) has it. Re-run after JWT key
 ## 5. Frontend (Web UI)
 
 - [ ] Set `ui/.env` with production `VITE_*` values
-- [ ] Build: from repo root `.\scripts\build-ui.ps1` or `./scripts/build-ui.sh` → output `backend/static/` (app at `/app/`, landing at `/`)
+- [ ] Build: from repo root `./scripts/build-ui.sh` → output `backend/static/` (app at `/app/`, landing at `/`)
 - [ ] Deploy `backend/static/` (or full backend serving it) over HTTPS
 - [ ] Ensure API and frontend are reachable (same origin or correct `VITE_API_BASE`)
 
@@ -186,7 +186,7 @@ Commit `backend/jwks.json` so Render (or your host) has it. Re-run after JWT key
   `https://zuno.com/`, `https://zuno.com/app/`, `https://zuno.com/app`,  
   `http://localhost:5173/`, `http://localhost:8000/app/`, `com.zuno.app://callback`
 
-- Build UI/landing: `.\scripts\build-ui.ps1` or `./scripts/build-ui.sh`; deploy over HTTPS.
+- Build UI/landing: `./scripts/build-ui.sh`; deploy over HTTPS.
 
 ---
 

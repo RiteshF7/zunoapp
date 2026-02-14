@@ -131,38 +131,6 @@ def test_get_supabase_respects_existing_singleton():
     assert result is dependencies._supabase_client
 
 
-def test_load_jwks_keys_raises_runtime_error_when_file_missing():
-    """_load_jwks_keys raises RuntimeError when jwks.json is missing."""
-    dependencies._jwks_keys = {}  # Clear cached keys
-    with patch("app.dependencies._JWKS_PATH") as mock_path:
-        mock_path.exists.return_value = False
-        with pytest.raises(RuntimeError, match="jwks.json not found"):
-            dependencies._load_jwks_keys()
-
-
-def test_get_signing_key_fallback_to_first_key():
-    """_get_signing_key falls back to first key when kid doesn't match."""
-    dependencies._jwks_keys = {}
-    mock_key1 = MagicMock()
-    mock_key1.key = "key1"
-    mock_key2 = MagicMock()
-    mock_key2.key = "key2"
-    keys_dict = {"kid-a": mock_key1, "kid-b": mock_key2}
-
-    # Token with kid "unknown" not in keys
-    token = pyjwt.encode(
-        {"sub": "x", "aud": "authenticated"},
-        TEST_SECRET,
-        algorithm="HS256",
-        headers={"kid": "unknown"},
-    )
-
-    with patch.object(dependencies, "_load_jwks_keys", return_value=keys_dict):
-        result = dependencies._get_signing_key(token)
-    # Should return first key (dict iteration order)
-    assert result in (mock_key1, mock_key2)
-
-
 @pytest.mark.asyncio
 async def test_malformed_token_raises_401():
     """Malformed token raises 401."""

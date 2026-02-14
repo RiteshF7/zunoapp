@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { navigate, replaceHash, getRoute } from './navigate.js';
 import { _prevPage, setPrevPage } from './state.js';
+import { showFeed } from './config.js';
 import { skeletonCards, skeletonDetail, loadingSpinner } from '../components/skeleton.js';
 import { esc } from '../utils/helpers.js';
 
@@ -50,7 +51,7 @@ export async function router() {
 
   // Collection without id
   if (page === 'collection' && !id) {
-    replaceHash('#library/collections');
+    replaceHash('#home/collections');
     queueMicrotask(() => router());
     return;
   }
@@ -81,21 +82,36 @@ export async function router() {
     return;
   }
 
-  // Backward compat redirects
-  if (page === 'feed') { replaceHash('#home'); queueMicrotask(() => router()); return; }
-  if (page === 'content') { replaceHash('#library'); queueMicrotask(() => router()); return; }
-  if (page === 'collections') { replaceHash('#library'); queueMicrotask(() => router()); return; }
+  // Feed disabled: redirect #feed to Home (Library Saved)
+  if (page === 'feed' && !showFeed()) {
+    replaceHash('#home');
+    queueMicrotask(() => router());
+    return;
+  }
+  // Backward compat: library routes → home (saved/collections/bookmarks live under Home only)
+  if (page === 'library') {
+    const sub = id === 'collections' ? 'collections' : id === 'bookmarks' ? 'bookmarks' : 'saved';
+    replaceHash(sub === 'saved' ? '#home' : `#home/${sub}`);
+    queueMicrotask(() => router());
+    return;
+  }
+  if (page === 'content') { replaceHash('#home'); queueMicrotask(() => router()); return; }
+  if (page === 'collections') { replaceHash('#home/collections'); queueMicrotask(() => router()); return; }
 
   // Show/hide shell
   const isAuth = page === 'auth';
   document.getElementById('topnav').classList.toggle('hidden', isAuth);
   document.getElementById('topnav').classList.toggle('flex', !isAuth);
   document.getElementById('bottomnav').classList.toggle('hidden', isAuth);
-  document.getElementById('fab-btn').classList.toggle('hidden', page !== 'library');
+  document.getElementById('fab-btn').classList.toggle('hidden', page !== 'home');
 
-  // Update active nav tab
+  // Show/hide Feed nav tab based on config
+  const navFeed = document.getElementById('nav-feed');
+  if (navFeed) navFeed.classList.toggle('hidden', !showFeed());
+
+  // Update active nav tab (library routes removed; content lives under home)
   const tabMap = {
-    home: 'home', library: 'library', 'content-detail': 'library', collection: 'library',
+    home: 'home', feed: 'feed', 'content-detail': 'home', collection: 'home',
     goals: 'goals', 'goal-detail': 'goals', knowledge: 'knowledge', profile: 'profile', admin: 'profile',
   };
   document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -109,7 +125,7 @@ export async function router() {
 
   const skeletonMap = {
     home: skeletonCards(3),
-    library: skeletonCards(3),
+    feed: skeletonCards(3),
     goals: skeletonCards(3),
     'content-detail': skeletonDetail(),
     'goal-detail': skeletonDetail(),
@@ -124,9 +140,8 @@ export async function router() {
     try {
       switch (page) {
         case 'auth': renderAuth(main); break;
-        case 'home': await renderHome(main); if (myNavId !== _navId) return; break;
-        case 'library':
-          await renderLibrary(main, id);
+        case 'home':
+          await renderLibrary(main, id || 'saved');
           if (myNavId !== _navId) return;
           try {
             const pending = sessionStorage.getItem('zuno_pending_share');
@@ -135,6 +150,12 @@ export async function router() {
               if (typeof openSaveContentModal === 'function') openSaveContentModal(pending);
             }
           } catch (_) {}
+          break;
+        case 'feed':
+          if (showFeed()) {
+            await renderHome(main);
+            if (myNavId !== _navId) return;
+          }
           break;
         case 'content-detail': await renderContentDetail(main, id); if (myNavId !== _navId) return; break;
         case 'collection': await renderCollectionDetail(main, id); if (myNavId !== _navId) return; break;

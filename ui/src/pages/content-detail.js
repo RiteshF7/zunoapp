@@ -11,7 +11,7 @@ import { badge, platformIcon } from '../components/ui.js';
 import { esc, truncate } from '../utils/helpers.js';
 
 export async function renderContentDetail(el, id) {
-  if (!id) { navigate('#library'); return; }
+  if (!id) { navigate('#home'); return; }
   const [res, tagRes] = await Promise.all([
     api('GET', `/api/content/${id}`),
     api('GET', `/api/content/${id}/tags`),
@@ -30,7 +30,7 @@ export async function renderContentDetail(el, id) {
     <div class="slide-in-right">
       <!-- Sticky Header -->
       <div class="flex items-center gap-3 mb-4">
-        <button onclick="navigate('#library')" class="p-2 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Back to library">
+        <button onclick="navigate('#home')" class="p-2 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Back to library">
           <span class="material-icons-round text-xl text-muted">arrow_back</span>
         </button>
         <h1 class="text-lg font-bold text-heading truncate flex-1">${esc(c.title || 'Untitled')}</h1>
@@ -240,7 +240,7 @@ async function deleteContent(contentId) {
   const ok = await customConfirm('Delete Content', 'This action cannot be undone. Are you sure?', 'Delete', true);
   if (!ok) return;
   const res = await api('DELETE', `/api/content/${contentId}`);
-  if (res.ok) { toast('Deleted!'); navigate('#library'); }
+  if (res.ok) { toast('Deleted!'); navigate('#home'); }
   else toast(res.data?.detail || 'Failed to delete', true);
 }
 

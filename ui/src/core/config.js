@@ -60,6 +60,19 @@ export function getApiBase() {
 }
 
 /**
+ * Whether the Feed section (My Feed / Suggested) is visible in the app.
+ * When false, Home shows Library Saved and there is no Feed nav or route.
+ * Set VITE_SHOW_FEED=true in .env to enable the feed (e.g. for dev or when feed is ready).
+ */
+export function showFeed() {
+  return (
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SHOW_FEED === 'true') ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SHOW_FEED === true) ||
+    false
+  );
+}
+
+/**
  * Build the OAuth redirect URL based on the current environment.
  * - Capacitor:  com.zuno.app://callback  (deep link, opens system browser → back to app)
  * - Vite dev:   http://localhost:5173/

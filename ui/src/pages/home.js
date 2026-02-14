@@ -55,7 +55,7 @@ export async function renderHome(el) {
           </div>
           <p class="text-heading font-semibold mb-1">Your feed is empty</p>
           <p class="text-muted text-sm mb-4">Save some content to start building your feed</p>
-          <button onclick="navigate('#library')" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Go to Library</button>
+          <button onclick="navigate('#home')" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Go to Home</button>
         </div>` : `
         <div class="space-y-3" id="feed-list" role="feed" aria-label="Feed items">
           ${items.map(item => contentCardHtml(item, { showBookmark: true, isBookmarked: bookmarkSet.has(item.id) })).join('')}

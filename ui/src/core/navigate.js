@@ -17,7 +17,7 @@ export function replaceHash(hash) {
 }
 
 const VALID_PAGES = new Set([
-  'auth', 'connect-extension', 'home', 'library', 'content-detail', 'collection',
+  'auth', 'connect-extension', 'home', 'library', 'feed', 'content-detail', 'collection',
   'goals', 'goal-detail', 'search', 'knowledge', 'profile', 'admin',
 ]);
 

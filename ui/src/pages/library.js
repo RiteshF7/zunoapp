@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { api } from '../core/api.js';
 import { navigate } from '../core/navigate.js';
+import { showFeed } from '../core/config.js';
 import { _libraryTab, setLibraryTab, getProcessingIds, addProcessingId, removeProcessingId } from '../core/state.js';
 import { toast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
@@ -83,8 +84,8 @@ async function renderLibraryBookmarks(el) {
             <span class="material-icons-round text-4xl text-accent/60">bookmark</span>
           </div>
           <p class="text-heading font-semibold mb-1">No bookmarks yet</p>
-          <p class="text-muted text-sm mb-4">Bookmark items from Home (My Feed or Suggested) to see them here</p>
-          <button onclick="navigate('#home')" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Go to Home</button>
+          <p class="text-muted text-sm mb-4">${showFeed() ? 'Bookmark items from Feed (My Feed or Suggested) to see them here' : 'When the Feed is enabled, you can bookmark items there to see them here.'}</p>
+          ${showFeed() ? `<button onclick="navigate('#feed')" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Go to Feed</button>` : ''}
         </div>` : `
         <div class="space-y-3" id="bookmarks-list">
           ${items.map(item => contentCardHtml(item, { showBookmark: true, isBookmarked: true })).join('')}
@@ -157,7 +158,7 @@ async function renderLibraryCollections(el) {
 
 function switchLibraryTab(tab) {
   setLibraryTab(tab);
-  navigate('#library/' + tab);
+  navigate(tab === 'saved' ? '#home' : `#home/${tab}`);
 }
 
 function getSaveContentFormHtml(prefillUrl = '') {
@@ -192,7 +193,7 @@ function openSaveContentModal(prefillUrl = '') {
 
 async function refreshSavedListOnly(newItemId = null) {
   const hash = (window.location.hash || '').replace('#', '');
-  const onLibrarySaved = (hash === 'library' || hash === 'library/saved') && _libraryTab === 'saved';
+  const onLibrarySaved = (hash === 'home' || hash === 'home/saved') && _libraryTab === 'saved';
   if (!onLibrarySaved) return;
 
   const res = await api('GET', '/api/content', null, { limit: 50 });

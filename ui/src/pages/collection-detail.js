@@ -9,7 +9,7 @@ import { customConfirm } from '../components/confirm.js';
 import { esc } from '../utils/helpers.js';
 
 export async function renderCollectionDetail(el, id) {
-  if (!id) { navigate('#library/collections'); return; }
+  if (!id) { navigate('#home/collections'); return; }
   const [colRes, itemsRes] = await Promise.all([
     api('GET', `/api/collections/${id}`),
     api('GET', `/api/collections/${id}/items`),
@@ -22,7 +22,7 @@ export async function renderCollectionDetail(el, id) {
     <div class="slide-in-right">
       <!-- Header -->
       <div class="flex items-center gap-3 mb-5">
-        <button onclick="navigate('#library/collections')" class="p-2 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Back to collections">
+        <button onclick="navigate('#home/collections')" class="p-2 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Back to collections">
           <span class="material-icons-round text-xl text-muted">arrow_back</span>
         </button>
         <div class="flex-1 min-w-0">
@@ -140,7 +140,7 @@ async function deleteCollection(id) {
   const ok = await customConfirm('Delete Collection', 'This will remove the collection but not its content. Continue?', 'Delete', true);
   if (!ok) return;
   const res = await api('DELETE', `/api/collections/${id}`);
-  if (res.ok) { toast('Deleted!'); navigate('#library/collections'); }
+  if (res.ok) { toast('Deleted!'); navigate('#home/collections'); }
   else toast(res.data?.detail || 'Failed to delete', true);
 }
 

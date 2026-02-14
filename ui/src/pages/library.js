@@ -17,16 +17,14 @@ import { showApiError } from '../utils/api-error.js';
  * @param {string} [subTab] - 'saved', 'collections', or 'bookmarks'
  */
 export async function renderLibrary(el, subTab) {
-  if (subTab === 'saved' || subTab === 'collections' || subTab === 'bookmarks') setLibraryTab(subTab);
+  if (subTab === 'saved' || subTab === 'bookmarks') setLibraryTab(subTab);
   const isSaved = _libraryTab === 'saved';
   const isBookmarks = _libraryTab === 'bookmarks';
 
   if (isSaved) {
     await renderLibrarySaved(el);
-  } else if (isBookmarks) {
-    await renderLibraryBookmarks(el);
   } else {
-    await renderLibraryCollections(el);
+    await renderLibraryBookmarks(el);
   }
 }
 
@@ -37,7 +35,6 @@ function libraryTabsHtml(activeTab) {
   };
   return `<div class="flex bg-surface rounded-xl p-1 gap-1 mb-5 shadow-card" role="tablist" aria-label="Library view">
     ${t('Saved', 'saved')}
-    ${t('Collections', 'collections')}
     ${t('Bookmarks', 'bookmarks')}
   </div>`;
 }
@@ -93,7 +90,60 @@ async function renderLibraryBookmarks(el) {
     </div>`;
 }
 
-async function renderLibraryCollections(el) {
+const _collectionThemeColors = {
+  blue: 'from-blue-500/20 to-blue-600/5 border-blue-500/20',
+  green: 'from-green-500/20 to-green-600/5 border-green-500/20',
+  purple: 'from-purple-500/20 to-purple-600/5 border-purple-500/20',
+  amber: 'from-amber-500/20 to-amber-600/5 border-amber-500/20',
+  rose: 'from-rose-500/20 to-rose-600/5 border-rose-500/20',
+  indigo: 'from-indigo-500/20 to-indigo-600/5 border-indigo-500/20',
+};
+
+function collectionsContentHtml(cols, cats) {
+  return `
+    ${cats.length > 0 ? `
+      <div class="mb-5">
+        <h2 class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">AI Categories</h2>
+        <div class="flex flex-wrap gap-1.5">
+          ${cats.map(c => `<span class="px-2.5 py-1 rounded-lg bg-surface border border-border text-xs text-body">${esc(typeof c === 'string' ? c : c.name || c.category || '')}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+    ${cols.length === 0 ? `
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <div class="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center mb-4">
+          <span class="material-icons-round text-4xl text-accent/60">folder_open</span>
+        </div>
+        <p class="text-heading font-semibold mb-1">No collections yet</p>
+        <p class="text-muted text-sm mb-4">Create your first collection to organize content</p>
+        <button onclick="openCreateCollectionModal()" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Create Collection</button>
+      </div>` : `
+      <div class="grid grid-cols-2 gap-3">
+        ${cols.map(c => {
+          const tc = _collectionThemeColors[c.theme] || _collectionThemeColors.blue;
+          return `
+          <article onclick="navigate('#collection/${c.id}')" class="bg-gradient-to-br ${tc} border rounded-2xl p-4 cursor-pointer hover:scale-[1.02] transition-all duration-200 active:scale-[0.97] shadow-card h-36 flex flex-col justify-between">
+            <span class="material-icons-round text-2xl text-heading/80">${esc(c.icon || 'folder')}</span>
+            <div>
+              <h3 class="text-heading font-semibold text-sm leading-snug line-clamp-1">${esc(c.title)}</h3>
+              <p class="text-muted text-xs mt-0.5">${c.item_count} item${c.item_count !== 1 ? 's' : ''}</p>
+              ${c.is_shared ? '<span class="text-[10px] text-accent font-medium">Shared</span>' : ''}
+            </div>
+          </article>`;
+        }).join('')}
+        <button onclick="openCreateCollectionModal()" class="border-2 border-dashed border-border rounded-2xl h-36 flex flex-col items-center justify-center gap-2 hover:border-accent hover:bg-accent/5 transition-all duration-200 active:scale-[0.97]" aria-label="Create new collection">
+          <span class="material-icons-round text-2xl text-muted">add</span>
+          <span class="text-muted text-xs font-medium">New Collection</span>
+        </button>
+      </div>`}
+  `;
+}
+
+/**
+ * Renders the standalone Collections page (list of collections + categories).
+ * Used by route #collections.
+ */
+export async function renderCollectionsPage(el) {
   const [colRes, catRes] = await Promise.all([
     api('GET', '/api/collections'),
     api('GET', '/api/collections/categories'),
@@ -103,56 +153,10 @@ async function renderLibraryCollections(el) {
   const cols = colRes.ok ? (Array.isArray(colRes.data) ? colRes.data : []) : [];
   const cats = catRes.ok ? (Array.isArray(catRes.data) ? catRes.data : []) : [];
 
-  const themeColors = {
-    blue: 'from-blue-500/20 to-blue-600/5 border-blue-500/20',
-    green: 'from-green-500/20 to-green-600/5 border-green-500/20',
-    purple: 'from-purple-500/20 to-purple-600/5 border-purple-500/20',
-    amber: 'from-amber-500/20 to-amber-600/5 border-amber-500/20',
-    rose: 'from-rose-500/20 to-rose-600/5 border-rose-500/20',
-    indigo: 'from-indigo-500/20 to-indigo-600/5 border-indigo-500/20',
-  };
-
   el.innerHTML = `
     <div class="fade-in">
-      <h1 class="text-xl font-bold text-heading mb-4">Library</h1>
-      ${libraryTabsHtml('collections')}
-
-      ${cats.length > 0 ? `
-        <div class="mb-5">
-          <h2 class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">AI Categories</h2>
-          <div class="flex flex-wrap gap-1.5">
-            ${cats.map(c => `<span class="px-2.5 py-1 rounded-lg bg-surface border border-border text-xs text-body">${esc(typeof c === 'string' ? c : c.name || c.category || '')}</span>`).join('')}
-          </div>
-        </div>` : ''}
-
-      ${cols.length === 0 ? `
-        <div class="flex flex-col items-center justify-center py-16 text-center">
-          <div class="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center mb-4">
-            <span class="material-icons-round text-4xl text-accent/60">folder_open</span>
-          </div>
-          <p class="text-heading font-semibold mb-1">No collections yet</p>
-          <p class="text-muted text-sm mb-4">Create your first collection to organize content</p>
-          <button onclick="openCreateCollectionModal()" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Create Collection</button>
-        </div>` : `
-        <div class="grid grid-cols-2 gap-3">
-          ${cols.map(c => {
-            const tc = themeColors[c.theme] || themeColors.blue;
-            return `
-            <article onclick="navigate('#collection/${c.id}')" class="bg-gradient-to-br ${tc} border rounded-2xl p-4 cursor-pointer hover:scale-[1.02] transition-all duration-200 active:scale-[0.97] shadow-card h-36 flex flex-col justify-between">
-              <span class="material-icons-round text-2xl text-heading/80">${esc(c.icon || 'folder')}</span>
-              <div>
-                <h3 class="text-heading font-semibold text-sm leading-snug line-clamp-1">${esc(c.title)}</h3>
-                <p class="text-muted text-xs mt-0.5">${c.item_count} item${c.item_count !== 1 ? 's' : ''}</p>
-                ${c.is_shared ? '<span class="text-[10px] text-accent font-medium">Shared</span>' : ''}
-              </div>
-            </article>`;
-          }).join('')}
-          <!-- Add Collection Card -->
-          <button onclick="openCreateCollectionModal()" class="border-2 border-dashed border-border rounded-2xl h-36 flex flex-col items-center justify-center gap-2 hover:border-accent hover:bg-accent/5 transition-all duration-200 active:scale-[0.97]" aria-label="Create new collection">
-            <span class="material-icons-round text-2xl text-muted">add</span>
-            <span class="text-muted text-xs font-medium">New Collection</span>
-          </button>
-        </div>`}
+      <h1 class="text-xl font-bold text-heading mb-4">Collections</h1>
+      ${collectionsContentHtml(cols, cats)}
     </div>`;
 }
 

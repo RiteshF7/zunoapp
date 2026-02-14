@@ -9,7 +9,7 @@ import { esc } from '../utils/helpers.js';
 
 import { renderAuth } from '../pages/auth.js';
 import { renderHome } from '../pages/home.js';
-import { renderLibrary } from '../pages/library.js';
+import { renderLibrary, renderCollectionsPage } from '../pages/library.js';
 import { renderContentDetail } from '../pages/content-detail.js';
 import { renderCollectionDetail } from '../pages/collection-detail.js';
 import { renderGoals } from '../pages/goals.js';
@@ -49,9 +49,9 @@ export async function router() {
     return;
   }
 
-  // Collection without id
+  // Collection list (no id) → collections page
   if (page === 'collection' && !id) {
-    replaceHash('#home/collections');
+    replaceHash('#collections');
     queueMicrotask(() => router());
     return;
   }
@@ -88,30 +88,39 @@ export async function router() {
     queueMicrotask(() => router());
     return;
   }
-  // Backward compat: library routes → home (saved/collections/bookmarks live under Home only)
+  // Backward compat: library routes → home or collections
   if (page === 'library') {
     const sub = id === 'collections' ? 'collections' : id === 'bookmarks' ? 'bookmarks' : 'saved';
-    replaceHash(sub === 'saved' ? '#home' : `#home/${sub}`);
+    if (sub === 'collections') {
+      replaceHash('#collections');
+    } else {
+      replaceHash(sub === 'saved' ? '#home' : `#home/${sub}`);
+    }
     queueMicrotask(() => router());
     return;
   }
   if (page === 'content') { replaceHash('#home'); queueMicrotask(() => router()); return; }
-  if (page === 'collections') { replaceHash('#home/collections'); queueMicrotask(() => router()); return; }
+  // #home/collections → dedicated collections page
+  if (page === 'home' && id === 'collections') {
+    replaceHash('#collections');
+    queueMicrotask(() => router());
+    return;
+  }
 
   // Show/hide shell
   const isAuth = page === 'auth';
   document.getElementById('topnav').classList.toggle('hidden', isAuth);
   document.getElementById('topnav').classList.toggle('flex', !isAuth);
   document.getElementById('bottomnav').classList.toggle('hidden', isAuth);
-  document.getElementById('fab-btn').classList.toggle('hidden', page !== 'home');
+  document.getElementById('fab-btn').classList.toggle('hidden', page !== 'home' && page !== 'collections');
 
   // Show/hide Feed nav tab based on config
   const navFeed = document.getElementById('nav-feed');
   if (navFeed) navFeed.classList.toggle('hidden', !showFeed());
 
-  // Update active nav tab (library routes removed; content lives under home)
+  // Update active nav tab
   const tabMap = {
-    home: 'home', feed: 'feed', 'content-detail': 'home', collection: 'home',
+    home: 'home', feed: 'feed', collections: 'collections', 'content-detail': 'home', collection: 'collections',
     goals: 'goals', 'goal-detail': 'goals', knowledge: 'knowledge', profile: 'profile', admin: 'profile',
   };
   document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -126,6 +135,7 @@ export async function router() {
   const skeletonMap = {
     home: skeletonCards(3),
     feed: skeletonCards(3),
+    collections: skeletonCards(3),
     goals: skeletonCards(3),
     'content-detail': skeletonDetail(),
     'goal-detail': skeletonDetail(),
@@ -156,6 +166,17 @@ export async function router() {
             await renderHome(main);
             if (myNavId !== _navId) return;
           }
+          break;
+        case 'collections':
+          await renderCollectionsPage(main);
+          if (myNavId !== _navId) return;
+          try {
+            const pending = sessionStorage.getItem('zuno_pending_share');
+            if (pending) {
+              sessionStorage.removeItem('zuno_pending_share');
+              if (typeof openSaveContentModal === 'function') openSaveContentModal(pending);
+            }
+          } catch (_) {}
           break;
         case 'content-detail': await renderContentDetail(main, id); if (myNavId !== _navId) return; break;
         case 'collection': await renderCollectionDetail(main, id); if (myNavId !== _navId) return; break;

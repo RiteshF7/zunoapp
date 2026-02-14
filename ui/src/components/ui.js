@@ -25,7 +25,18 @@ export function contentCardHtml(item, opts = {}) {
   const showBookmark = opts.showBookmark || false;
   const isBookmarked = opts.isBookmarked || false;
   const showAiStatus = opts.showAiStatus || false;
+  const processingIds = opts.processingIds || null;
   const aiProcessed = item.ai_processed;
+  const isProcessing = showAiStatus && processingIds && processingIds.has(id);
+
+  const aiStatusHtml = !showAiStatus ? '' : isProcessing
+    ? `<span class="text-accent/80 text-[10px] flex items-center gap-1 shrink-0" role="status" aria-busy="true">
+        <span class="progress-bar-inline flex-1 min-w-[48px] max-w-[80px]"><span class="progress-bar-inline-inner block h-full rounded"></span></span>
+        <span class="material-icons-round text-xs">auto_awesome</span> Processing with AI
+       </span>`
+    : aiProcessed
+      ? '<span class="text-success text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">check_circle</span>AI</span>'
+      : '<span class="text-muted text-[10px]">Pending</span>';
 
   return `
     <article class="bg-surface rounded-2xl p-4 shadow-card hover:shadow-elevated transition-all duration-200 cursor-pointer active:scale-[0.97] group"
@@ -46,9 +57,7 @@ export function contentCardHtml(item, opts = {}) {
           <div class="flex items-center gap-2 mt-2 flex-wrap">
             ${badge(cat)}
             ${platform ? `<span class="text-muted text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">${platformIcon(platform)}</span>${esc(platform)}</span>` : ''}
-            ${showAiStatus ? (aiProcessed
-              ? '<span class="text-success text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">check_circle</span>AI</span>'
-              : '<span class="text-muted text-[10px]">Pending</span>') : ''}
+            ${aiStatusHtml}
           </div>
         </div>
       </div>

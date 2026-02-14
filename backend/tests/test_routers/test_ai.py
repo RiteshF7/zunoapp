@@ -71,8 +71,8 @@ def test_generate_feed_handles_no_interests(client, mock_db, auth_headers):
     assert "Save more" in data["message"]
 
 
-def test_process_content_processes_successfully(client, mock_db, auth_headers):
-    """POST /api/v1/ai/process-content processes successfully (mock AI)."""
+def test_process_content_returns_202_and_starts_background(client, mock_db, auth_headers):
+    """POST /api/v1/ai/process-content returns 202 immediately; processing runs in background."""
     content = {
         "id": "c1",
         "user_id": TEST_USER_ID,
@@ -81,63 +81,15 @@ def test_process_content_processes_successfully(client, mock_db, auth_headers):
         "description": "",
     }
     mock_db.set_table_data("content", [content])
-    mock_db.add_table_response("content", [content])
 
-    with patch(
-        "app.routers.ai.fetch_url_metadata",
-        new_callable=AsyncMock,
-        return_value=MagicMock(title="Test", description="", body_text=None, thumbnail=None),
-    ), patch(
-        "app.routers.ai.process_with_ai",
-        new_callable=AsyncMock,
-        return_value={
-            "category": "Technology",
-            "summary": "A summary",
-            "tags": ["tech"],
-            "structured_content": {},
-            "embedding": [0.1] * 256,
-        },
-    ), patch(
-        "app.routers.ai.analyze_and_update_goals",
-        new_callable=AsyncMock,
-    ):
-        res = client.post(
-            "/api/v1/ai/process-content",
-            headers=auth_headers,
-            json={"content_id": "c1"},
-        )
+    res = client.post(
+        "/api/v1/ai/process-content",
+        headers=auth_headers,
+        json={"content_id": "c1"},
+    )
 
-    assert res.status_code == 200
+    assert res.status_code == 202
     data = res.json()
     assert data["success"] is True
-    assert data["category"] == "Technology"
-    assert data["summary"] == "A summary"
-
-
-def test_process_content_returns_502_on_ai_failure(client, mock_db, auth_headers):
-    """POST /api/v1/ai/process-content returns 502 on AI failure."""
-    content = {
-        "id": "c1",
-        "user_id": TEST_USER_ID,
-        "url": "https://example.com",
-        "title": "Test",
-    }
-    mock_db.set_table_data("content", [content])
-
-    with patch(
-        "app.routers.ai.fetch_url_metadata",
-        new_callable=AsyncMock,
-        return_value=MagicMock(title="Test", description="", body_text=None, thumbnail=None),
-    ), patch(
-        "app.routers.ai.process_with_ai",
-        new_callable=AsyncMock,
-        side_effect=Exception("AI service error"),
-    ):
-        res = client.post(
-            "/api/v1/ai/process-content",
-            headers=auth_headers,
-            json={"content_id": "c1"},
-        )
-
-    assert res.status_code == 502
-    assert "AI" in res.json()["detail"] or "failed" in res.json()["detail"].lower()
+    assert data.get("message") == "Processing started"
+    assert data.get("content_id") == "c1"

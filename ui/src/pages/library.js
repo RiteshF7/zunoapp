@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { api } from '../core/api.js';
 import { navigate } from '../core/navigate.js';
-import { _libraryTab, setLibraryTab } from '../core/state.js';
+import { _libraryTab, setLibraryTab, getProcessingIds, addProcessingId, removeProcessingId } from '../core/state.js';
 import { toast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { contentCardHtml } from '../components/ui.js';
@@ -46,6 +46,7 @@ async function renderLibrarySaved(el) {
   if (!res.ok) showApiError(res);
   const raw = res.ok ? res.data : null;
   const items = Array.isArray(raw) ? raw : (raw?.items ?? []);
+  items.forEach(item => { if (item.ai_processed) removeProcessingId(item.id); });
 
   el.innerHTML = `
     <div class="fade-in">
@@ -61,7 +62,7 @@ async function renderLibrarySaved(el) {
           <p class="text-muted text-sm mb-4">Tap the + button to save your first item</p>
         </div>` : `
         <div class="space-y-3" id="content-list">
-          ${items.map(item => contentCardHtml(item, { showAiStatus: true })).join('')}
+          ${items.map(item => contentCardHtml(item, { showAiStatus: true, processingIds: getProcessingIds() })).join('')}
         </div>`}
     </div>`;
 }
@@ -159,47 +160,101 @@ function switchLibraryTab(tab) {
   navigate('#library/' + tab);
 }
 
-function openSaveContentModal(prefillUrl = '') {
-  openModal(`
-    <h2 class="text-lg font-bold text-heading mb-4">Save Content</h2>
+function getSaveContentFormHtml(prefillUrl = '') {
+  return `
+    <h2 class="text-lg font-bold text-heading mb-4">Add content</h2>
     <div class="space-y-4">
       <div>
         <label for="m-url" class="text-xs text-muted font-medium mb-1.5 block">URL</label>
-        <input id="m-url" type="url" placeholder="Paste a link..." value="${esc(prefillUrl)}" class="w-full bg-bg border border-border rounded-xl px-4 py-3 text-sm text-heading placeholder-muted/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30" autofocus />
-        <p class="text-[11px] text-muted mt-1.5">Title, description, platform &amp; type are auto-detected</p>
+        <input id="m-url" type="url" inputmode="url" autocomplete="url" placeholder="Paste a link..." value="${esc(prefillUrl)}" class="w-full bg-bg border border-border rounded-xl px-4 py-3 text-sm text-heading placeholder-muted/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30" autofocus />
+        <p class="text-[11px] text-muted mt-1.5">Title, description, platform and type are auto-detected</p>
       </div>
-      <button onclick="doSaveContent()" id="save-content-btn" class="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.97]">Save Content</button>
+      <button onclick="doSaveContent()" id="save-content-btn" class="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.97] min-h-[44px]">Save Content</button>
     </div>
-  `);
+  `;
+}
+
+function getSaveContentProgressHtml() {
+  return `
+    <div class="flex flex-col items-center justify-center py-6 gap-4" role="status" aria-busy="true">
+      <span class="material-icons-round text-3xl text-accent/80">link</span>
+      <p class="text-sm font-medium text-heading">Saving link…</p>
+      <div class="progress-bar-inline w-full" style="max-width: 280px;">
+        <span class="progress-bar-inline-inner block h-full rounded"></span>
+      </div>
+    </div>
+  `;
+}
+
+function openSaveContentModal(prefillUrl = '') {
+  openModal(getSaveContentFormHtml(prefillUrl));
+}
+
+async function refreshSavedListOnly(newItemId = null) {
+  const hash = (window.location.hash || '').replace('#', '');
+  const onLibrarySaved = (hash === 'library' || hash === 'library/saved') && _libraryTab === 'saved';
+  if (!onLibrarySaved) return;
+
+  const res = await api('GET', '/api/content', null, { limit: 50 });
+  if (!res.ok) return;
+  const raw = res.data;
+  const items = Array.isArray(raw) ? raw : (raw?.items ?? []);
+
+  items.forEach(item => {
+    if (item.ai_processed) removeProcessingId(item.id);
+  });
+
+  const listEl = document.getElementById('content-list');
+  if (listEl) {
+    const processingIds = getProcessingIds();
+    listEl.innerHTML = items.map(item => {
+      const isNew = newItemId && (item.id === newItemId || (item.content_id || item.id) === newItemId);
+      const cardHtml = contentCardHtml(item, { showAiStatus: true, processingIds });
+      return isNew ? cardHtml.replace('<article class="', '<article class="new-item-highlight ') : cardHtml;
+    }).join('');
+
+    if (newItemId) {
+      const card = listEl.querySelector('.new-item-highlight');
+      if (card) setTimeout(() => card.classList.remove('new-item-highlight'), 1500);
+    }
+  } else {
+    const main = document.getElementById('page');
+    if (main) await renderLibrarySaved(main);
+  }
 }
 
 async function doSaveContent() {
-  const url = document.getElementById('m-url').value.trim();
-  if (!url) { toast('URL is required', true); return; }
-  const btn = document.getElementById('save-content-btn');
-  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>';
-  btn.disabled = true;
-  if (typeof showProgress === 'function') showProgress();
+  const urlInput = document.getElementById('m-url');
+  const url = urlInput ? urlInput.value.trim() : '';
+  if (!url) {
+    toast('URL is required', true);
+    return;
+  }
+
+  const modalContent = document.getElementById('modal-content');
+  if (modalContent) modalContent.innerHTML = getSaveContentProgressHtml();
+
   try {
     const res = await api('POST', '/api/content', { url });
     if (res.ok) {
-      closeModal();
-      toast('Content saved!');
-      if (res.data?.id) {
-        await api('POST', '/api/ai/process-content', { content_id: res.data.id });
+      const contentId = res.data?.id;
+      if (contentId) {
+        addProcessingId(contentId);
+        api('POST', '/api/ai/process-content', { content_id: contentId }).catch(() => {
+          removeProcessingId(contentId);
+          toast('AI processing failed for this item', true);
+        });
       }
-      navigate('#content-detail/' + res.data.id);
+      closeModal();
+      toast('Link saved');
+      await refreshSavedListOnly(contentId);
     } else {
-      toast(res.data?.detail || 'Failed to save', true);
-      btn.textContent = 'Save Content';
-      btn.disabled = false;
+      if (modalContent) modalContent.innerHTML = getSaveContentFormHtml(url);
+      toast(res.data?.detail || "Couldn't save link. Check the URL and try again.", true);
     }
   } catch (_) {
-    toast('Failed to save', true);
-    btn.textContent = 'Save Content';
-    btn.disabled = false;
-  } finally {
-    if (typeof hideProgress === 'function') hideProgress();
+    if (modalContent) modalContent.innerHTML = getSaveContentFormHtml(url);
+    toast("Couldn't save link. Check the URL and try again.", true);
   }
 }
 

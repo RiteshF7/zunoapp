@@ -75,3 +75,43 @@
   50% { transform: translateX(350%); }
   100% { transform: translateX(-100%); }
 }
+
+/* Inline indeterminate progress bar (modal + content card) */
+.progress-bar-inline {
+  height: 4px;
+  overflow: hidden;
+  background: var(--c-border);
+  border-radius: 2px;
+}
+.progress-bar-inline-inner {
+  height: 100%;
+  width: 40%;
+  max-width: 120px;
+  background: var(--c-accent);
+  animation: loadingBarSlide 1.2s ease-in-out infinite;
+  border-radius: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar-inline-inner,
+  .global-loading-bar-inner {
+    animation: none;
+    width: 100%;
+    opacity: 0.6;
+  }
+}
+
+/* New item highlight (brief accent border after save) */
+.new-item-highlight {
+  box-shadow: 0 0 0 2px var(--c-accent);
+  animation: newItemPulse 1.5s ease-out;
+}
+@keyframes newItemPulse {
+  0% { box-shadow: 0 0 0 2px var(--c-accent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-item-highlight {
+    animation: none;
+    box-shadow: 0 0 0 2px var(--c-accent);
+  }
+}

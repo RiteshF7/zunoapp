@@ -53,3 +53,10 @@ export const _suggestedQuestions = [
 // Router transition state
 export let _prevPage = null;
 export function setPrevPage(p) { _prevPage = p; }
+
+// Content IDs currently being processed by AI (client-side; no backend status yet)
+const _processingContentIds = new Set();
+export function addProcessingId(id) { _processingContentIds.add(id); }
+export function removeProcessingId(id) { _processingContentIds.delete(id); }
+export function getProcessingIds() { return _processingContentIds; }
+export function hasProcessingId(id) { return _processingContentIds.has(id); }

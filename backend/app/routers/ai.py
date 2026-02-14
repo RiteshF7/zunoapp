@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from supabase import Client
 
 from app.config import Settings, get_settings
@@ -31,114 +32,73 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 
-# ---------------------------------------------------------------------------
-# POST /api/ai/process-content
-# ---------------------------------------------------------------------------
-@router.post("/process-content", response_model=ProcessContentResponse)
-@limiter.limit(RATE_AI_PROCESS)
-async def process_content(
-    request: Request,
-    body: ProcessContentRequest,
-    background_tasks: BackgroundTasks,
-    user_id: str = Depends(get_current_user),
-    db: Client = Depends(get_supabase),
-    settings: Settings = Depends(get_settings),
-):
-    """Scrape URL metadata, run AI categorization/summary/tags/embedding, update DB."""
-    content_id = body.content_id
-
-    # 1. Fetch the content item
-    result = db.table("content").select("*").eq("id", content_id).single().execute()
-    if not result.data:
-        raise HTTPException(status_code=404, detail="Content not found")
-    content = result.data
-
-    # 2. Fetch URL metadata
-    metadata = await fetch_url_metadata(content["url"])
-
-    # 3. Build text for AI analysis (include full body text for deep extraction)
-    text_parts = [
-        f"Title: {metadata.title or content.get('title') or ''}",
-        f"Description: {metadata.description or content.get('description') or ''}",
-        f"URL: {content['url']}",
-    ]
-    # Append full page body text when available for deeper AI analysis
-    if metadata.body_text:
-        text_parts.append(f"\n--- Full Page Content ---\n{metadata.body_text}")
-    text_to_analyze = "\n\n".join(part for part in text_parts if part)
-
-    # 4. AI processing
+async def _run_process_content_background(
+    content_id: str,
+    content: dict,
+    settings: Settings,
+    db: Client,
+) -> None:
+    """Run full AI processing in background (metadata, LLM, embedding, DB update, tags, goals)."""
     try:
+        metadata = await fetch_url_metadata(content["url"])
+        text_parts = [
+            f"Title: {metadata.title or content.get('title') or ''}",
+            f"Description: {metadata.description or content.get('description') or ''}",
+            f"URL: {content['url']}",
+        ]
+        if metadata.body_text:
+            text_parts.append(f"\n--- Full Page Content ---\n{metadata.body_text}")
+        text_to_analyze = "\n\n".join(part for part in text_parts if part)
+
         ai_result = await process_with_ai(text_to_analyze, settings)
-    except Exception as exc:
-        logger.error("AI processing failed for content %s: %s", content_id, exc)
-        raise HTTPException(status_code=502, detail=f"AI processing failed: {exc}")
+        detected_platform = detect_platform(content["url"])
+        update_payload: dict = {
+            "title": content.get("title") or metadata.title or ai_result.get("title"),
+            "description": content.get("description") or metadata.description,
+            "thumbnail_url": content.get("thumbnail_url") or metadata.thumbnail,
+            "platform": detected_platform,
+            "ai_category": ai_result["category"],
+            "ai_summary": ai_result["summary"],
+            "ai_processed": True,
+        }
+        if ai_result.get("structured_content"):
+            update_payload["ai_structured_content"] = ai_result["structured_content"]
+        if ai_result.get("embedding"):
+            update_payload["embedding"] = ai_result["embedding"]
 
-    # 5. Update content record
-    detected_platform = detect_platform(content["url"])
-    update_payload: dict = {
-        "title": content.get("title") or metadata.title or ai_result.get("title"),
-        "description": content.get("description") or metadata.description,
-        "thumbnail_url": content.get("thumbnail_url") or metadata.thumbnail,
-        "platform": detected_platform,
-        "ai_category": ai_result["category"],
-        "ai_summary": ai_result["summary"],
-        "ai_processed": True,
-    }
-    # Store structured AI content (key_points, action_items, tldr, save_motive)
-    if ai_result.get("structured_content"):
-        update_payload["ai_structured_content"] = ai_result["structured_content"]
+        db.table("content").update(update_payload).eq("id", content_id).execute()
 
-    # Only set embedding if available
-    if ai_result.get("embedding"):
-        update_payload["embedding"] = ai_result["embedding"]
+        if metadata.body_text or text_to_analyze:
+            full_text = metadata.body_text or text_to_analyze
+            db.table("content").update({"full_text": full_text}).eq("id", content_id).execute()
+            if settings.gcp_project_id:
+                try:
+                    await index_content_chunks(
+                        db=db,
+                        content_id=content_id,
+                        user_id=content["user_id"],
+                        text=full_text,
+                        content_metadata={
+                            "title": update_payload.get("title", ""),
+                            "platform": detected_platform,
+                            "url": content["url"],
+                            "category": ai_result["category"],
+                        },
+                        settings=settings,
+                    )
+                except Exception as exc:
+                    logger.warning("RAG chunking failed for %s (non-fatal): %s", content_id, exc)
 
-    db.table("content").update(update_payload).eq("id", content_id).execute()
-
-    # 5b. Store full text for RAG and create knowledge chunks
-    if metadata.body_text or text_to_analyze:
-        full_text = metadata.body_text or text_to_analyze
-        # Store full_text on content record
-        db.table("content").update({"full_text": full_text}).eq("id", content_id).execute()
-
-        # Chunk and embed for RAG (only if Vertex AI is configured)
-        if settings.gcp_project_id:
-            try:
-                await index_content_chunks(
-                    db=db,
-                    content_id=content_id,
-                    user_id=content["user_id"],
-                    text=full_text,
-                    content_metadata={
-                        "title": update_payload.get("title", ""),
-                        "platform": detected_platform,
-                        "url": content["url"],
-                        "category": ai_result["category"],
-                    },
-                    settings=settings,
-                )
-            except Exception as exc:
-                logger.warning("RAG chunking failed for %s (non-fatal): %s", content_id, exc)
-
-    # 5c. Auto-create / link smart collection for this category
-    ensure_category_collection(db, content["user_id"], ai_result["category"], content_id)
-
-    # 6. Create and assign tags
-    upsert_tags(db, content_id, ai_result.get("tags", []))
-
-    # 7. Update user interest profile
-    update_user_interests(
-        db,
-        content["user_id"],
-        ai_result["category"],
-        ai_result.get("tags", []),
-        detected_platform,
-        content.get("content_type", "post"),
-    )
-
-    # 8. Schedule goal analysis as a background task so the response returns
-    #    immediately — goal processing happens after the HTTP response is sent.
-    async def _run_goal_analysis() -> None:
+        ensure_category_collection(db, content["user_id"], ai_result["category"], content_id)
+        upsert_tags(db, content_id, ai_result.get("tags", []))
+        update_user_interests(
+            db,
+            content["user_id"],
+            ai_result["category"],
+            ai_result.get("tags", []),
+            detected_platform,
+            content.get("content_type", "post"),
+        )
         try:
             await analyze_and_update_goals(
                 db=db,
@@ -149,18 +109,48 @@ async def process_content(
             )
         except Exception as exc:
             logger.warning("Goal analysis failed for %s (non-fatal): %s", content_id, exc)
+        bust_cache("popular_tags:*")
+        bust_cache("categories:*")
+        logger.info("Background AI processing completed for content %s", content_id)
+    except Exception as exc:
+        logger.error("Background AI processing failed for content %s: %s", content_id, exc, exc_info=True)
 
-    background_tasks.add_task(_run_goal_analysis)
 
-    # 9. Bust caches that may be stale now
-    bust_cache("popular_tags:*")
-    bust_cache("categories:*")
+# ---------------------------------------------------------------------------
+# POST /api/ai/process-content
+# ---------------------------------------------------------------------------
+@router.post("/process-content")
+@limiter.limit(RATE_AI_PROCESS)
+async def process_content(
+    request: Request,
+    body: ProcessContentRequest,
+    background_tasks: BackgroundTasks,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+    settings: Settings = Depends(get_settings),
+):
+    """Start AI processing for content. Returns 202 immediately; work runs in background."""
+    content_id = body.content_id
 
-    return ProcessContentResponse(
-        success=True,
-        category=ai_result["category"],
-        summary=ai_result["summary"],
-        tags=ai_result.get("tags", []),
+    result = db.table("content").select("*").eq("id", content_id).single().execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Content not found")
+    content = result.data
+
+    background_tasks.add_task(
+        _run_process_content_background,
+        content_id,
+        content,
+        settings,
+        db,
+    )
+    return JSONResponse(
+        status_code=202,
+        content={
+            "success": True,
+            "message": "Processing started",
+            "content_id": content_id,
+        },
     )
 
 

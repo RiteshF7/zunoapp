@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { api } from '../core/api.js';
 import { navigate } from '../core/navigate.js';
-import { _contentDetailTab, setContentDetailTab } from '../core/state.js';
+import { _contentDetailTab, setContentDetailTab, hasProcessingId, addProcessingId, removeProcessingId } from '../core/state.js';
 import { toast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { customConfirm } from '../components/confirm.js';
@@ -18,7 +18,9 @@ export async function renderContentDetail(el, id) {
   ]);
   if (!res.ok) { el.innerHTML = `<div class="text-center py-16 fade-in"><span class="material-icons-round text-5xl text-muted/30 mb-3">error</span><p class="text-muted">Content not found</p></div>`; return; }
   const c = res.data;
+  if (c.ai_processed) removeProcessingId(c.id);
   const tags = tagRes.ok && tagRes.data.content_tags ? tagRes.data.content_tags.map(t => t.tags || t) : [];
+  const isProcessing = hasProcessingId(c.id);
 
   const tabClass = (t) => _contentDetailTab === t
     ? 'bg-accent text-white shadow-sm'
@@ -53,7 +55,9 @@ export async function renderContentDetail(el, id) {
         ${badge(c.ai_category, 'emerald')}
         ${c.ai_processed
           ? '<span class="text-success text-xs flex items-center gap-0.5"><span class="material-icons-round text-sm">check_circle</span>AI Processed</span>'
-          : '<span class="text-muted text-xs">Not AI processed</span>'}
+          : isProcessing
+            ? '<span class="text-accent/80 text-xs flex items-center gap-1.5" role="status" aria-busy="true"><span class="progress-bar-inline w-16 h-1"><span class="progress-bar-inline-inner block h-full rounded"></span></span><span class="material-icons-round text-sm">auto_awesome</span> Processing with AI</span>'
+            : '<span class="text-muted text-xs">Not AI processed</span>'}
       </div>
 
       <!-- Content Tabs -->
@@ -68,8 +72,8 @@ export async function renderContentDetail(el, id) {
       </div>
 
       <!-- Primary Action -->
-      ${!c.ai_processed ? `
-        <button onclick="processWithAI('${c.id}')" id="ai-btn" class="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.97] mb-3 shadow-card">
+      ${!c.ai_processed && !isProcessing ? `
+        <button onclick="processWithAI('${c.id}')" id="ai-btn" class="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.97] mb-3 shadow-card min-h-[44px]">
           <span class="material-icons-round text-lg">auto_awesome</span> Process with AI
         </button>` : ''}
 
@@ -135,25 +139,29 @@ function openContentActions(contentId) {
 }
 
 async function processWithAI(contentId) {
-  const btn = document.getElementById('ai-btn');
-  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div> Processing...';
-  btn.disabled = true;
+  addProcessingId(contentId);
+  await renderContentDetail(document.getElementById('page'), contentId);
   if (typeof showProgress === 'function') showProgress();
   try {
     const res = await api('POST', '/api/ai/process-content', { content_id: contentId });
     if (res.ok) {
-      toast('AI processing complete!');
-      setContentDetailTab('summary');
-      await renderContentDetail(document.getElementById('page'), contentId);
+      if (res.status === 202) {
+        toast('AI processing started — refresh the list in a moment');
+      } else {
+        removeProcessingId(contentId);
+        toast('AI processing complete!');
+        setContentDetailTab('summary');
+        await renderContentDetail(document.getElementById('page'), contentId);
+      }
     } else {
+      removeProcessingId(contentId);
       toast(res.data?.detail || 'AI processing failed', true);
-      btn.innerHTML = '<span class="material-icons-round text-lg">auto_awesome</span> Process with AI';
-      btn.disabled = false;
+      await renderContentDetail(document.getElementById('page'), contentId);
     }
   } catch (_) {
+    removeProcessingId(contentId);
     toast('AI processing failed', true);
-    btn.innerHTML = '<span class="material-icons-round text-lg">auto_awesome</span> Process with AI';
-    btn.disabled = false;
+    await renderContentDetail(document.getElementById('page'), contentId);
   } finally {
     if (typeof hideProgress === 'function') hideProgress();
   }

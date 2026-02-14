@@ -40,6 +40,15 @@ import './pages/admin.js';
 // 5. Initialize theme immediately (before DOMContentLoaded)
 initTheme();
 
+// 5b. Show dev indicator in top-left when running in development
+if (import.meta.env.DEV) {
+  const el = document.getElementById('dev-indicator');
+  if (el) {
+    el.classList.remove('hidden');
+    el.setAttribute('aria-hidden', 'false');
+  }
+}
+
 // 6. Set up deep link listener for Capacitor OAuth callback (register immediately so we don't miss the event on cold start).
 //    When the system browser redirects to com.zuno.app://callback#access_token=...,
 //    Android opens the app and fires an appUrlOpen event — listener must already be registered.

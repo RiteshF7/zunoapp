@@ -5,6 +5,17 @@ export function navigate(hash) {
   window.location.hash = hash;
 }
 
+/**
+ * Set hash without firing hashchange (uses replaceState).
+ * Use for internal redirects so router() is not run twice.
+ */
+export function replaceHash(hash) {
+  const h = hash.startsWith('#') ? hash : '#' + hash;
+  const url = new URL(window.location.href);
+  url.hash = h;
+  history.replaceState(null, '', url);
+}
+
 const VALID_PAGES = new Set([
   'auth', 'connect-extension', 'home', 'library', 'content-detail', 'collection',
   'goals', 'goal-detail', 'search', 'knowledge', 'profile', 'admin',

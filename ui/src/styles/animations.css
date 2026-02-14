@@ -1,3 +1,10 @@
+/* ── View Transitions API (smooth navigation) ── */
+#page { view-transition-name: page-content; }
+::view-transition-old(page-content) { animation: viewTransitionFadeOut .2s ease-out forwards; }
+::view-transition-new(page-content) { animation: viewTransitionFadeIn .25s ease-out forwards; }
+@keyframes viewTransitionFadeOut { to { opacity: 0; } }
+@keyframes viewTransitionFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 /* ── Page Transitions ── */
 .fade-in { animation: fadeIn .25s ease-out; }
 .slide-in-right { animation: slideRight .25s ease-out; }

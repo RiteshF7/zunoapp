@@ -12,7 +12,7 @@ import { esc } from '../utils/helpers.js';
 export async function renderGoalDetail(el, id) {
   if (!id) { navigate('#goals'); return; }
   const res = await api('GET', `/api/goals/${id}`);
-  if (!res.ok) { el.innerHTML = '<div class="text-center py-16 fade-in"><span class="material-icons-round text-5xl text-muted/30 mb-3">error</span><p class="text-muted">Goal not found</p></div>'; return; }
+  if (!res.ok) { el.innerHTML = '<div class="text-center py-16 fade-in"><span class="material-icons-round text-5xl text-muted-foreground/60 mb-3">error</span><p class="text-muted-foreground">Goal not found</p></div>'; return; }
   const g = res.data;
   const steps = g.steps || [];
   const completedSteps = steps.filter(s => s.is_completed);
@@ -25,20 +25,21 @@ export async function renderGoalDetail(el, id) {
   const children = g.children || [];
   const hasChildren = children.length > 0;
   const isChild = !!g.parent_goal_id;
-  const ringColor = hasChildren ? '#a855f7' : '#6366f1';
+  const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+  const ringColor = `hsl(${primary})`;
 
   el.innerHTML = `
     <div class="slide-in-right">
       <!-- Header -->
       <div class="flex items-center gap-3 mb-4">
-        <button onclick="navigate('${isChild ? '#goal-detail/' + g.parent_goal_id : '#goals'}')" class="p-2 rounded-xl hover:bg-surface-hover transition-colors" aria-label="${isChild ? 'Back to parent goal' : 'Back to goals'}">
-          <span class="material-icons-round text-xl text-muted">arrow_back</span>
+        <button onclick="navigate('${isChild ? '#goal-detail/' + g.parent_goal_id : '#goals'}')" class="p-2 rounded-xl hover:bg-card-hover transition-colors" aria-label="${isChild ? 'Back to parent goal' : 'Back to goals'}">
+          <span class="material-icons-round text-xl text-muted-foreground">arrow_back</span>
         </button>
         <h1 class="text-lg font-bold text-heading truncate flex-1">${isChild ? 'Sub-goal' : 'Goal'}</h1>
       </div>
 
       <!-- Progress Card -->
-      <section class="bg-surface rounded-2xl p-5 mb-4 shadow-card border border-border">
+      <section class="bg-card rounded-2xl p-5 mb-4 shadow-sm border border-border">
         <div class="flex items-center gap-4 mb-4">
           <div class="relative flex-shrink-0">
             ${progressRing(progressPercent, 64, 5, ringColor)}
@@ -55,7 +56,7 @@ export async function renderGoalDetail(el, id) {
           </div>
         </div>
         <p class="text-body text-sm leading-relaxed">${esc(g.description)}</p>
-        <div class="flex items-center gap-4 mt-4 text-xs text-muted">
+        <div class="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
           <span class="flex items-center gap-1"><span class="material-icons-round text-sm">trending_up</span>${confidence}% confidence</span>
           <span class="flex items-center gap-1"><span class="material-icons-round text-sm">link</span>${evidenceCount} sources</span>
           <span class="flex items-center gap-1"><span class="material-icons-round text-sm">checklist</span>${completedCount}/${totalSteps} steps</span>
@@ -73,12 +74,12 @@ export async function renderGoalDetail(el, id) {
             const cConf = Math.round((c.confidence || 0) * 100);
             const cStatus = c.status || 'active';
             const cIcon = cStatus === 'completed' ? 'check_circle' : cStatus === 'dismissed' ? 'do_not_disturb_on' : 'flag';
-            const cColor = cStatus === 'completed' ? 'text-success' : cStatus === 'dismissed' ? 'text-muted' : 'text-accent';
+            const cColor = cStatus === 'completed' ? 'text-success' : cStatus === 'dismissed' ? 'text-muted-foreground' : 'text-accent';
             return `
-            <article onclick="navigate('#goal-detail/${c.id}')" class="flex-shrink-0 w-44 bg-surface rounded-xl p-3.5 shadow-card border border-border hover:shadow-elevated transition-all cursor-pointer active:scale-[0.97]">
+            <article onclick="navigate('#goal-detail/${c.id}')" class="flex-shrink-0 w-44 bg-card rounded-xl p-3.5 shadow-sm border border-border hover:shadow-elevated transition-all cursor-pointer active:scale-[0.97]">
               <div class="flex items-center gap-2 mb-2">
                 <span class="material-icons-round text-lg ${cColor}">${cIcon}</span>
-                <span class="text-[10px] text-muted">${cConf}%</span>
+                <span class="text-[10px] text-muted-foreground">${cConf}%</span>
               </div>
               <h4 class="font-semibold text-heading text-xs leading-snug line-clamp-2">${esc(c.title)}</h4>
             </article>`;
@@ -89,11 +90,11 @@ export async function renderGoalDetail(el, id) {
       <!-- Steps -->
       <section class="mb-4" aria-label="Goal steps">
         <h3 class="text-sm font-semibold text-heading mb-3">Steps</h3>
-        ${totalSteps === 0 ? '<p class="text-muted text-sm text-center py-4">No steps yet</p>' : `
+        ${totalSteps === 0 ? '<p class="text-muted-foreground text-sm text-center py-4">No steps yet</p>' : `
           <div class="space-y-2" id="goal-steps-list">
             ${pendingSteps.map(step => goalStepCard(step, id)).join('')}
             ${completedCount > 0 ? `
-              <button onclick="toggleCompletedSteps('${id}')" class="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted font-medium hover:text-heading transition-colors">
+              <button onclick="toggleCompletedSteps('${id}')" class="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs text-muted-foreground font-medium hover:text-heading transition-colors">
                 <span class="material-icons-round text-sm">${_showCompletedSteps ? 'expand_less' : 'expand_more'}</span>
                 ${completedCount} completed step${completedCount !== 1 ? 's' : ''}
               </button>
@@ -103,12 +104,12 @@ export async function renderGoalDetail(el, id) {
       </section>
 
       ${g.ai_reasoning ? `
-        <section class="bg-surface rounded-2xl p-5 mb-4 shadow-card border border-border">
+        <section class="bg-card rounded-2xl p-5 mb-4 shadow-sm border border-border">
           <div class="flex items-center gap-2 mb-2">
             <span class="material-icons-round text-base text-accent">auto_awesome</span>
             <h3 class="text-xs font-semibold text-accent uppercase tracking-wide">AI Reasoning</h3>
           </div>
-          <p class="text-muted text-sm leading-relaxed">${esc(g.ai_reasoning)}</p>
+          <p class="text-muted-foreground text-sm leading-relaxed">${esc(g.ai_reasoning)}</p>
         </section>` : ''}
 
       <!-- Actions -->
@@ -117,13 +118,13 @@ export async function renderGoalDetail(el, id) {
           <button onclick="updateGoalStatus('${g.id}','completed')" class="w-full flex items-center justify-center gap-2 bg-success/10 hover:bg-success/20 text-success font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.97]">
             <span class="material-icons-round text-lg">check_circle</span> Mark Complete
           </button>
-          <button onclick="updateGoalStatus('${g.id}','dismissed')" class="w-full flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-border text-muted font-medium py-3 rounded-xl transition-colors active:scale-[0.97]">
+          <button onclick="updateGoalStatus('${g.id}','dismissed')" class="w-full flex items-center justify-center gap-2 bg-card hover:bg-card-hover border border-border text-muted-foreground font-medium py-3 rounded-xl transition-colors active:scale-[0.97]">
             <span class="material-icons-round text-lg">do_not_disturb_on</span> Dismiss Goal
           </button>` : `
           <button onclick="updateGoalStatus('${g.id}','active')" class="w-full flex items-center justify-center gap-2 bg-accent/10 hover:bg-accent/20 text-accent font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.97]">
             <span class="material-icons-round text-lg">flag</span> Reactivate
           </button>`}
-        <button onclick="deleteGoal('${g.id}')" class="w-full flex items-center justify-center gap-2 bg-surface hover:bg-danger/10 border border-border text-danger font-medium py-3 rounded-xl transition-colors active:scale-[0.97]">
+        <button onclick="deleteGoal('${g.id}')" class="w-full flex items-center justify-center gap-2 bg-card hover:bg-danger/10 border border-border text-danger font-medium py-3 rounded-xl transition-colors active:scale-[0.97]">
           <span class="material-icons-round text-lg">delete</span> Delete Goal
         </button>
       </div>
@@ -133,16 +134,16 @@ export async function renderGoalDetail(el, id) {
 function goalStepCard(step, goalId) {
   const sourceCount = (step.source_content_ids || []).length;
   return `
-    <div class="bg-surface rounded-xl p-3.5 flex items-start gap-3 transition-all duration-200 shadow-card ${step.is_completed ? 'opacity-60' : ''}">
+    <div class="bg-card rounded-xl p-3.5 flex items-start gap-3 transition-all duration-200 shadow-sm ${step.is_completed ? 'opacity-60' : ''}">
       <button onclick="event.stopPropagation();toggleGoalStep('${goalId}','${step.id}',${!step.is_completed})" class="mt-0.5 flex-shrink-0 w-6 h-6 rounded-lg border-2 ${step.is_completed ? 'bg-accent border-accent check-bounce' : 'border-border hover:border-accent'} flex items-center justify-center transition-all" aria-label="${step.is_completed ? 'Mark incomplete' : 'Mark complete'}">
         ${step.is_completed ? '<span class="material-icons-round text-sm text-white">check</span>' : ''}
       </button>
       <div class="flex-1 min-w-0">
         <p class="text-heading text-sm font-medium leading-snug ${step.is_completed ? 'line-through' : ''}">${esc(step.title)}</p>
-        ${step.description ? `<p class="text-muted text-xs mt-1 leading-relaxed">${esc(step.description)}</p>` : ''}
+        ${step.description ? `<p class="text-muted-foreground text-xs mt-1 leading-relaxed">${esc(step.description)}</p>` : ''}
         <div class="flex items-center gap-2 mt-1.5">
-          <span class="text-muted text-[10px]">Step ${step.step_index + 1}</span>
-          ${sourceCount > 0 ? `<span class="text-muted text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-[10px]">link</span>${sourceCount}</span>` : ''}
+          <span class="text-muted-foreground text-[10px]">Step ${step.step_index + 1}</span>
+          ${sourceCount > 0 ? `<span class="text-muted-foreground text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-[10px]">link</span>${sourceCount}</span>` : ''}
           ${step.is_completed && step.completed_at ? '<span class="text-success text-[10px]">Done</span>' : ''}
         </div>
       </div>

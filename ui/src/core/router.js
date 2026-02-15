@@ -75,7 +75,7 @@ export async function router() {
   if (page === 'connect-extension') {
     main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in">
       <p class="text-heading font-semibold mb-2">Connecting extension…</p>
-      <p class="text-muted text-sm">Make sure you're logged in. If nothing happens, ensure the Share to Zuno extension is installed.</p>
+      <p class="text-muted-foreground text-sm">Make sure you're logged in. If nothing happens, ensure the Share to Zuno extension is installed.</p>
     </div>`;
     document.getElementById('topnav').classList.add('hidden');
     document.getElementById('bottomnav').classList.add('hidden');
@@ -112,7 +112,6 @@ export async function router() {
   document.getElementById('topnav').classList.toggle('hidden', isAuth);
   document.getElementById('topnav').classList.toggle('flex', !isAuth);
   document.getElementById('bottomnav').classList.toggle('hidden', isAuth);
-  document.getElementById('fab-btn').classList.toggle('hidden', page !== 'home' && page !== 'collections');
 
   // Show/hide Feed nav tab based on config
   const navFeed = document.getElementById('nav-feed');
@@ -125,8 +124,7 @@ export async function router() {
   };
   document.querySelectorAll('.nav-btn').forEach(btn => {
     const active = btn.dataset.tab === tabMap[page];
-    btn.classList.toggle('text-accent', active);
-    btn.classList.toggle('text-muted', !active);
+    btn.setAttribute('aria-current', active ? 'page' : 'false');
   });
 
   const transition = getTransition(page);
@@ -197,8 +195,8 @@ export async function router() {
       main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in" role="alert" aria-live="assertive">
         <span class="material-icons-round text-5xl text-danger/40 mb-3">error_outline</span>
         <p class="text-heading font-semibold mb-1">Something went wrong</p>
-        <p class="text-muted text-sm mb-4">${esc(errMsg)}</p>
-        <button type="button" onclick="router()" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Try again</button>
+        <p class="text-muted-foreground text-sm mb-4">${esc(errMsg)}</p>
+        <button type="button" onclick="router()" class="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Try again</button>
       </div>`;
     }
   });

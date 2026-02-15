@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 export function skeletonCards(count = 3) {
   return Array(count).fill(0).map(() => `
-    <div class="bg-surface rounded-2xl p-4 shadow-card">
+    <div class="bg-card rounded-2xl p-4 border border-border shadow-sm">
       <div class="flex gap-3">
         <div class="w-20 h-20 rounded-xl skeleton-line flex-shrink-0"></div>
         <div class="flex-1 space-y-2.5 py-1">

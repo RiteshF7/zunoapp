@@ -10,25 +10,28 @@
 #splash-screen .splash-track { background-color: rgba(18,18,18,0.05); }
 #splash-screen .splash-bar { background-color: rgba(18,18,18,0.3); }
 #splash-screen .splash-footer-text { color: rgba(18,18,18,0.2); }
-#splash-screen .splash-glow-1 { background-color: rgba(79,70,229,0.01); }
-#splash-screen .splash-glow-2 { background-color: rgba(124,58,237,0.02); }
+#splash-screen .splash-glow-1 { background-color: rgba(18,18,18,0.03); }
+#splash-screen .splash-glow-2 { background-color: rgba(18,18,18,0.02); }
 #splash-screen .splash-icon-glow {
-  background: linear-gradient(135deg, rgba(18,18,18,0.05), rgba(79,70,229,0.05), rgba(124,58,237,0.05));
+  background: linear-gradient(135deg, rgba(18,18,18,0.05), rgba(18,18,18,0.03));
 }
 
-/* Dark mode */
-.splash-dark .splash-stroke { stroke: #FAFAF9; stroke-opacity: 0.15; }
-.splash-dark .splash-dot { fill: #FAFAF9; }
-.splash-dark .splash-text { color: #FAFAF9; }
-.splash-dark .splash-divider { background-color: rgba(250,250,249,0.1); }
-.splash-dark .splash-loading-text { color: rgba(250,250,249,0.5); }
-.splash-dark .splash-track { background-color: rgba(250,250,249,0.05); }
-.splash-dark .splash-bar { background-color: rgba(250,250,249,0.3); }
-.splash-dark .splash-footer-text { color: rgba(250,250,249,0.2); }
-.splash-dark .splash-glow-1 { background-color: rgba(79,70,229,0.03); }
-.splash-dark .splash-glow-2 { background-color: rgba(124,58,237,0.04); }
+/* Dark mode (matt black) */
+.splash-dark {
+  background: linear-gradient(180deg, #141414 0%, #1a1a1a 35%, #1c1c1c 70%, #1a1a1a 100%) !important;
+}
+.splash-dark .splash-stroke { stroke: #e5e5e5; stroke-opacity: 0.15; }
+.splash-dark .splash-dot { fill: #e5e5e5; }
+.splash-dark .splash-text { color: #fafafa; }
+.splash-dark .splash-divider { background-color: rgba(250,250,250,0.1); }
+.splash-dark .splash-loading-text { color: rgba(250,250,250,0.5); }
+.splash-dark .splash-track { background-color: rgba(250,250,250,0.05); }
+.splash-dark .splash-bar { background-color: rgba(250,250,250,0.3); }
+.splash-dark .splash-footer-text { color: rgba(250,250,250,0.2); }
+.splash-dark .splash-glow-1 { background-color: rgba(250,250,250,0.02); }
+.splash-dark .splash-glow-2 { background-color: rgba(250,250,250,0.02); }
 .splash-dark .splash-icon-glow {
-  background: linear-gradient(135deg, rgba(250,250,249,0.03), rgba(79,70,229,0.06), rgba(124,58,237,0.06));
+  background: linear-gradient(135deg, rgba(250,250,250,0.03), rgba(250,250,250,0.02));
 }
 
 /* Splash progress animation */

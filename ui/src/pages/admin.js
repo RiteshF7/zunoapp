@@ -22,14 +22,14 @@ export async function renderAdmin(el) {
         <h1 class="text-xl font-bold text-heading">Admin</h1>
       </div>
 
-      <section class="bg-surface rounded-2xl shadow-card border border-border mb-4 overflow-hidden" aria-label="Developer tools">
+      <section class="bg-card rounded-2xl shadow-sm border border-border mb-4 overflow-hidden" aria-label="Developer tools">
         <div class="p-5 space-y-4">
           <!-- Cache -->
           <div>
-            <h4 class="text-xs text-muted font-semibold uppercase tracking-wide mb-2">Cache</h4>
+            <h4 class="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Cache</h4>
             <div class="flex gap-2">
               <input id="admin-cache-pattern" placeholder="Pattern (optional)" class="flex-1 bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-heading focus:outline-none focus:border-accent" />
-              <button onclick="adminDoBustCache()" id="admin-bust-btn" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-4 rounded-xl transition-colors active:scale-95">Bust</button>
+              <button onclick="adminDoBustCache()" id="admin-bust-btn" class="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-4 rounded-xl transition-colors active:scale-95">Bust</button>
             </div>
             <button onclick="adminLoadCacheStats()" class="text-xs text-accent hover:text-accent-hover mt-2 font-medium">View Stats</button>
             <div id="admin-cache-stats-result" class="mt-2"></div>
@@ -37,7 +37,7 @@ export async function renderAdmin(el) {
 
           <!-- Prompts -->
           <div>
-            <h4 class="text-xs text-muted font-semibold uppercase tracking-wide mb-2">Prompts</h4>
+            <h4 class="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Prompts</h4>
             <button onclick="adminDoReloadPrompts()" id="admin-prompts-btn" class="w-full bg-bg hover:bg-surface-hover border border-border text-heading text-sm font-medium py-2.5 rounded-xl transition-colors active:scale-[0.97] flex items-center justify-center gap-1.5">
               <span class="material-icons-round text-base">refresh</span> Reload Prompts
             </button>
@@ -45,17 +45,17 @@ export async function renderAdmin(el) {
 
           <!-- Embedding Test -->
           <div>
-            <h4 class="text-xs text-muted font-semibold uppercase tracking-wide mb-2">Generate Embedding</h4>
+            <h4 class="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Generate Embedding</h4>
             <div class="flex gap-2">
               <input id="admin-embed-text" placeholder="Text to embed..." class="flex-1 bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-heading focus:outline-none focus:border-accent" />
-              <button onclick="adminDoGenerateEmbedding()" id="admin-embed-btn" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-4 rounded-xl transition-colors active:scale-95">Go</button>
+              <button onclick="adminDoGenerateEmbedding()" id="admin-embed-btn" class="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-4 rounded-xl transition-colors active:scale-95">Go</button>
             </div>
             <div id="admin-embed-result" class="mt-2"></div>
           </div>
 
           <!-- Generate Feed -->
           <div>
-            <h4 class="text-xs text-muted font-semibold uppercase tracking-wide mb-2">AI Feed</h4>
+            <h4 class="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">AI Feed</h4>
             <button onclick="adminDoGenerateFeed()" id="admin-gen-feed-btn" class="w-full bg-bg hover:bg-surface-hover border border-border text-heading text-sm font-medium py-2.5 rounded-xl transition-colors active:scale-[0.97] flex items-center justify-center gap-1.5">
               <span class="material-icons-round text-base">auto_awesome</span> Generate Feed
             </button>
@@ -64,7 +64,7 @@ export async function renderAdmin(el) {
 
           <!-- Health Check -->
           <div>
-            <h4 class="text-xs text-muted font-semibold uppercase tracking-wide mb-2">Health</h4>
+            <h4 class="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Health</h4>
             <button onclick="adminDoHealthCheck()" id="admin-health-btn" class="w-full bg-bg hover:bg-surface-hover border border-border text-heading text-sm font-medium py-2.5 rounded-xl transition-colors active:scale-[0.97] flex items-center justify-center gap-1.5">
               <span class="material-icons-round text-base">monitor_heart</span> Check Health
             </button>
@@ -73,7 +73,7 @@ export async function renderAdmin(el) {
 
           <!-- Pro waitlist -->
           <div>
-            <h4 class="text-xs text-muted font-semibold uppercase tracking-wide mb-2">Pro waitlist</h4>
+            <h4 class="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Pro waitlist</h4>
             <button onclick="adminLoadWaitlist()" id="admin-waitlist-btn" class="w-full bg-bg hover:bg-surface-hover border border-border text-heading text-sm font-medium py-2.5 rounded-xl transition-colors active:scale-[0.97] flex items-center justify-center gap-1.5">
               <span class="material-icons-round text-base">list</span> Load waitlist
             </button>
@@ -87,7 +87,7 @@ export async function renderAdmin(el) {
 async function adminLoadCacheStats() {
   const statsRes = await api('GET', '/api/admin/cache/stats');
   const el = document.getElementById('admin-cache-stats-result');
-  if (statsRes.ok) el.innerHTML = `<pre class="text-xs text-muted bg-bg rounded-xl p-3 overflow-x-auto max-h-32">${esc(JSON.stringify(statsRes.data, null, 2))}</pre>`;
+  if (statsRes.ok) el.innerHTML = `<pre class="text-xs text-muted-foreground bg-bg rounded-xl p-3 overflow-x-auto max-h-32">${esc(JSON.stringify(statsRes.data, null, 2))}</pre>`;
   else el.innerHTML = `<p class="text-danger text-xs">${esc(statsRes.data?.detail || 'Failed to load stats')}</p>`;
 }
 
@@ -124,7 +124,7 @@ async function adminDoGenerateEmbedding() {
   const el = document.getElementById('admin-embed-result');
   if (res.ok) {
     const dim = res.data.embedding?.length || 0;
-    el.innerHTML = `<p class="text-success text-xs">Embedding generated (${dim} dimensions)</p><pre class="text-xs text-muted bg-bg rounded-lg p-2 mt-1 max-h-24 overflow-y-auto">[${res.data.embedding?.slice(0, 5).map(n => n.toFixed(6)).join(', ')}... ]</pre>`;
+    el.innerHTML = `<p class="text-success text-xs">Embedding generated (${dim} dimensions)</p><pre class="text-xs text-muted-foreground bg-bg rounded-lg p-2 mt-1 max-h-24 overflow-y-auto">[${res.data.embedding?.slice(0, 5).map(n => n.toFixed(6)).join(', ')}... ]</pre>`;
   } else el.innerHTML = `<p class="text-danger text-xs">${esc(res.data?.detail || 'Failed')}</p>`;
   btn.textContent = 'Go';
   btn.disabled = false;
@@ -139,7 +139,7 @@ async function adminDoGenerateFeed() {
   if (res.ok) {
     const count = res.data.items?.length || 0;
     el.innerHTML = `<p class="text-success text-xs">${count} feed items generated</p>`;
-    if (res.data.message) el.innerHTML += `<p class="text-muted text-xs mt-1">${esc(res.data.message)}</p>`;
+    if (res.data.message) el.innerHTML += `<p class="text-muted-foreground text-xs mt-1">${esc(res.data.message)}</p>`;
   } else el.innerHTML = `<p class="text-danger text-xs">${esc(res.data?.detail || 'Failed')}</p>`;
   btn.innerHTML = '<span class="material-icons-round text-base">auto_awesome</span> Generate Feed';
   btn.disabled = false;
@@ -173,14 +173,14 @@ async function adminLoadWaitlist() {
   _waitlistData = items;
   const total = res.data?.total ?? items.length;
   const rows = items.map(
-    (r) => `<tr class="border-b border-border"><td class="py-2 pr-3 text-sm text-heading">${esc(r.email)}</td><td class="py-2 pr-3 text-xs text-muted">${esc(r.tier)}</td><td class="py-2 pr-3 text-xs text-muted">${esc(r.discount_code || '—')}</td><td class="py-2 text-xs text-muted">${r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td></tr>`
+    (r) => `<tr class="border-b border-border"><td class="py-2 pr-3 text-sm text-heading">${esc(r.email)}</td><td class="py-2 pr-3 text-xs text-muted-foreground">${esc(r.tier)}</td><td class="py-2 pr-3 text-xs text-muted-foreground">${esc(r.discount_code || '—')}</td><td class="py-2 text-xs text-muted-foreground">${r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td></tr>`
   ).join('');
   resultEl.innerHTML = `
     <p class="text-success text-xs mb-2">${total} signup(s)</p>
     <div class="overflow-x-auto max-h-48 overflow-y-auto rounded-xl border border-border">
       <table class="w-full text-left text-sm">
-        <thead><tr class="bg-surface border-b border-border"><th class="py-2 pr-3 font-semibold text-heading">Email</th><th class="py-2 pr-3 font-semibold text-heading">Tier</th><th class="py-2 pr-3 font-semibold text-heading">Code</th><th class="py-2 font-semibold text-heading">Date</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="4" class="py-4 text-center text-muted text-xs">No entries</td></tr>'}</tbody>
+        <thead><tr class="bg-card border-b border-border"><th class="py-2 pr-3 font-semibold text-heading">Email</th><th class="py-2 pr-3 font-semibold text-heading">Tier</th><th class="py-2 pr-3 font-semibold text-heading">Code</th><th class="py-2 font-semibold text-heading">Date</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4" class="py-4 text-center text-muted-foreground text-xs">No entries</td></tr>'}</tbody>
       </table>
     </div>
     ${items.length > 0 ? '<button type="button" onclick="adminExportWaitlistCsv()" class="mt-2 text-xs text-accent hover:text-accent-hover font-medium">Export CSV</button>' : ''}

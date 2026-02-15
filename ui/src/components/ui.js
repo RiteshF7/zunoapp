@@ -36,27 +36,27 @@ export function contentCardHtml(item, opts = {}) {
        </span>`
     : aiProcessed
       ? '<span class="text-success text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">check_circle</span>AI</span>'
-      : '<span class="text-muted text-[10px]">Pending</span>';
+      : '<span class="text-muted-foreground text-[10px]">Pending</span>';
 
   return `
-    <article class="bg-surface rounded-2xl p-4 shadow-card hover:shadow-elevated transition-all duration-200 cursor-pointer active:scale-[0.97] group"
+    <article class="bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.97] group"
       onclick="if(!event.target.closest('.card-action'))navigate('#content-detail/${id}')">
       <div class="flex gap-3">
         ${thumb
           ? `<img src="${esc(thumb)}" alt="" class="w-20 h-20 rounded-xl object-cover flex-shrink-0" onerror="this.style.display='none'" loading="lazy"/>`
-          : `<div class="w-20 h-20 rounded-xl bg-surface-hover flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-2xl text-muted">${platformIcon(platform)}</span></div>`}
+          : `<div class="w-20 h-20 rounded-xl bg-surface-hover flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-2xl text-muted-foreground">${platformIcon(platform)}</span></div>`}
         <div class="flex-1 min-w-0">
           <div class="flex items-start justify-between gap-2">
             <h3 class="font-semibold text-heading text-sm leading-snug line-clamp-2">${esc(title)}</h3>
             ${showBookmark ? `
               <button class="card-action flex-shrink-0 p-1 rounded-lg hover:bg-surface-hover transition-colors" onclick="toggleBookmark('${item.id}', this)" aria-label="${isBookmarked ? 'Remove bookmark' : 'Add bookmark'}">
-                <span class="material-icons-round text-lg ${isBookmarked ? 'text-accent bookmark-pop' : 'text-muted'}">${isBookmarked ? 'bookmark' : 'bookmark_border'}</span>
+                <span class="material-icons-round text-lg ${isBookmarked ? 'text-accent bookmark-pop' : 'text-muted-foreground'}">${isBookmarked ? 'bookmark' : 'bookmark_border'}</span>
               </button>` : ''}
           </div>
-          <p class="text-muted text-xs mt-1 line-clamp-2">${esc(truncate(desc, 120))}</p>
+          <p class="text-muted-foreground text-xs mt-1 line-clamp-2">${esc(truncate(desc, 120))}</p>
           <div class="flex items-center gap-2 mt-2 flex-wrap">
             ${badge(cat)}
-            ${platform ? `<span class="text-muted text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">${platformIcon(platform)}</span>${esc(platform)}</span>` : ''}
+            ${platform ? `<span class="text-muted-foreground text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">${platformIcon(platform)}</span>${esc(platform)}</span>` : ''}
             ${aiStatusHtml}
           </div>
         </div>

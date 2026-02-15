@@ -38,24 +38,23 @@ export async function renderHome(el) {
       <!-- Greeting -->
       <section class="mb-6" aria-label="Greeting">
         <h1 class="text-2xl font-bold text-heading">${getGreeting()}, ${esc(name)}</h1>
-        <p class="text-muted text-sm mt-0.5">${formatDate()}</p>
+        <p class="text-muted-foreground text-sm mt-0.5">${formatDate()}</p>
       </section>
 
       <!-- Feed Toggle -->
-      <div class="flex bg-surface rounded-xl p-1 gap-1 mb-5 shadow-card" role="tablist" aria-label="Feed type">
-        <button onclick="switchFeedType('usersaved')" role="tab" aria-selected="${feedType === 'usersaved'}" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${feedType === 'usersaved' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-heading'}">My Feed</button>
-        <button onclick="switchFeedType('suggestedcontent')" role="tab" aria-selected="${feedType === 'suggestedcontent'}" class="flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${feedType === 'suggestedcontent' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-heading'}">Suggested</button>
+      <div class="flex bg-muted/30 rounded-2xl p-1 gap-2 mb-5" role="tablist" aria-label="Feed type">
+        <button onclick="switchFeedType('usersaved')" role="tab" aria-selected="${feedType === 'usersaved'}" class="flex-1 py-2.5 text-sm font-medium rounded-full border border-border shadow-sm hover:shadow-md transition-all duration-200 ${feedType === 'usersaved' ? 'bg-primary text-primary-foreground border-primary/30' : 'bg-card text-foreground'}">My Feed</button>
+        <button onclick="switchFeedType('suggestedcontent')" role="tab" aria-selected="${feedType === 'suggestedcontent'}" class="flex-1 py-2.5 text-sm font-medium rounded-full border border-border shadow-sm hover:shadow-md transition-all duration-200 ${feedType === 'suggestedcontent' ? 'bg-primary text-primary-foreground border-primary/30' : 'bg-card text-foreground'}">Suggested</button>
       </div>
 
       <!-- Feed Items -->
       ${items.length === 0 ? `
-        <div class="flex flex-col items-center justify-center py-16 text-center">
-          <div class="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center mb-4">
-            <span class="material-icons-round text-4xl text-accent/60">dynamic_feed</span>
-          </div>
-          <p class="text-heading font-semibold mb-1">Your feed is empty</p>
-          <p class="text-muted text-sm mb-4">Save some content to start building your feed</p>
-          <button onclick="navigate('#home')" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Go to Home</button>
+        <div class="rounded-2xl p-6 min-h-[180px] bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-800/40 dark:to-neutral-800/20 border border-border shadow-sm relative overflow-hidden flex flex-col items-center justify-center text-center">
+          <div class="absolute inset-0 opacity-20 pointer-events-none"><svg viewBox="0 0 200 200" class="w-full h-full"><defs><filter id="blur-f"><feGaussianBlur in="SourceGraphic" stdDeviation="40"/></filter></defs><circle cx="60" cy="60" r="80" fill="currentColor" filter="url(#blur-f)"/></svg></div>
+          <div class="relative z-10"><span class="material-icons-round text-4xl text-heading opacity-80">dynamic_feed</span></div>
+          <p class="relative z-10 text-heading font-semibold mb-1 mt-2">Your feed is empty</p>
+          <p class="relative z-10 text-muted-foreground text-sm mb-4">Save some content to start building your feed</p>
+          <button onclick="navigate('#home')" class="relative z-10 px-4 py-2 bg-card rounded-full text-sm font-medium shadow-sm hover:shadow-md border border-border">Go to Home</button>
         </div>` : `
         <div class="space-y-3" id="feed-list" role="feed" aria-label="Feed items">
           ${items.map(item => contentCardHtml(item, { showBookmark: true, isBookmarked: bookmarkSet.has(item.id) })).join('')}
@@ -75,7 +74,7 @@ async function toggleBookmark(feedItemId, btn) {
     const isNow = res.data?.bookmarked ?? !icon.textContent.includes('border');
     icon.textContent = isNow ? 'bookmark' : 'bookmark_border';
     icon.classList.toggle('text-accent', isNow);
-    icon.classList.toggle('text-muted', !isNow);
+    icon.classList.toggle('text-muted-foreground', !isNow);
     if (isNow) icon.classList.add('bookmark-pop');
     else icon.classList.remove('bookmark-pop');
   }

@@ -21,6 +21,7 @@ import './components/toast.js';
 import './components/modal.js';
 import './components/loading-bar.js';
 import { renderAppHeader } from './components/app-header.js';
+import { renderBottomNav } from './components/bottom-nav.js';
 
 // 3b. Import share handler (registers window.handleSharedContent for native bridge)
 import './core/share-handler.js';
@@ -77,8 +78,9 @@ function runWhenReady(fn) {
 window.addEventListener('hashchange', router);
 
 runWhenReady(async () => {
-  // Mount app header so #topnav exists before router
+  // Mount app header and bottom nav so #topnav and #bottomnav exist before router
   renderAppHeader();
+  renderBottomNav();
 
   // Chrome extension share: capture ?share=url and store for after auth
   const params = new URLSearchParams(window.location.search);

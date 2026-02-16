@@ -126,27 +126,8 @@
     <!-- Page Content -->
     <main id="page" role="main" class="flex-1 px-5 pt-2 pb-24" aria-live="polite"></main>
 
-    <!-- Bottom Nav (medical-style, black/white, Lucide icons + labels) -->
-    <nav id="bottomnav" role="navigation" aria-label="Main navigation" class="hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 px-6 py-4 z-30 safe-bottom">
-      <div class="flex justify-around items-center max-w-2xl mx-auto">
-        <button onclick="navigate('#home')" data-tab="home" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-md transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Home">
-          <i data-lucide="home" class="nav-lucide w-6 h-6"></i>
-          <span class="text-[10px] font-medium">Home</span>
-        </button>
-        <button onclick="navigate('#knowledge')" data-tab="knowledge" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-md transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Ask AI">
-          <span class="material-icons-round text-2xl text-neutral-500 dark:text-neutral-400">auto_awesome</span>
-          <span class="text-[10px] font-medium">Ask</span>
-        </button>
-        <button onclick="navigate('#goals')" data-tab="goals" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-md transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Goals">
-          <i data-lucide="target" class="nav-lucide w-6 h-6"></i>
-          <span class="text-[10px] font-medium">Goals</span>
-        </button>
-        <button id="nav-feed" onclick="navigate('#feed')" data-tab="feed" class="nav-btn hidden flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-md transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Feed">
-          <i data-lucide="rss" class="nav-lucide w-6 h-6"></i>
-          <span class="text-[10px] font-medium">Feed</span>
-        </button>
-      </div>
-    </nav>
+    <!-- Bottom Nav (mounted by components/bottom-nav.js) -->
+    <div id="bottom-nav-root"></div>
   </div>
 
   <!-- ======================= MODAL OVERLAY ======================= -->

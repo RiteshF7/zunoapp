@@ -37,19 +37,19 @@ pre { white-space: pre-wrap; word-break: break-word; }
   display: block;
 }
 
-/* ── Bottom nav (white active, minimal roundness); Lucide SVGs inherit color ── */
+/* ── Bottom nav (translucent, app theme); Lucide SVGs inherit color ── */
+#bottomnav {
+  background: color-mix(in srgb, var(--c-surface) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
 #bottomnav .nav-btn svg {
   stroke: currentColor;
 }
 #bottomnav .nav-btn[aria-current="page"] {
-  color: #171717;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-.dark #bottomnav .nav-btn[aria-current="page"] {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: var(--c-heading);
+  background: var(--c-surface-hover);
+  box-shadow: 0 1px 3px var(--c-shadow);
 }
 
 /* ── Scrollbar ── */

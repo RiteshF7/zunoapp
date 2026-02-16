@@ -9,6 +9,7 @@ import { esc } from '../utils/helpers.js';
 
 import { renderAuth } from '../pages/auth.js';
 import { renderHome } from '../pages/home.js';
+import { renderHomeDashboard } from '../pages/home-dashboard.js';
 import { renderLibrary, renderCollectionsPage, renderLibraryBookmarks } from '../pages/library.js';
 import { renderContentDetail } from '../pages/content-detail.js';
 import { renderCollectionDetail } from '../pages/collection-detail.js';
@@ -133,7 +134,7 @@ export async function router() {
 
   // Update active nav tab
   const tabMap = {
-    home: 'home', feed: 'feed', collections: 'collections', 'content-detail': 'home', collection: 'collections',
+    home: 'home', feed: 'feed', collections: 'home', 'content-detail': 'home', collection: 'home',
     goals: 'goals', 'goal-detail': 'goals', knowledge: 'knowledge', profile: 'profile', admin: 'profile',
   };
   document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -165,7 +166,11 @@ export async function router() {
         switch (page) {
         case 'auth': renderAuth(main); break;
         case 'home':
-          await renderLibrary(main, id || 'saved');
+          if (id === 'saved') {
+            await renderLibrary(main, 'saved');
+          } else {
+            await renderHomeDashboard(main);
+          }
           if (myNavId !== _navId) return;
           try {
             const pending = sessionStorage.getItem('zuno_pending_share');

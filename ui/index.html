@@ -133,21 +133,17 @@
           <i data-lucide="home" class="nav-lucide w-6 h-6"></i>
           <span class="text-[10px] font-medium">Home</span>
         </button>
-        <button onclick="navigate('#collections')" data-tab="collections" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Collections">
-          <i data-lucide="bookmark" class="nav-lucide w-6 h-6"></i>
-          <span class="text-[10px] font-medium">Collections</span>
-        </button>
-        <button id="nav-feed" onclick="navigate('#feed')" data-tab="feed" class="nav-btn hidden flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Feed">
-          <i data-lucide="rss" class="nav-lucide w-6 h-6"></i>
-          <span class="text-[10px] font-medium">Feed</span>
+        <button onclick="navigate('#knowledge')" data-tab="knowledge" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Ask AI">
+          <span class="material-icons-round text-2xl text-neutral-500 dark:text-neutral-400">auto_awesome</span>
+          <span class="text-[10px] font-medium">Ask</span>
         </button>
         <button onclick="navigate('#goals')" data-tab="goals" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Goals">
           <i data-lucide="target" class="nav-lucide w-6 h-6"></i>
           <span class="text-[10px] font-medium">Goals</span>
         </button>
-        <button onclick="navigate('#knowledge')" data-tab="knowledge" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Ask AI">
-          <i data-lucide="brain" class="nav-lucide w-6 h-6"></i>
-          <span class="text-[10px] font-medium">Ask</span>
+        <button id="nav-feed" onclick="navigate('#feed')" data-tab="feed" class="nav-btn hidden flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Feed">
+          <i data-lucide="rss" class="nav-lucide w-6 h-6"></i>
+          <span class="text-[10px] font-medium">Feed</span>
         </button>
       </div>
     </nav>

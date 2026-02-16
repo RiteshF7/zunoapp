@@ -28,6 +28,7 @@ import './core/share-handler.js';
 // 4. Import pages (registers window globals for onclick handlers)
 import { handleOAuthCallback } from './pages/auth.js';
 import './pages/home.js';
+import './pages/home-dashboard.js';
 import './pages/library.js';
 import './pages/content-detail.js';
 import './pages/collection-detail.js';

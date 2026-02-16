@@ -97,7 +97,7 @@ async function renderLibrarySaved(el) {
           <p class="text-muted text-sm mb-4">Tap the + button to save your first item</p>
         </div>` : `
         <div class="space-y-3" id="content-list">
-          ${items.map(item => contentCardHtml(item, { showAiStatus: true, processingIds: getProcessingIds() })).join('')}
+          ${items.map(item => contentCardHtml(item, { showAiStatus: true, processingIds: getProcessingIds(), roundedMinimal: true })).join('')}
         </div>`}
     </div>`;
   if (getProcessingIds().size > 0) {
@@ -141,7 +141,7 @@ async function renderLibraryBookmarks(el, options = {}) {
           ${showFeed() ? `<button onclick="navigate('#feed')" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Go to Feed</button>` : ''}
         </div>` : `
         <div class="space-y-3" id="bookmarks-list">
-          ${items.map(item => contentCardHtml(item, { showBookmark: true, isBookmarked: true })).join('')}
+          ${items.map(item => contentCardHtml(item, { showBookmark: true, isBookmarked: true, roundedMinimal: true })).join('')}
         </div>`}
     </div>`;
 }
@@ -178,7 +178,7 @@ function collectionsContentHtml(cols, cats) {
         ${cols.map(c => {
           const tc = _collectionThemeColors[c.theme] || _collectionThemeColors.blue;
           return `
-          <article onclick="navigate('#collection/${c.id}')" class="bg-gradient-to-br ${tc} border rounded-2xl p-4 cursor-pointer hover:scale-[1.02] transition-all duration-200 active:scale-[0.97] shadow-card h-36 flex flex-col justify-between">
+          <article onclick="navigate('#collection/${c.id}')" class="bg-gradient-to-br ${tc} border rounded-md p-4 cursor-pointer hover:scale-[1.02] transition-all duration-200 active:scale-[0.97] shadow-card h-36 flex flex-col justify-between">
             <span class="material-icons-round text-2xl text-heading/80">${esc(c.icon || 'folder')}</span>
             <div>
               <h3 class="text-heading font-semibold text-sm leading-snug line-clamp-1">${esc(c.title)}</h3>
@@ -187,7 +187,7 @@ function collectionsContentHtml(cols, cats) {
             </div>
           </article>`;
         }).join('')}
-        <button onclick="openCreateCollectionModal()" class="border-2 border-dashed border-border rounded-2xl h-36 flex flex-col items-center justify-center gap-2 hover:border-accent hover:bg-accent/5 transition-all duration-200 active:scale-[0.97]" aria-label="Create new collection">
+        <button onclick="openCreateCollectionModal()" class="border-2 border-dashed border-border rounded-md h-36 flex flex-col items-center justify-center gap-2 hover:border-accent hover:bg-accent/5 transition-all duration-200 active:scale-[0.97]" aria-label="Create new collection">
           <span class="material-icons-round text-2xl text-muted">add</span>
           <span class="text-muted text-xs font-medium">New Collection</span>
         </button>
@@ -296,7 +296,7 @@ async function refreshSavedListOnly(newItemId = null) {
     const processingIds = getProcessingIds();
     listEl.innerHTML = items.map(item => {
       const isNew = newItemId && (item.id === newItemId || (item.content_id || item.id) === newItemId);
-      const cardHtml = contentCardHtml(item, { showAiStatus: true, processingIds });
+      const cardHtml = contentCardHtml(item, { showAiStatus: true, processingIds, roundedMinimal: true });
       return isNew ? cardHtml.replace('<article class="', '<article class="new-item-highlight ') : cardHtml;
     }).join('');
 

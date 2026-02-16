@@ -43,7 +43,7 @@ export async function renderGoals(el) {
             <p class="text-muted-foreground text-xs">${goals.length} goal${goals.length !== 1 ? 's' : ''} &middot; ${completedSteps}/${totalSteps} steps</p>
           </div>
         </div>
-        <button onclick="openGoalsMenu()" class="p-2 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Goal actions">
+        <button onclick="openGoalsMenu()" class="p-2 rounded-md hover:bg-surface-hover transition-colors" aria-label="Goal actions">
           <span class="material-icons-round text-xl text-muted-foreground">more_vert</span>
         </button>
       </div>
@@ -57,8 +57,8 @@ export async function renderGoals(el) {
 
       <!-- Merge Suggestions Banner -->
       ${suggestions.length > 0 ? `
-        <button onclick="toggleSuggestions()" class="w-full bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 mb-4 flex items-center gap-3 transition-all active:scale-[0.98]" aria-expanded="${_showSuggestions}">
-          <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+        <button onclick="toggleSuggestions()" class="w-full bg-purple-500/10 border border-purple-500/20 rounded-md p-4 mb-4 flex items-center gap-3 transition-all active:scale-[0.98]" aria-expanded="${_showSuggestions}">
+          <div class="w-10 h-10 rounded bg-purple-500/20 flex items-center justify-center flex-shrink-0">
             <span class="material-icons-round text-xl text-purple-400">merge_type</span>
           </div>
           <div class="flex-1 text-left">
@@ -72,7 +72,7 @@ export async function renderGoals(el) {
 
       <!-- Goals List -->
       ${parentGoals.length === 0 && suggestions.length === 0 ? `
-        <div class="rounded-2xl p-6 min-h-[180px] bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-800/40 dark:to-neutral-800/20 border border-border shadow-sm relative overflow-hidden flex flex-col items-center justify-center text-center">
+        <div class="rounded-md p-6 min-h-[180px] bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-800/40 dark:to-neutral-800/20 border border-border shadow-sm relative overflow-hidden flex flex-col items-center justify-center text-center">
           <div class="absolute inset-0 opacity-20 pointer-events-none"><svg viewBox="0 0 200 200" class="w-full h-full"><defs><filter id="blur-g"><feGaussianBlur in="SourceGraphic" stdDeviation="40"/></filter></defs><circle cx="60" cy="60" r="80" fill="currentColor" filter="url(#blur-g)"/></svg></div>
           <div class="relative z-10"><span class="material-icons-round text-4xl text-heading opacity-80">flag</span></div>
           <p class="relative z-10 text-heading font-semibold mb-1 mt-2">${_goalsFilter === 'active' ? 'No active goals yet' : 'No ' + _goalsFilter + ' goals'}</p>
@@ -97,9 +97,9 @@ function goalCard(goal, children = []) {
   const borderClass = statusBorder[goal.status] || 'border-l-accent';
 
   return `
-    <article onclick="navigate('#goal-detail/${goal.id}')" class="bg-card rounded-2xl p-4 border border-border border-l-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.97] ${borderClass}">
+    <article onclick="navigate('#goal-detail/${goal.id}')" class="bg-card rounded-md p-4 border border-border border-l-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.97] ${borderClass}">
       <div class="flex items-start gap-3">
-        <div class="w-10 h-10 rounded-xl ${hasChildren ? 'bg-purple-500/15' : 'bg-accent/15'} flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div class="w-10 h-10 rounded ${hasChildren ? 'bg-purple-500/15' : 'bg-accent/15'} flex items-center justify-center flex-shrink-0 mt-0.5">
           <span class="material-icons-round text-xl ${hasChildren ? 'text-purple-500' : 'text-accent'}">${hasChildren ? 'account_tree' : 'flag'}</span>
         </div>
         <div class="flex-1 min-w-0">
@@ -129,9 +129,9 @@ function goalCard(goal, children = []) {
 function mergeSuggestionCard(suggestion) {
   const childCount = (suggestion.child_goal_ids || []).length;
   return `
-    <div class="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4">
+    <div class="bg-purple-500/10 border border-purple-500/20 rounded-md p-4">
       <div class="flex items-start gap-3">
-        <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div class="w-10 h-10 rounded bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
           <span class="material-icons-round text-xl text-purple-400">merge_type</span>
         </div>
         <div class="flex-1 min-w-0">
@@ -140,10 +140,10 @@ function mergeSuggestionCard(suggestion) {
           <p class="text-muted-foreground text-xs mt-1 line-clamp-3">${esc(suggestion.ai_reasoning || suggestion.suggested_parent_description)}</p>
           <p class="text-purple-400/70 text-[10px] mt-1.5"><span class="material-icons-round text-xs align-middle">account_tree</span> Merges ${childCount} goal${childCount !== 1 ? 's' : ''}</p>
           <div class="flex items-center gap-2 mt-3">
-            <button onclick="event.stopPropagation();acceptSuggestion('${suggestion.id}')" id="accept-${suggestion.id}" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold py-2.5 px-3 rounded-xl transition-colors active:scale-[0.97] flex items-center justify-center gap-1">
+            <button onclick="event.stopPropagation();acceptSuggestion('${suggestion.id}')" id="accept-${suggestion.id}" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold py-2.5 px-3 rounded-md transition-colors active:scale-[0.97] flex items-center justify-center gap-1">
               <span class="material-icons-round text-sm">check</span> Accept
             </button>
-            <button onclick="event.stopPropagation();dismissSuggestion('${suggestion.id}')" id="dismiss-${suggestion.id}" class="flex-1 bg-surface hover:bg-surface-hover text-muted-foreground text-xs font-semibold py-2.5 px-3 rounded-xl transition-colors active:scale-[0.97] border border-border flex items-center justify-center gap-1">
+            <button onclick="event.stopPropagation();dismissSuggestion('${suggestion.id}')" id="dismiss-${suggestion.id}" class="flex-1 bg-surface hover:bg-surface-hover text-muted-foreground text-xs font-semibold py-2.5 px-3 rounded-md transition-colors active:scale-[0.97] border border-border flex items-center justify-center gap-1">
               <span class="material-icons-round text-sm">close</span> Dismiss
             </button>
           </div>
@@ -161,11 +161,11 @@ function openGoalsMenu() {
   openModal(`
     <h2 class="text-lg font-bold text-heading mb-4">Goal Actions</h2>
     <div class="space-y-2">
-      <button onclick="closeModal();reanalyzeGoals()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-surface-hover transition-colors text-left">
+      <button onclick="closeModal();reanalyzeGoals()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-md hover:bg-surface-hover transition-colors text-left">
         <span class="material-icons-round text-xl text-accent">refresh</span>
         <div><p class="text-heading text-sm font-medium">Reanalyze Goals</p><p class="text-muted-foreground text-xs">Re-scan content for new goals</p></div>
       </button>
-      <button onclick="closeModal();triggerConsolidate()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-surface-hover transition-colors text-left">
+      <button onclick="closeModal();triggerConsolidate()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-md hover:bg-surface-hover transition-colors text-left">
         <span class="material-icons-round text-xl text-purple-400">merge_type</span>
         <div><p class="text-heading text-sm font-medium">Consolidate Goals</p><p class="text-muted-foreground text-xs">Find goals to merge together</p></div>
       </button>

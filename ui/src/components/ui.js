@@ -28,6 +28,9 @@ export function contentCardHtml(item, opts = {}) {
   const processingIds = opts.processingIds || null;
   const aiProcessed = item.ai_processed;
   const isProcessing = showAiStatus && processingIds && processingIds.has(id);
+  const roundedMinimal = opts.roundedMinimal || false;
+  const cardRound = roundedMinimal ? 'rounded-md' : 'rounded-2xl';
+  const thumbRound = roundedMinimal ? 'rounded' : 'rounded-xl';
 
   const aiStatusHtml = !showAiStatus ? '' : isProcessing
     ? `<span class="text-accent/80 text-[10px] flex items-center gap-1 shrink-0" role="status" aria-busy="true">
@@ -39,12 +42,12 @@ export function contentCardHtml(item, opts = {}) {
       : '<span class="text-muted-foreground text-[10px]">Pending</span>';
 
   return `
-    <article class="bg-card rounded-2xl p-4 border border-border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.97] group"
+    <article class="bg-card ${cardRound} p-4 border border-border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.97] group"
       onclick="if(!event.target.closest('.card-action'))navigate('#content-detail/${id}')">
       <div class="flex gap-3">
         ${thumb
-          ? `<img src="${esc(thumb)}" alt="" class="w-20 h-20 rounded-xl object-cover flex-shrink-0" onerror="this.style.display='none'" loading="lazy"/>`
-          : `<div class="w-20 h-20 rounded-xl bg-surface-hover flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-2xl text-muted-foreground">${platformIcon(platform)}</span></div>`}
+          ? `<img src="${esc(thumb)}" alt="" class="w-20 h-20 ${thumbRound} object-cover flex-shrink-0" onerror="this.style.display='none'" loading="lazy"/>`
+          : `<div class="w-20 h-20 ${thumbRound} bg-surface-hover flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-2xl text-muted-foreground">${platformIcon(platform)}</span></div>`}
         <div class="flex-1 min-w-0">
           <div class="flex items-start justify-between gap-2">
             <h3 class="font-semibold text-heading text-sm leading-snug line-clamp-2">${esc(title)}</h3>

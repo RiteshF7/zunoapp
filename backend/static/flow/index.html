@@ -5,7 +5,7 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Zuno — How It Works | Investor Flow</title>
   <meta name="description" content="Zuno: one place for all your content. Share from any app. AI organizes. Search in your words. Discover more."/>
-  <link rel="icon" href="../assets/logo.svg" type="image/svg+xml"/>
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
@@ -15,14 +15,23 @@
       theme: {
         extend: {
           colors: {
-            primary: "#E2E8F0",
-            "background-light": "#F8FAFC",
-            "background-dark": "#1A1C1E",
-            "card-dark": "#2D2F31",
-            "accent-blue": "#4D96FF",
+            background: "hsl(0 0% 100%)",
+            foreground: "hsl(0 0% 3.9%)",
+            "background-dark": "hsl(0 0% 3.9%)",
+            "foreground-dark": "hsl(0 0% 98%)",
+            card: "hsl(0 0% 100%)",
+            "card-dark": "hsl(0 0% 6%)",
+            muted: "hsl(0 0% 45.1%)",
+            "muted-dark": "hsl(0 0% 63.9%)",
+            border: "hsl(0 0% 89.8%)",
+            "border-dark": "hsl(0 0% 14.9%)",
+            accent: "hsl(217 91% 60%)",
+            "accent-blue": "hsl(217 91% 60%)",
+            secondary: "hsl(0 0% 96.1%)",
+            "secondary-dark": "hsl(0 0% 14.9%)",
           },
-          fontFamily: { display: ["Inter", "sans-serif"] },
-          borderRadius: { DEFAULT: "1.25rem", xl: "1.5rem", "2xl": "2rem" },
+          fontFamily: { display: ["Inter", "system-ui", "sans-serif"] },
+          borderRadius: { lg: "0.5rem", DEFAULT: "0.5rem", xl: "1rem", "2xl": "1rem" },
         },
       },
     };
@@ -63,30 +72,33 @@
     @keyframes pulse-soft { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
     .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
 
+    .text-balance { text-wrap: balance; }
     /* Connection lines */
-    .flow-line { height: 2px; background: linear-gradient(90deg, transparent, #4D96FF, transparent); }
-    .flow-line-v { width: 2px; background: linear-gradient(180deg, transparent, #4D96FF, transparent); }
+    .flow-line { height: 2px; background: linear-gradient(90deg, transparent, hsl(217 91% 60%), transparent); }
+    .flow-line-v { width: 2px; background: linear-gradient(180deg, transparent, hsl(217 91% 60%), transparent); }
 
     /* Slide nav */
-    .slide-dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; transition: all 0.3s; cursor: pointer; }
-    .slide-dot.active { background: #4D96FF; width: 28px; border-radius: 5px; }
-    .dark .slide-dot { background: #475569; }
-    .dark .slide-dot.active { background: #4D96FF; }
+    .slide-dot { width: 10px; height: 10px; border-radius: 50%; background: hsl(0 0% 90%); transition: all 0.3s; cursor: pointer; }
+    .slide-dot.active { background: hsl(217 91% 60%); width: 28px; border-radius: 5px; }
+    .dark .slide-dot { background: hsl(0 0% 20%); }
+    .dark .slide-dot.active { background: hsl(217 91% 60%); }
 
     /* Tag pill */
     .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+    /* Medical-style card decorative blur */
+    .card-blur::before { content: ''; position: absolute; inset: 0; opacity: 0.15; pointer-events: none; background: radial-gradient(circle at 20% 20%, rgba(148,163,184,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(148,163,184,0.3) 0%, transparent 45%); filter: blur(32px); }
   </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
+<body class="bg-white dark:bg-background-dark text-foreground dark:text-foreground-dark min-h-screen transition-colors duration-200">
 
   <!-- Fixed header -->
-  <header class="px-6 py-4 flex items-center justify-between sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md z-30 border-b border-slate-200/50 dark:border-slate-800/50">
+  <header class="px-6 py-4 flex items-center justify-between sticky top-0 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md z-30 border-b border-border dark:border-border-dark">
     <a href="../" class="flex items-center gap-3">
-      <img src="../assets/logo.svg" alt="Zuno" class="w-10 h-10" data-logo-light="../assets/logo.svg" data-logo-dark="../assets/logo-dark.svg"/>
+      <img src="/assets/logo.svg" alt="Zuno" class="w-10 h-10" data-logo-light="/assets/logo.svg" data-logo-dark="/assets/logo-dark.svg"/>
       <span class="text-xl font-bold tracking-tight">Zuno</span>
     </a>
     <div class="flex items-center gap-3">
-      <button id="themeToggle" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200 active:scale-95" aria-label="Toggle theme">
+      <button id="themeToggle" class="p-2 rounded-lg hover:bg-secondary dark:hover:bg-secondary-dark transition-colors duration-200 active:scale-95" aria-label="Toggle theme">
         <span class="material-icons-round text-lg">dark_mode</span>
       </button>
       <!-- Slide nav dots -->
@@ -101,10 +113,10 @@
         <div class="slide-dot" data-slide="7"></div>
       </div>
       <!-- Arrow nav -->
-      <button id="prevSlide" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200 active:scale-95 hidden md:flex items-center justify-center" aria-label="Previous">
+      <button id="prevSlide" class="p-2 rounded-lg hover:bg-secondary dark:hover:bg-secondary-dark transition-colors duration-200 active:scale-95 hidden md:flex items-center justify-center" aria-label="Previous">
         <span class="material-icons-round">chevron_left</span>
       </button>
-      <button id="nextSlide" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200 active:scale-95 hidden md:flex items-center justify-center" aria-label="Next">
+      <button id="nextSlide" class="p-2 rounded-lg hover:bg-secondary dark:hover:bg-secondary-dark transition-colors duration-200 active:scale-95 hidden md:flex items-center justify-center" aria-label="Next">
         <span class="material-icons-round">chevron_right</span>
       </button>
     </div>
@@ -115,11 +127,11 @@
     <!-- ========== SECTION 1: THE PROBLEM ========== -->
     <section id="slide-0" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-4 fade-up">Step 1</p>
-        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 fade-up">
-          Your content is <span class="text-accent-blue">everywhere.</span>
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-4 fade-up">Step 1</p>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-6 fade-up">
+          Your content is <span class="text-accent">everywhere.</span>
         </h2>
-        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12 fade-up">
+        <p class="text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-12 fade-up">
           Reels on Instagram. Videos on YouTube. Tweets on Twitter. Articles in your browser. Every app has its own save button. Nothing is connected. Finding anything later? Impossible.
         </p>
 
@@ -130,49 +142,49 @@
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
               <span class="material-icons-round text-white text-2xl">photo_camera</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 text-center">Instagram</p>
+            <p class="text-xs text-muted mt-1 text-center">Instagram</p>
           </div>
           <div class="absolute top-8 right-[12%] float-delay">
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
               <span class="material-icons-round text-white text-2xl">play_arrow</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 text-center">YouTube</p>
+            <p class="text-xs text-muted mt-1 text-center">YouTube</p>
           </div>
           <div class="absolute top-1/2 left-[2%] -translate-y-1/2 float-delay2">
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
               <span class="material-icons-round text-white text-2xl">thumb_up</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 text-center">Facebook</p>
+            <p class="text-xs text-muted mt-1 text-center">Facebook</p>
           </div>
           <div class="absolute top-1/2 right-[4%] -translate-y-1/2 float">
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-sky-500 flex items-center justify-center shadow-lg">
               <span class="material-icons-round text-white text-2xl">tag</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 text-center">Twitter/X</p>
+            <p class="text-xs text-muted mt-1 text-center">Twitter/X</p>
           </div>
           <div class="absolute bottom-8 left-[18%] float-delay">
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-700 to-blue-800 flex items-center justify-center shadow-lg">
               <span class="material-icons-round text-white text-2xl">work</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 text-center">LinkedIn</p>
+            <p class="text-xs text-muted mt-1 text-center">LinkedIn</p>
           </div>
           <div class="absolute bottom-4 right-[16%] float-delay2">
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg">
               <span class="material-icons-round text-white text-2xl">music_note</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 text-center">TikTok</p>
+            <p class="text-xs text-muted mt-1 text-center">TikTok</p>
           </div>
           <div class="absolute top-[30%] left-[38%] float">
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg">
               <span class="material-icons-round text-white text-2xl">forum</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 text-center">Reddit</p>
+            <p class="text-xs text-muted mt-1 text-center">Reddit</p>
           </div>
           <div class="absolute bottom-[20%] left-[50%] -translate-x-1/2 float-delay2">
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-400 to-red-500 flex items-center justify-center shadow-lg">
               <span class="material-icons-round text-white text-2xl">push_pin</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 text-center">Pinterest</p>
+            <p class="text-xs text-muted mt-1 text-center">Pinterest</p>
           </div>
           <!-- Dashed chaos lines -->
           <svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -184,68 +196,68 @@
 
         <!-- Problem cards -->
         <div class="grid md:grid-cols-3 gap-4 mt-8 stagger">
-          <div class="p-4 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
+          <div class="p-4 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
             <span class="material-icons-round text-red-400 text-xl mb-2">folder_off</span>
-            <p class="text-sm font-semibold text-slate-800 dark:text-white">Scattered saves</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Each app has its own save. No single place.</p>
+            <p class="text-sm font-semibold text-foreground dark:text-foreground-dark">Scattered saves</p>
+            <p class="text-xs text-muted dark:text-muted-dark mt-1">Each app has its own save. No single place.</p>
           </div>
-          <div class="p-4 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
+          <div class="p-4 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
             <span class="material-icons-round text-red-400 text-xl mb-2">search_off</span>
-            <p class="text-sm font-semibold text-slate-800 dark:text-white">Impossible to find</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">No unified search across platforms.</p>
+            <p class="text-sm font-semibold text-foreground dark:text-foreground-dark">Impossible to find</p>
+            <p class="text-xs text-muted dark:text-muted-dark mt-1">No unified search across platforms.</p>
           </div>
-          <div class="p-4 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
+          <div class="p-4 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
             <span class="material-icons-round text-red-400 text-xl mb-2">inventory_2</span>
-            <p class="text-sm font-semibold text-slate-800 dark:text-white">Library graveyard</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Saved content is forgotten forever.</p>
+            <p class="text-sm font-semibold text-foreground dark:text-foreground-dark">Library graveyard</p>
+            <p class="text-xs text-muted dark:text-muted-dark mt-1">Saved content is forgotten forever.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ========== SECTION 2: SHARE TO ZUNO ========== -->
-    <section id="slide-1" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center bg-slate-100/50 dark:bg-slate-900/30">
+    <section id="slide-1" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-4 fade-up">Step 2</p>
-        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 fade-up">
-          One tap from <span class="text-accent-blue">any app.</span>
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-4 fade-up">Step 2</p>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-6 fade-up">
+          One tap from <span class="text-accent">any app.</span>
         </h2>
-        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12 fade-up">
+        <p class="text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-12 fade-up">
           Tap Share on any reel, video, article, or post — or paste a URL. Choose Zuno. Done. No copy-paste, no switching apps.
         </p>
 
         <!-- Abstract share sheet -->
         <div class="max-w-sm mx-auto fade-up">
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm shadow-xl overflow-hidden">
             <!-- Content preview -->
-            <div class="p-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-700">
+            <div class="p-4 flex items-center gap-3 border-b border-border dark:border-border-dark">
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                 <span class="material-icons-round text-white">photo_camera</span>
               </div>
               <div class="text-left">
-                <p class="text-sm font-semibold text-slate-800 dark:text-white">Thai Green Curry Recipe</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">instagram.com/reels/...</p>
+                <p class="text-sm font-semibold text-foreground dark:text-foreground-dark">Thai Green Curry Recipe</p>
+                <p class="text-xs text-muted dark:text-muted-dark">instagram.com/reels/...</p>
               </div>
             </div>
             <!-- Share targets -->
             <div class="p-4">
-              <p class="text-xs text-slate-500 dark:text-slate-400 mb-3 text-left">Share to...</p>
+              <p class="text-xs text-muted dark:text-muted-dark mb-3 text-left">Share to...</p>
               <div class="grid grid-cols-4 gap-3 stagger">
-                <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-accent-blue/10 dark:bg-accent-blue/20 border-2 border-accent-blue">
-                  <img src="../assets/logo.svg" alt="Zuno" class="w-10 h-10" data-logo-light="../assets/logo.svg" data-logo-dark="../assets/logo-dark.svg"/>
-                  <span class="text-[10px] font-bold text-accent-blue">Zuno</span>
+                <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-accent/10 dark:bg-accent/20 border-2 border-accent">
+                  <img src="/assets/logo.svg" alt="Zuno" class="w-10 h-10" data-logo-light="/assets/logo.svg" data-logo-dark="/assets/logo-dark.svg"/>
+                  <span class="text-[10px] font-bold text-accent">Zuno</span>
                 </div>
                 <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl opacity-40">
                   <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-                  <span class="text-[10px] text-slate-400">Messages</span>
+                  <span class="text-[10px] text-muted">Messages</span>
                 </div>
                 <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl opacity-40">
                   <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-                  <span class="text-[10px] text-slate-400">Copy</span>
+                  <span class="text-[10px] text-muted">Copy</span>
                 </div>
                 <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl opacity-40">
                   <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-                  <span class="text-[10px] text-slate-400">More</span>
+                  <span class="text-[10px] text-muted">More</span>
                 </div>
               </div>
             </div>
@@ -261,16 +273,16 @@
 
         <!-- Supported platforms -->
         <div class="mt-12 fade-up">
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">Works with</p>
+          <p class="text-xs text-muted dark:text-muted-dark uppercase tracking-wide mb-4">Works with</p>
           <div class="flex flex-wrap justify-center gap-3 stagger">
-            <span class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">Instagram</span>
-            <span class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">YouTube</span>
-            <span class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">Facebook</span>
-            <span class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">Twitter/X</span>
-            <span class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">LinkedIn</span>
-            <span class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">TikTok</span>
-            <span class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">Reddit</span>
-            <span class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">Browser</span>
+            <span class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">Instagram</span>
+            <span class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">YouTube</span>
+            <span class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">Facebook</span>
+            <span class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">Twitter/X</span>
+            <span class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">LinkedIn</span>
+            <span class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">TikTok</span>
+            <span class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">Reddit</span>
+            <span class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">Browser</span>
           </div>
         </div>
       </div>
@@ -279,34 +291,34 @@
     <!-- ========== SECTION 3: AI CATEGORIZES ========== -->
     <section id="slide-2" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-4 fade-up">Step 3</p>
-        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 fade-up">
-          AI <span class="text-accent-blue">understands</span> and organizes.
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-4 fade-up">Step 3</p>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-6 fade-up">
+          AI <span class="text-accent">understands</span> and organizes.
         </h2>
-        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12 fade-up">
+        <p class="text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-12 fade-up">
           The moment you save, AI categorizes, tags, and summarizes your content. Smart collections grow automatically. Zero effort.
         </p>
 
         <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           <!-- AI processing card -->
           <div class="fade-up">
-            <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+            <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
               <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                   <span class="material-icons-round text-white text-lg">photo_camera</span>
                 </div>
                 <div>
-                  <p class="text-sm font-bold text-slate-800 dark:text-white">Thai Green Curry Recipe</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">Instagram Reel</p>
+                  <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Thai Green Curry Recipe</p>
+                  <p class="text-xs text-muted dark:text-muted-dark">Instagram Reel</p>
                 </div>
               </div>
               <!-- AI summary -->
-              <div class="mb-3 p-3 rounded-xl bg-accent-blue/5 dark:bg-accent-blue/10 border border-accent-blue/20">
+              <div class="mb-3 p-3 rounded-xl bg-accent/5 dark:bg-accent/10 border border-accent/20">
                 <div class="flex items-center gap-2 mb-1">
-                  <span class="material-icons-round text-accent-blue text-sm">auto_awesome</span>
-                  <span class="text-xs font-semibold text-accent-blue">AI Summary</span>
+                  <span class="material-icons-round text-accent text-sm">auto_awesome</span>
+                  <span class="text-xs font-semibold text-accent">AI Summary</span>
                 </div>
-                <p class="text-xs text-slate-700 dark:text-slate-300">"3-min cooking video: Thai green curry with coconut milk and fresh basil."</p>
+                <p class="text-xs text-foreground/90 dark:text-foreground-dark/90">"3-min cooking video: Thai green curry with coconut milk and fresh basil."</p>
               </div>
               <!-- Tags -->
               <div class="flex flex-wrap gap-1.5 mb-3">
@@ -323,9 +335,9 @@
                   <span class="material-icons-round text-[11px]">person</span> #quick-meal
                 </span>
               </div>
-              <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center gap-2 text-xs text-muted dark:text-muted-dark">
                 <span class="material-icons-round text-sm text-green-500">arrow_forward</span>
-                Auto-added to <span class="font-semibold text-slate-700 dark:text-slate-300">Recipes</span> collection
+                Auto-added to <span class="font-semibold text-foreground/90 dark:text-foreground-dark/90">Recipes</span> collection
               </div>
             </div>
           </div>
@@ -337,8 +349,8 @@
                 <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-3">
                   <span class="material-icons-round text-green-600 dark:text-green-400">restaurant</span>
                 </div>
-                <p class="text-sm font-bold text-slate-800 dark:text-white">Recipes</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">24 items</p>
+                <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Recipes</p>
+                <p class="text-xs text-muted dark:text-muted-dark">24 items</p>
                 <div class="mt-2 flex items-center gap-1">
                   <span class="material-icons-round text-green-500 text-xs pulse-soft">add_circle</span>
                   <span class="text-[10px] text-green-600 dark:text-green-400 font-medium">+1 new</span>
@@ -348,25 +360,25 @@
                 <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mb-3">
                   <span class="material-icons-round text-blue-600 dark:text-blue-400">code</span>
                 </div>
-                <p class="text-sm font-bold text-slate-800 dark:text-white">Tech Tutorials</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">37 items</p>
+                <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Tech Tutorials</p>
+                <p class="text-xs text-muted dark:text-muted-dark">37 items</p>
               </div>
               <div class="bg-amber-50 dark:bg-[#38332A] p-4 rounded-2xl">
                 <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mb-3">
                   <span class="material-icons-round text-amber-600 dark:text-amber-400">flight</span>
                 </div>
-                <p class="text-sm font-bold text-slate-800 dark:text-white">Travel</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">15 items</p>
+                <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Travel</p>
+                <p class="text-xs text-muted dark:text-muted-dark">15 items</p>
               </div>
               <div class="bg-purple-50 dark:bg-[#342A38] p-4 rounded-2xl">
                 <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mb-3">
                   <span class="material-icons-round text-purple-600 dark:text-purple-400">fitness_center</span>
                 </div>
-                <p class="text-sm font-bold text-slate-800 dark:text-white">Fitness</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">9 items</p>
+                <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Fitness</p>
+                <p class="text-xs text-muted dark:text-muted-dark">9 items</p>
               </div>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-3 text-center">Collections auto-populate. No manual filing.</p>
+            <p class="text-xs text-muted dark:text-muted-dark mt-3 text-center">Collections auto-populate. No manual filing.</p>
           </div>
         </div>
 
@@ -375,11 +387,11 @@
           <div class="flex items-center gap-6 justify-center">
             <div class="flex items-center gap-2">
               <span class="material-icons-round text-green-500 text-sm">auto_awesome</span>
-              <span class="text-xs text-slate-600 dark:text-slate-400">AI-generated tags</span>
+              <span class="text-xs text-muted dark:text-muted-dark">AI-generated tags</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="material-icons-round text-blue-500 text-sm">person</span>
-              <span class="text-xs text-slate-600 dark:text-slate-400">User-created tags</span>
+              <span class="text-xs text-muted dark:text-muted-dark">User-created tags</span>
             </div>
           </div>
         </div>
@@ -387,67 +399,67 @@
     </section>
 
     <!-- ========== SECTION 4: SEARCH ========== -->
-    <section id="slide-3" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center bg-slate-100/50 dark:bg-slate-900/30">
+    <section id="slide-3" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-4 fade-up">Step 4</p>
-        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 fade-up">
-          Find anything in <span class="text-accent-blue">seconds.</span>
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-4 fade-up">Step 4</p>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-6 fade-up">
+          Find anything in <span class="text-accent">seconds.</span>
         </h2>
-        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12 fade-up">
+        <p class="text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-12 fade-up">
           Three powerful ways to search your entire library. Natural language, questions, or tags.
         </p>
 
         <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto stagger">
           <!-- Natural language -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mb-3">
               <span class="material-icons-round text-blue-600 dark:text-blue-400">search</span>
             </div>
-            <h3 class="font-bold text-slate-800 dark:text-white mb-2">Natural language</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Type in plain English. Zuno understands context, time, and intent.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark mb-2">Natural language</h3>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Type in plain English. Zuno understands context, time, and intent.</p>
             <!-- Mock search -->
             <div class="rounded-xl bg-slate-100 dark:bg-slate-800 p-3 mb-2">
-              <p class="text-xs text-slate-700 dark:text-slate-300 italic">"that recipe video I saved last month"</p>
+              <p class="text-xs text-foreground/90 dark:text-foreground-dark/90 italic">"that recipe video I saved last month"</p>
             </div>
             <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
                 <span class="material-icons-round text-green-600 dark:text-green-400 text-sm">restaurant</span>
               </div>
               <div>
-                <p class="text-[11px] font-semibold text-slate-800 dark:text-white">Thai Green Curry</p>
-                <p class="text-[10px] text-slate-400">Instagram · 3 weeks ago</p>
+                <p class="text-[11px] font-semibold text-foreground dark:text-foreground-dark">Thai Green Curry</p>
+                <p class="text-[10px] text-muted">Instagram · 3 weeks ago</p>
               </div>
             </div>
           </div>
 
           <!-- Ask Zuno (chat) -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mb-3">
               <span class="material-icons-round text-purple-600 dark:text-purple-400">chat</span>
             </div>
-            <h3 class="font-bold text-slate-800 dark:text-white mb-2">Ask Zuno</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Ask questions like talking to a smart assistant.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark mb-2">Ask Zuno</h3>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Ask questions like talking to a smart assistant.</p>
             <!-- Mock chat -->
             <div class="space-y-2">
               <div class="rounded-xl bg-slate-100 dark:bg-slate-800 p-2.5 max-w-[85%]">
-                <p class="text-[11px] text-slate-700 dark:text-slate-300">"Do I have any cooking videos?"</p>
+                <p class="text-[11px] text-foreground/90 dark:text-foreground-dark/90">"Do I have any cooking videos?"</p>
               </div>
-              <div class="rounded-xl bg-accent-blue/10 dark:bg-accent-blue/20 p-2.5 max-w-[85%] ml-auto">
-                <p class="text-[11px] text-accent-blue">You have 24 cooking items across Recipes, Quick Meals, and Desserts.</p>
+              <div class="rounded-xl bg-accent/10 dark:bg-accent/20 p-2.5 max-w-[85%] ml-auto">
+                <p class="text-[11px] text-accent">You have 24 cooking items across Recipes, Quick Meals, and Desserts.</p>
               </div>
               <div class="rounded-xl bg-slate-100 dark:bg-slate-800 p-2.5 max-w-[85%]">
-                <p class="text-[11px] text-slate-700 dark:text-slate-300">"Show me the Thai ones"</p>
+                <p class="text-[11px] text-foreground/90 dark:text-foreground-dark/90">"Show me the Thai ones"</p>
               </div>
             </div>
           </div>
 
           <!-- Tag search -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-3">
               <span class="material-icons-round text-green-600 dark:text-green-400">sell</span>
             </div>
-            <h3 class="font-bold text-slate-800 dark:text-white mb-2">Tag search</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Click tags or combine them to filter instantly.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark mb-2">Tag search</h3>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Click tags or combine them to filter instantly.</p>
             <!-- Mock tags -->
             <div class="flex flex-wrap gap-1.5 mb-3">
               <span class="tag bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[11px]">#recipe</span>
@@ -457,7 +469,7 @@
             </div>
             <div class="rounded-xl bg-slate-100 dark:bg-slate-800 p-2.5 flex items-center gap-1.5">
               <span class="tag bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 text-[11px]">#recipe</span>
-              <span class="text-[11px] text-slate-400">+</span>
+              <span class="text-[11px] text-muted">+</span>
               <span class="tag bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-[11px]">#quick-meal</span>
               <span class="text-[11px] text-slate-500 ml-1">→ 8 results</span>
             </div>
@@ -469,118 +481,118 @@
     <!-- ========== SECTION 5: PERSONALIZED FEED ========== -->
     <section id="slide-4" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-4 fade-up">Step 5</p>
-        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 fade-up">
-          AI finds what you'll <span class="text-accent-blue">love.</span>
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-4 fade-up">Step 5</p>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-6 fade-up">
+          AI finds what you'll <span class="text-accent">love.</span>
         </h2>
-        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12 fade-up">
+        <p class="text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-12 fade-up">
           Discover new content from across social media, personalized to your interests. Every recommendation explains why it's there.
         </p>
 
         <div class="max-w-sm mx-auto space-y-4 stagger">
           <!-- Feed card 1 -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg text-left">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden shadow-lg text-left">
             <div class="h-36 bg-gradient-to-br from-orange-200 to-orange-400 dark:from-orange-900 dark:to-orange-700 flex items-center justify-center">
               <span class="material-icons-round text-white text-5xl opacity-60">restaurant</span>
             </div>
             <div class="p-4">
-              <p class="text-sm font-bold text-slate-800 dark:text-white mb-1">New Thai Cooking Channel You'll Love</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">YouTube · 15K subscribers</p>
+              <p class="text-sm font-bold text-foreground dark:text-foreground-dark mb-1">New Thai Cooking Channel You'll Love</p>
+              <p class="text-xs text-muted dark:text-muted-dark mb-3">YouTube · 15K subscribers</p>
               <!-- Why this? -->
-              <div class="flex items-center gap-2 p-2 rounded-lg bg-accent-blue/5 dark:bg-accent-blue/10 border border-accent-blue/20">
-                <span class="material-icons-round text-accent-blue text-sm">auto_awesome</span>
-                <p class="text-[11px] text-accent-blue font-medium">Because you saved 24 cooking videos</p>
+              <div class="flex items-center gap-2 p-2 rounded-lg bg-accent/5 dark:bg-accent/10 border border-accent/20">
+                <span class="material-icons-round text-accent text-sm">auto_awesome</span>
+                <p class="text-[11px] text-accent font-medium">Because you saved 24 cooking videos</p>
               </div>
             </div>
           </div>
 
           <!-- Feed card 2 -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg text-left">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden shadow-lg text-left">
             <div class="h-36 bg-gradient-to-br from-blue-200 to-blue-400 dark:from-blue-900 dark:to-blue-700 flex items-center justify-center">
               <span class="material-icons-round text-white text-5xl opacity-60">code</span>
             </div>
             <div class="p-4">
-              <p class="text-sm font-bold text-slate-800 dark:text-white mb-1">10 VS Code Extensions for 2026</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Twitter/X thread · Trending</p>
-              <div class="flex items-center gap-2 p-2 rounded-lg bg-accent-blue/5 dark:bg-accent-blue/10 border border-accent-blue/20">
-                <span class="material-icons-round text-accent-blue text-sm">trending_up</span>
-                <p class="text-[11px] text-accent-blue font-medium">Trending in your interests</p>
+              <p class="text-sm font-bold text-foreground dark:text-foreground-dark mb-1">10 VS Code Extensions for 2026</p>
+              <p class="text-xs text-muted dark:text-muted-dark mb-3">Twitter/X thread · Trending</p>
+              <div class="flex items-center gap-2 p-2 rounded-lg bg-accent/5 dark:bg-accent/10 border border-accent/20">
+                <span class="material-icons-round text-accent text-sm">trending_up</span>
+                <p class="text-[11px] text-accent font-medium">Trending in your interests</p>
               </div>
             </div>
           </div>
 
           <!-- Feed card 3 -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg text-left">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden shadow-lg text-left">
             <div class="h-36 bg-gradient-to-br from-green-200 to-green-400 dark:from-green-900 dark:to-green-700 flex items-center justify-center">
               <span class="material-icons-round text-white text-5xl opacity-60">flight</span>
             </div>
             <div class="p-4">
-              <p class="text-sm font-bold text-slate-800 dark:text-white mb-1">Hidden Gems: Budget Travel in Southeast Asia</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Instagram Reel · 45K likes</p>
-              <div class="flex items-center gap-2 p-2 rounded-lg bg-accent-blue/5 dark:bg-accent-blue/10 border border-accent-blue/20">
-                <span class="material-icons-round text-accent-blue text-sm">auto_awesome</span>
-                <p class="text-[11px] text-accent-blue font-medium">Similar to travel reels you saved</p>
+              <p class="text-sm font-bold text-foreground dark:text-foreground-dark mb-1">Hidden Gems: Budget Travel in Southeast Asia</p>
+              <p class="text-xs text-muted dark:text-muted-dark mb-3">Instagram Reel · 45K likes</p>
+              <div class="flex items-center gap-2 p-2 rounded-lg bg-accent/5 dark:bg-accent/10 border border-accent/20">
+                <span class="material-icons-round text-accent text-sm">auto_awesome</span>
+                <p class="text-[11px] text-accent font-medium">Similar to travel reels you saved</p>
               </div>
             </div>
           </div>
         </div>
 
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-6 fade-up">Available as Feed (scroll) or VFeed (reels-style swipe). Save feed items to your library in one tap.</p>
+        <p class="text-xs text-muted dark:text-muted-dark mt-6 fade-up">Available as Feed (scroll) or VFeed (reels-style swipe). Save feed items to your library in one tap.</p>
       </div>
     </section>
 
     <!-- ========== SECTION 5B: UNIFIED FEED ========== -->
-    <section id="slide-5" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center bg-slate-100/50 dark:bg-slate-900/30">
+    <section id="slide-5" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-4 fade-up">Your Feed</p>
-        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 fade-up">
-          Every type. Every source. <span class="text-accent-blue">One feed.</span>
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-4 fade-up">Your Feed</p>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-6 fade-up">
+          Every type. Every source. <span class="text-accent">One feed.</span>
         </h2>
-        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10 fade-up">
+        <p class="text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-10 fade-up">
           Videos, podcasts, articles, posts, images — from Instagram, YouTube, Spotify, Medium, Twitter, and more — all in a single scrollable feed, personalized to you.
         </p>
 
         <!-- Phone frame with auto-scrolling feed -->
         <div class="max-w-sm mx-auto fade-up">
-          <div class="rounded-[2.5rem] bg-white dark:bg-card-dark border-[3px] border-slate-300 dark:border-slate-600 shadow-2xl overflow-hidden relative" style="height: 680px;">
+          <div class="rounded-[2.5rem] bg-white dark:bg-card-dark border-[3px] border-border dark:border-border-dark shadow-2xl overflow-hidden relative" style="height: 680px;">
             <!-- Phone notch -->
             <div class="h-7 bg-white dark:bg-card-dark flex items-center justify-center">
               <div class="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
             </div>
             <!-- Header inside phone -->
-            <div class="px-4 py-3 flex items-center justify-between bg-white/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
+            <div class="px-4 py-3 flex items-center justify-between bg-white/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-border dark:border-border-dark sticky top-0 z-10">
               <div class="flex items-center gap-2">
-                <img src="../assets/logo.svg" alt="Zuno" class="w-7 h-7" data-logo-light="../assets/logo.svg" data-logo-dark="../assets/logo-dark.svg"/>
-                <span class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">Feed</span>
+                <img src="/assets/logo.svg" alt="Zuno" class="w-7 h-7" data-logo-light="/assets/logo.svg" data-logo-dark="/assets/logo-dark.svg"/>
+                <span class="text-sm font-bold tracking-tight text-foreground dark:text-foreground-dark">Feed</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <span class="material-icons-round text-slate-500 dark:text-slate-400 text-lg">search</span>
-                <span class="material-icons-round text-slate-500 dark:text-slate-400 text-lg">tune</span>
+                <span class="material-icons-round text-muted dark:text-muted-dark text-lg">search</span>
+                <span class="material-icons-round text-muted dark:text-muted-dark text-lg">tune</span>
               </div>
             </div>
             <!-- Filter bar -->
-            <div class="px-3 py-2 flex gap-1.5 overflow-x-auto no-scrollbar bg-white dark:bg-card-dark border-b border-slate-100 dark:border-slate-800">
-              <span class="px-3 py-1.5 rounded-full bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 text-[10px] font-semibold whitespace-nowrap">All</span>
-              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Videos</span>
-              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Audio</span>
-              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Articles</span>
-              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Posts</span>
-              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Images</span>
+            <div class="px-3 py-2 flex gap-1.5 overflow-x-auto no-scrollbar bg-white dark:bg-card-dark border-b border-border dark:border-border-dark">
+              <span class="px-3 py-1.5 rounded-full bg-slate-900 dark:bg-slate-200 text-white dark:text-foreground text-[10px] font-semibold whitespace-nowrap">All</span>
+              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Videos</span>
+              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Audio</span>
+              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Articles</span>
+              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Posts</span>
+              <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Images</span>
             </div>
             <!-- Scrollable feed container (auto-scrolls) -->
             <div id="feedScroll" class="overflow-hidden relative" style="height: calc(100% - 94px);">
               <div id="feedTrack" class="px-3 py-3 space-y-3">
 
                 <!-- Card 1: Video -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm overflow-hidden">
                   <div class="h-28 bg-gradient-to-br from-red-300 to-red-500 dark:from-red-800 dark:to-red-600 relative flex items-center justify-center">
                     <div class="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center"><span class="material-icons-round text-white text-xl">play_arrow</span></div>
                     <span class="absolute bottom-2 right-2 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">3:42</span>
                   </div>
                   <div class="p-3 flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-bold text-slate-800 dark:text-white truncate">Quick Pad Thai in 5 Minutes</p>
-                      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">12K views</p>
+                      <p class="text-xs font-bold text-foreground dark:text-foreground-dark truncate">Quick Pad Thai in 5 Minutes</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-0.5">12K views</p>
                     </div>
                     <div class="flex items-center gap-1.5 flex-shrink-0">
                       <span class="tag bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[9px] py-0.5 px-1.5">Video</span>
@@ -590,14 +602,14 @@
                 </div>
 
                 <!-- Card 2: Podcast -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm p-3">
                   <div class="flex items-center gap-3">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
                       <span class="material-icons-round text-white text-2xl">headphones</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-bold text-slate-800 dark:text-white truncate">The Future of AI Agents</p>
-                      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Tech Podcast · 45 min</p>
+                      <p class="text-xs font-bold text-foreground dark:text-foreground-dark truncate">The Future of AI Agents</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-0.5">Tech Podcast · 45 min</p>
                       <div class="mt-1.5 h-1 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div class="h-full bg-purple-500 rounded-full" style="width: 35%"></div></div>
                     </div>
                     <div class="flex flex-col items-end gap-1 flex-shrink-0">
@@ -608,12 +620,12 @@
                 </div>
 
                 <!-- Card 3: Article -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm p-3">
                   <div class="flex items-start gap-3">
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-bold text-slate-800 dark:text-white leading-snug">Why Tailwind CSS Dominates in 2026</p>
-                      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">An in-depth look at how utility-first CSS changed frontend development forever and what's next...</p>
-                      <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5">4 min read</p>
+                      <p class="text-xs font-bold text-foreground dark:text-foreground-dark leading-snug">Why Tailwind CSS Dominates in 2026</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-1 line-clamp-2">An in-depth look at how utility-first CSS changed frontend development forever and what's next...</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-1.5">4 min read</p>
                     </div>
                     <div class="flex flex-col items-end gap-1 flex-shrink-0">
                       <span class="tag bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] py-0.5 px-1.5">Article</span>
@@ -623,7 +635,7 @@
                 </div>
 
                 <!-- Card 4: Image Post -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm overflow-hidden">
                   <div class="h-32 bg-gradient-to-br from-pink-300 to-orange-300 dark:from-pink-800 dark:to-orange-700 relative flex items-end p-3">
                     <div class="flex items-center gap-1.5">
                       <div class="w-5 h-5 rounded-full bg-white/40 flex items-center justify-center"><span class="material-icons-round text-white text-[11px]">favorite</span></div>
@@ -632,8 +644,8 @@
                   </div>
                   <div class="p-3 flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-bold text-slate-800 dark:text-white truncate">Minimalist Desk Setup Inspiration</p>
-                      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">@designhome</p>
+                      <p class="text-xs font-bold text-foreground dark:text-foreground-dark truncate">Minimalist Desk Setup Inspiration</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-0.5">@designhome</p>
                     </div>
                     <div class="flex items-center gap-1.5 flex-shrink-0">
                       <span class="tag bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 text-[9px] py-0.5 px-1.5">Image</span>
@@ -643,18 +655,18 @@
                 </div>
 
                 <!-- Card 5: Tweet / Post -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm p-3">
                   <div class="flex items-start gap-3">
                     <div class="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-sky-500 flex items-center justify-center flex-shrink-0">
                       <span class="material-icons-round text-white text-sm">tag</span>
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-1.5 mb-1">
-                        <p class="text-[11px] font-bold text-slate-800 dark:text-white">@elonmusk</p>
-                        <span class="text-[10px] text-slate-400">· 2h</span>
+                        <p class="text-[11px] font-bold text-foreground dark:text-foreground-dark">@elonmusk</p>
+                        <span class="text-[10px] text-muted">· 2h</span>
                       </div>
-                      <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-snug">"The best way to predict the future is to build it. Ship fast, iterate faster."</p>
-                      <div class="flex items-center gap-3 mt-2 text-[10px] text-slate-400">
+                      <p class="text-[11px] text-foreground/90 dark:text-foreground-dark/90 leading-snug">"The best way to predict the future is to build it. Ship fast, iterate faster."</p>
+                      <div class="flex items-center gap-3 mt-2 text-[10px] text-muted">
                         <span>💬 1.2K</span>
                         <span>🔁 8.4K</span>
                         <span>❤️ 42K</span>
@@ -665,14 +677,14 @@
                 </div>
 
                 <!-- Card 6: Audio -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm p-3">
                   <div class="flex items-center gap-3">
                     <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center flex-shrink-0">
                       <span class="material-icons-round text-white text-2xl">music_note</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-bold text-slate-800 dark:text-white truncate">Lo-fi Coding Beats — 2hr Mix</p>
-                      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Spotify · 2:04:30</p>
+                      <p class="text-xs font-bold text-foreground dark:text-foreground-dark truncate">Lo-fi Coding Beats — 2hr Mix</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-0.5">Spotify · 2:04:30</p>
                       <div class="mt-1.5 flex gap-[2px]">
                         <div class="w-1 h-2 bg-green-400 rounded-full"></div>
                         <div class="w-1 h-3 bg-green-400 rounded-full"></div>
@@ -696,7 +708,7 @@
                 </div>
 
                 <!-- Card 7: Reel / Short -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm overflow-hidden">
                   <div class="h-28 bg-gradient-to-br from-amber-300 to-orange-400 dark:from-amber-800 dark:to-orange-700 relative flex items-center justify-center">
                     <div class="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center"><span class="material-icons-round text-white text-xl">play_arrow</span></div>
                     <span class="absolute bottom-2 right-2 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">0:30</span>
@@ -704,8 +716,8 @@
                   </div>
                   <div class="p-3 flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-bold text-slate-800 dark:text-white truncate">3 Must-Visit Cafes in Tokyo</p>
-                      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">56K views · @travelbites</p>
+                      <p class="text-xs font-bold text-foreground dark:text-foreground-dark truncate">3 Must-Visit Cafes in Tokyo</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-0.5">56K views · @travelbites</p>
                     </div>
                     <div class="flex items-center gap-1.5 flex-shrink-0">
                       <span class="tag bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[9px] py-0.5 px-1.5">Video</span>
@@ -715,12 +727,12 @@
                 </div>
 
                 <!-- Card 8: Article -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm p-3">
                   <div class="flex items-start gap-3">
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-bold text-slate-800 dark:text-white leading-snug">The Science of Habit Building</p>
-                      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">New research reveals that the 21-day myth is wrong. Here's what actually works for building lasting habits...</p>
-                      <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5">7 min read</p>
+                      <p class="text-xs font-bold text-foreground dark:text-foreground-dark leading-snug">The Science of Habit Building</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-1 line-clamp-2">New research reveals that the 21-day myth is wrong. Here's what actually works for building lasting habits...</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-1.5">7 min read</p>
                     </div>
                     <div class="flex flex-col items-end gap-1 flex-shrink-0">
                       <span class="tag bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] py-0.5 px-1.5">Article</span>
@@ -730,15 +742,15 @@
                 </div>
 
                 <!-- Card 9: Video -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm overflow-hidden">
                   <div class="h-28 bg-gradient-to-br from-blue-300 to-cyan-400 dark:from-blue-800 dark:to-cyan-700 relative flex items-center justify-center">
                     <div class="w-10 h-10 rounded-full bg-white/30 flex items-center justify-center"><span class="material-icons-round text-white text-xl">play_arrow</span></div>
                     <span class="absolute bottom-2 right-2 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-medium">12:08</span>
                   </div>
                   <div class="p-3 flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
-                      <p class="text-xs font-bold text-slate-800 dark:text-white truncate">Build a SaaS in a Weekend</p>
-                      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">89K views · Code with Ryan</p>
+                      <p class="text-xs font-bold text-foreground dark:text-foreground-dark truncate">Build a SaaS in a Weekend</p>
+                      <p class="text-[10px] text-muted dark:text-muted-dark mt-0.5">89K views · Code with Ryan</p>
                     </div>
                     <div class="flex items-center gap-1.5 flex-shrink-0">
                       <span class="tag bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[9px] py-0.5 px-1.5">Video</span>
@@ -748,17 +760,17 @@
                 </div>
 
                 <!-- Card 10: Post -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm p-3">
                   <div class="flex items-start gap-3">
                     <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center flex-shrink-0">
                       <span class="material-icons-round text-white text-sm">work</span>
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-1.5 mb-1">
-                        <p class="text-[11px] font-bold text-slate-800 dark:text-white">Sarah Chen</p>
-                        <span class="text-[10px] text-slate-400">· LinkedIn</span>
+                        <p class="text-[11px] font-bold text-foreground dark:text-foreground-dark">Sarah Chen</p>
+                        <span class="text-[10px] text-muted">· LinkedIn</span>
                       </div>
-                      <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-snug">Just shipped our v2 product. 3 lessons from 6 months of building: focus on one thing, talk to users daily, ship before you're ready.</p>
+                      <p class="text-[11px] text-foreground/90 dark:text-foreground-dark/90 leading-snug">Just shipped our v2 product. 3 lessons from 6 months of building: focus on one thing, talk to users daily, ship before you're ready.</p>
                     </div>
                     <span class="tag bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] py-0.5 px-1.5 flex-shrink-0">Post</span>
                   </div>
@@ -771,8 +783,8 @@
           </div>
           <!-- Scroll indicator -->
           <div class="flex items-center justify-center gap-2 mt-4 fade-in">
-            <span class="material-icons-round text-slate-400 dark:text-slate-500 text-sm animate-bounce">expand_more</span>
-            <p class="text-xs text-slate-400 dark:text-slate-500">Auto-scrolling feed — all types, all sources</p>
+            <span class="material-icons-round text-muted dark:text-muted-dark text-sm animate-bounce">expand_more</span>
+            <p class="text-xs text-muted dark:text-muted-dark">Auto-scrolling feed — all types, all sources</p>
           </div>
         </div>
       </div>
@@ -781,40 +793,40 @@
     <!-- ========== SECTION 6: GOALS ========== -->
     <section id="slide-6" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-4 fade-up">Goals from your saves</p>
-        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 fade-up">
-          AI detects what you're <span class="text-accent-blue">working toward.</span>
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-4 fade-up">Goals from your saves</p>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-6 fade-up">
+          AI detects what you're <span class="text-accent">working toward.</span>
         </h2>
-        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12 fade-up">
+        <p class="text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-12 fade-up">
           Zuno infers goals from your saved content — e.g. "Master AI video editing," "Plan a trip." No manual goal entry. Each goal gets actionable steps linked to your saved items; mark steps complete, dismiss or merge goals, edit anytime.
         </p>
 
         <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto stagger">
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="flex items-center gap-2 mb-3">
               <span class="material-icons-round text-emerald-500">flag</span>
-              <h3 class="font-bold text-slate-800 dark:text-white">Automatic</h3>
+              <h3 class="font-bold text-foreground dark:text-foreground-dark">Automatic</h3>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Goals are inferred from what you save — no forms, no manual entry.</p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Goals are inferred from what you save — no forms, no manual entry.</p>
             <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
-              <p class="text-[11px] font-semibold text-slate-800 dark:text-white">Detected: "Master AI video editing"</p>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">From 12 saved Runway / CapCut tutorials</p>
+              <p class="text-[11px] font-semibold text-foreground dark:text-foreground-dark">Detected: "Master AI video editing"</p>
+              <p class="text-[10px] text-muted dark:text-muted-dark mt-1">From 12 saved Runway / CapCut tutorials</p>
             </div>
           </div>
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="flex items-center gap-2 mb-3">
               <span class="material-icons-round text-emerald-500">check_circle</span>
-              <h3 class="font-bold text-slate-800 dark:text-white">Actionable steps</h3>
+              <h3 class="font-bold text-foreground dark:text-foreground-dark">Actionable steps</h3>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Steps link to your saved items. Complete, dismiss, or edit.</p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Steps link to your saved items. Complete, dismiss, or edit.</p>
             <div class="space-y-2">
               <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800">
                 <span class="material-icons-round text-green-500 text-sm">check_circle</span>
-                <p class="text-[11px] text-slate-700 dark:text-slate-300">Watch the saved Runway tutorial</p>
+                <p class="text-[11px] text-foreground/90 dark:text-foreground-dark/90">Watch the saved Runway tutorial</p>
               </div>
-              <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <span class="material-icons-round text-slate-400 text-sm">radio_button_unchecked</span>
-                <p class="text-[11px] text-slate-700 dark:text-slate-300">Apply tips from the saved article</p>
+              <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm">
+                <span class="material-icons-round text-muted text-sm">radio_button_unchecked</span>
+                <p class="text-[11px] text-foreground/90 dark:text-foreground-dark/90">Apply tips from the saved article</p>
               </div>
             </div>
           </div>
@@ -823,35 +835,35 @@
     </section>
 
     <!-- ========== SECTION 7: GROWS SMARTER ========== -->
-    <section id="slide-7" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center bg-slate-100/50 dark:bg-slate-900/30">
+    <section id="slide-7" class="slide px-6 py-16 md:py-24 min-h-[80vh] flex items-center bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-4 fade-up">Step 6</p>
-        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 fade-up">
-          The more you save, the <span class="text-accent-blue">smarter</span> it gets.
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-4 fade-up">Step 6</p>
+        <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-6 fade-up">
+          The more you save, the <span class="text-accent">smarter</span> it gets.
         </h2>
-        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12 fade-up">
+        <p class="text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-12 fade-up">
           Weekly insights. Content reminders. Collaborative collections. Cross-platform intelligence. Zuno grows with you.
         </p>
 
         <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto stagger">
           <!-- Weekly digest -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="flex items-center gap-2 mb-3">
-              <span class="material-icons-round text-accent-blue">insights</span>
-              <h3 class="font-bold text-slate-800 dark:text-white">Weekly Digest</h3>
+              <span class="material-icons-round text-accent">insights</span>
+              <h3 class="font-bold text-foreground dark:text-foreground-dark">Weekly Digest</h3>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Your week at a glance.</p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Your week at a glance.</p>
             <div class="space-y-2">
               <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-600 dark:text-slate-300">Items saved</span>
-                <span class="font-bold text-slate-800 dark:text-white">23</span>
+                <span class="text-muted dark:text-muted-dark">Items saved</span>
+                <span class="font-bold text-foreground dark:text-foreground-dark">23</span>
               </div>
               <div class="flex gap-1 h-4 rounded-full overflow-hidden">
                 <div class="bg-blue-400 rounded-l-full" style="width: 40%"></div>
                 <div class="bg-green-400" style="width: 30%"></div>
                 <div class="bg-amber-400 rounded-r-full" style="width: 30%"></div>
               </div>
-              <div class="flex gap-3 text-[10px] text-slate-500 dark:text-slate-400">
+              <div class="flex gap-3 text-[10px] text-muted dark:text-muted-dark">
                 <span><span class="inline-block w-2 h-2 rounded-full bg-blue-400 mr-1"></span>Tech 40%</span>
                 <span><span class="inline-block w-2 h-2 rounded-full bg-green-400 mr-1"></span>Cooking 30%</span>
                 <span><span class="inline-block w-2 h-2 rounded-full bg-amber-400 mr-1"></span>Travel 30%</span>
@@ -864,101 +876,101 @@
           </div>
 
           <!-- Content reminders -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="flex items-center gap-2 mb-3">
               <span class="material-icons-round text-amber-500">notifications_active</span>
-              <h3 class="font-bold text-slate-800 dark:text-white">Content Reminders</h3>
+              <h3 class="font-bold text-foreground dark:text-foreground-dark">Content Reminders</h3>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Don't forget what you saved.</p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Don't forget what you saved.</p>
             <div class="space-y-2">
               <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
                 <span class="material-icons-round text-amber-500 text-sm mt-0.5">schedule</span>
                 <div>
-                  <p class="text-[11px] font-semibold text-slate-800 dark:text-white">Revisit: React Best Practices</p>
-                  <p class="text-[10px] text-slate-500 dark:text-slate-400">Saved 2 weeks ago · Never opened</p>
+                  <p class="text-[11px] font-semibold text-foreground dark:text-foreground-dark">Revisit: React Best Practices</p>
+                  <p class="text-[10px] text-muted dark:text-muted-dark">Saved 2 weeks ago · Never opened</p>
                 </div>
               </div>
               <div class="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-start gap-2">
                 <span class="material-icons-round text-blue-500 text-sm mt-0.5">lightbulb</span>
                 <div>
-                  <p class="text-[11px] font-semibold text-slate-800 dark:text-white">Related to today's save</p>
-                  <p class="text-[10px] text-slate-500 dark:text-slate-400">This tutorial matches your new bookmark</p>
+                  <p class="text-[11px] font-semibold text-foreground dark:text-foreground-dark">Related to today's save</p>
+                  <p class="text-[10px] text-muted dark:text-muted-dark">This tutorial matches your new bookmark</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Collaborative collections -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="flex items-center gap-2 mb-3">
               <span class="material-icons-round text-purple-500">group</span>
-              <h3 class="font-bold text-slate-800 dark:text-white">Collaborative Collections</h3>
+              <h3 class="font-bold text-foreground dark:text-foreground-dark">Collaborative Collections</h3>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Share collections with friends or teams.</p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Share collections with friends or teams.</p>
             <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
               <div class="flex items-center justify-between mb-2">
-                <p class="text-sm font-bold text-slate-800 dark:text-white">Trip Planning</p>
+                <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Trip Planning</p>
                 <div class="flex -space-x-2">
                   <div class="w-6 h-6 rounded-full bg-blue-400 border-2 border-white dark:border-card-dark flex items-center justify-center text-[9px] text-white font-bold">R</div>
                   <div class="w-6 h-6 rounded-full bg-green-400 border-2 border-white dark:border-card-dark flex items-center justify-center text-[9px] text-white font-bold">A</div>
                   <div class="w-6 h-6 rounded-full bg-amber-400 border-2 border-white dark:border-card-dark flex items-center justify-center text-[9px] text-white font-bold">S</div>
                 </div>
               </div>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400">3 people · 18 items · Updated 2h ago</p>
+              <p class="text-[11px] text-muted dark:text-muted-dark">3 people · 18 items · Updated 2h ago</p>
             </div>
           </div>
 
           <!-- Cross-platform linking -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="flex items-center gap-2 mb-3">
               <span class="material-icons-round text-indigo-500">hub</span>
-              <h3 class="font-bold text-slate-800 dark:text-white">Cross-Platform Links</h3>
+              <h3 class="font-bold text-foreground dark:text-foreground-dark">Cross-Platform Links</h3>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">AI connects related content across apps.</p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">AI connects related content across apps.</p>
             <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800">
               <div class="flex items-center gap-2 mb-2">
                 <span class="material-icons-round text-indigo-500 text-sm">link</span>
-                <p class="text-[11px] font-semibold text-slate-800 dark:text-white">Related content detected</p>
+                <p class="text-[11px] font-semibold text-foreground dark:text-foreground-dark">Related content detected</p>
               </div>
-              <div class="flex items-center gap-2 text-[10px] text-slate-600 dark:text-slate-400">
+              <div class="flex items-center gap-2 text-[10px] text-muted dark:text-muted-dark">
                 <span class="tag bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10px]">YouTube</span>
-                <span class="material-icons-round text-slate-400 text-xs">sync_alt</span>
+                <span class="material-icons-round text-muted text-xs">sync_alt</span>
                 <span class="tag bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 text-[10px]">Twitter</span>
               </div>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Same topic: "AI startup funding trends"</p>
+              <p class="text-[10px] text-muted dark:text-muted-dark mt-1">Same topic: "AI startup funding trends"</p>
             </div>
           </div>
 
           <!-- Browser Extension -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="flex items-center gap-2 mb-3">
-              <span class="material-icons-round text-slate-600 dark:text-slate-400">extension</span>
-              <h3 class="font-bold text-slate-800 dark:text-white">Browser Extension</h3>
+              <span class="material-icons-round text-muted dark:text-muted-dark">extension</span>
+              <h3 class="font-bold text-foreground dark:text-foreground-dark">Browser Extension</h3>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Save to Zuno from any webpage — articles, docs, news.</p>
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center gap-2">
-              <span class="material-icons-round text-accent-blue text-sm">add_circle</span>
-              <p class="text-[11px] font-semibold text-slate-800 dark:text-white">Save to Zuno — one click on any site</p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Save to Zuno from any webpage — articles, docs, news.</p>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm flex items-center gap-2">
+              <span class="material-icons-round text-accent text-sm">add_circle</span>
+              <p class="text-[11px] font-semibold text-foreground dark:text-foreground-dark">Save to Zuno — one click on any site</p>
             </div>
           </div>
 
           <!-- Voice Search -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-5 text-left shadow-lg">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-5 text-left shadow-lg">
             <div class="flex items-center gap-2 mb-3">
-              <span class="material-icons-round text-accent-blue">mic</span>
-              <h3 class="font-bold text-slate-800 dark:text-white">Voice Search</h3>
+              <span class="material-icons-round text-accent">mic</span>
+              <h3 class="font-bold text-foreground dark:text-foreground-dark">Voice Search</h3>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Hands-free search. "Hey Zuno, find that recipe video I saved last week."</p>
-            <div class="p-3 rounded-xl bg-accent-blue/5 dark:bg-accent-blue/10 border border-accent-blue/20 flex items-center gap-2">
-              <span class="material-icons-round text-accent-blue text-sm">mic</span>
-              <p class="text-[11px] text-slate-700 dark:text-slate-300 italic">"that recipe video I saved last week"</p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-4">Hands-free search. "Hey Zuno, find that recipe video I saved last week."</p>
+            <div class="p-3 rounded-xl bg-accent/5 dark:bg-accent/10 border border-accent/20 flex items-center gap-2">
+              <span class="material-icons-round text-accent text-sm">mic</span>
+              <p class="text-[11px] text-foreground/90 dark:text-foreground-dark/90 italic">"that recipe video I saved last week"</p>
             </div>
           </div>
         </div>
 
         <!-- API Access (future) -->
         <div class="mt-10 flex flex-wrap justify-center gap-3 fade-up">
-          <div class="tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+          <div class="tag bg-slate-200 dark:bg-slate-700 text-foreground/90 dark:text-foreground-dark/90">
             <span class="material-icons-round text-sm">api</span> API Access
           </div>
         </div>
@@ -967,12 +979,12 @@
 
     <!-- ========== FINAL CTA ========== -->
     <section class="px-6 py-16 md:py-24">
-      <div class="max-w-2xl mx-auto text-center rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-10 md:p-14 fade-up">
-        <img src="../assets/logo.svg" alt="Zuno" class="w-16 h-16 mx-auto mb-6" data-logo-light="../assets/logo.svg" data-logo-dark="../assets/logo-dark.svg"/>
-        <h2 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-4">One place. All your content.</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-3">Share from any app. AI organizes. Search in your words. Discover more.</p>
-        <p class="text-sm text-accent-blue font-semibold mb-8">The more you save, the smarter it gets.</p>
-        <a href="../" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all duration-200">
+      <div class="max-w-2xl mx-auto text-center rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-10 md:p-14 fade-up">
+        <img src="/assets/logo.svg" alt="Zuno" class="w-16 h-16 mx-auto mb-6" data-logo-light="/assets/logo.svg" data-logo-dark="/assets/logo-dark.svg"/>
+        <h2 class="text-2xl md:text-3xl font-bold text-foreground dark:text-foreground-dark mb-4">One place. All your content.</h2>
+        <p class="text-muted dark:text-muted-dark mb-3">Share from any app. AI organizes. Search in your words. Discover more.</p>
+        <p class="text-sm text-accent font-semibold mb-8">The more you save, the smarter it gets.</p>
+        <a href="../" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-foreground dark:bg-foreground-dark text-white dark:text-foreground font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all duration-200">
           <span class="material-icons-round">arrow_forward</span>
           Explore Zuno
         </a>
@@ -980,12 +992,12 @@
     </section>
 
     <!-- ========== FOR INVESTORS: VIEW LANDING PAGE ========== -->
-    <section class="px-6 py-12 md:py-16 border-t border-slate-200 dark:border-slate-800">
+    <section class="px-6 py-12 md:py-16 border-t border-border dark:border-border-dark">
       <div class="max-w-2xl mx-auto text-center">
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">For investors</p>
-        <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2">View our public landing page</h2>
-        <p class="text-slate-600 dark:text-slate-400 text-sm mb-6">The main Zuno site for users — features, pricing, and waitlist.</p>
-        <a href="../" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent-blue text-white font-semibold shadow-lg hover:opacity-90 active:scale-95 transition-all duration-200">
+        <p class="text-sm font-medium text-muted dark:text-muted-dark uppercase tracking-wide mb-3">For investors</p>
+        <h2 class="text-xl md:text-2xl font-bold text-foreground dark:text-foreground-dark mb-2">View our public landing page</h2>
+        <p class="text-muted dark:text-muted-dark text-sm mb-6">The main Zuno site for users — features, pricing, and waitlist.</p>
+        <a href="../" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-white font-semibold shadow-lg hover:opacity-90 active:scale-95 transition-all duration-200">
           <span class="material-icons-round text-lg">open_in_new</span>
           View landing page
         </a>
@@ -995,13 +1007,13 @@
   </main>
 
   <!-- Footer -->
-  <footer class="px-6 py-8 border-t border-slate-200 dark:border-slate-800">
+  <footer class="px-6 py-8 border-t border-border dark:border-border-dark">
     <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-3">
-        <img src="../assets/logo.svg" alt="Zuno" class="w-8 h-8" data-logo-light="../assets/logo.svg" data-logo-dark="../assets/logo-dark.svg"/>
-        <span class="font-bold text-slate-800 dark:text-white">Zuno</span>
+        <img src="/assets/logo.svg" alt="Zuno" class="w-8 h-8" data-logo-light="/assets/logo.svg" data-logo-dark="/assets/logo-dark.svg"/>
+        <span class="font-bold text-foreground dark:text-foreground-dark">Zuno</span>
       </div>
-      <p class="text-sm text-slate-500 dark:text-slate-400">Share from anywhere. Search anytime.</p>
+      <p class="text-sm text-muted dark:text-muted-dark">Share from anywhere. Search anytime.</p>
     </div>
   </footer>
 

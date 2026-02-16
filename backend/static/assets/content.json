@@ -1,0 +1,118 @@
+{
+  "app": {
+    "name": "Zuno",
+    "avatar": "Z",
+    "title": "User Profile Collections"
+  },
+  "filters": [
+    {
+      "id": "all",
+      "label": "All",
+      "active": true
+    },
+    {
+      "id": "recent",
+      "label": "Recent",
+      "active": false
+    },
+    {
+      "id": "ideas",
+      "label": "Ideas",
+      "active": false
+    },
+    {
+      "id": "research",
+      "label": "Research",
+      "active": false
+    },
+    {
+      "id": "personal",
+      "label": "Personal",
+      "active": false
+    }
+  ],
+  "collections": [
+    {
+      "id": "legal-cases",
+      "title": "Important Documents",
+      "count": 12,
+      "icon": "gavel",
+      "color": "blue",
+      "bgLight": "bg-blue-50",
+      "bgDark": "dark:bg-[#2A303C]",
+      "iconBgLight": "bg-blue-100",
+      "iconBgDark": "dark:bg-blue-900/40",
+      "iconColorLight": "text-blue-600",
+      "iconColorDark": "dark:text-blue-400"
+    },
+    {
+      "id": "ai-agents",
+      "title": "Daily Helpers",
+      "count": 37,
+      "icon": "smart_toy",
+      "color": "green",
+      "bgLight": "bg-green-50",
+      "bgDark": "dark:bg-[#2A3430]",
+      "iconBgLight": "bg-green-100",
+      "iconBgDark": "dark:bg-green-900/40",
+      "iconColorLight": "text-green-600",
+      "iconColorDark": "dark:text-green-400"
+    },
+    {
+      "id": "neural-nets",
+      "title": "Creative Projects",
+      "count": 8,
+      "icon": "auto_awesome",
+      "color": "purple",
+      "bgLight": "bg-purple-50",
+      "bgDark": "dark:bg-[#342A38]",
+      "iconBgLight": "bg-purple-100",
+      "iconBgDark": "dark:bg-purple-900/40",
+      "iconColorLight": "text-purple-600",
+      "iconColorDark": "dark:text-purple-400"
+    },
+    {
+      "id": "architecture",
+      "title": "Home & DIY",
+      "count": 21,
+      "icon": "architecture",
+      "color": "amber",
+      "bgLight": "bg-amber-50",
+      "bgDark": "dark:bg-[#38332A]",
+      "iconBgLight": "bg-amber-100",
+      "iconBgDark": "dark:bg-amber-900/40",
+      "iconColorLight": "text-amber-600",
+      "iconColorDark": "dark:text-amber-400"
+    },
+    {
+      "id": "philosophy",
+      "title": "Personal Notes",
+      "count": 5,
+      "icon": "psychology",
+      "color": "rose",
+      "bgLight": "bg-rose-50",
+      "bgDark": "dark:bg-[#382A2A]",
+      "iconBgLight": "bg-rose-100",
+      "iconBgDark": "dark:bg-rose-900/40",
+      "iconColorLight": "text-rose-600",
+      "iconColorDark": "dark:text-rose-400"
+    },
+    {
+      "id": "research",
+      "title": "Learning & Discovery",
+      "count": 14,
+      "icon": "science",
+      "color": "indigo",
+      "bgLight": "bg-indigo-50",
+      "bgDark": "dark:bg-[#2A2E38]",
+      "iconBgLight": "bg-indigo-100",
+      "iconBgDark": "dark:bg-indigo-900/40",
+      "iconColorLight": "text-indigo-600",
+      "iconColorDark": "dark:text-indigo-400"
+    }
+  ],
+  "actions": {
+    "createNew": "Add New Resource",
+    "camera": "photo_camera"
+  }
+}

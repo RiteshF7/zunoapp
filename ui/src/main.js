@@ -20,6 +20,7 @@ import { App } from '@capacitor/app';
 import './components/toast.js';
 import './components/modal.js';
 import './components/loading-bar.js';
+import { renderAppHeader } from './components/app-header.js';
 
 // 3b. Import share handler (registers window.handleSharedContent for native bridge)
 import './core/share-handler.js';
@@ -75,6 +76,9 @@ function runWhenReady(fn) {
 window.addEventListener('hashchange', router);
 
 runWhenReady(async () => {
+  // Mount app header so #topnav exists before router
+  renderAppHeader();
+
   // Chrome extension share: capture ?share=url and store for after auth
   const params = new URLSearchParams(window.location.search);
   const shareUrl = params.get('share');

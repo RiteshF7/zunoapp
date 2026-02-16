@@ -70,6 +70,15 @@ export async function renderProfile(el) {
         </div>
       </section>
 
+      <!-- Bookmarks (feed items you bookmarked) -->
+      <section class="bg-card rounded-2xl p-5 mb-4 shadow-sm border border-border" aria-label="Bookmarks">
+        <h3 class="text-sm font-semibold text-heading mb-2">Bookmarks</h3>
+        <p class="text-xs text-muted-foreground mb-3">Items you bookmarked from Feed (My Feed or Suggested).</p>
+        <a href="#profile/bookmarks" onclick="navigate('#profile/bookmarks'); return false" class="block w-full text-center py-2.5 rounded-xl text-sm font-medium bg-bg hover:bg-surface-hover border border-border text-heading transition-colors">
+          <span class="material-icons-round text-base align-middle mr-1">bookmark</span> View Bookmarks
+        </a>
+      </section>
+
       <!-- Chrome Extension -->
       <section class="bg-card rounded-2xl p-5 mb-4 shadow-sm border border-border" aria-label="Chrome Extension">
         <h3 class="text-sm font-semibold text-heading mb-2">Chrome Extension</h3>

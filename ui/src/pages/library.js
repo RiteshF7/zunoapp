@@ -87,7 +87,6 @@ async function renderLibrarySaved(el) {
           <span class="material-icons-round text-xl">refresh</span>
         </button>
       </div>
-      ${libraryTabsHtml('saved')}
 
       ${items.length === 0 ? `
         <div class="flex flex-col items-center justify-center py-16 text-center">
@@ -107,20 +106,30 @@ async function renderLibrarySaved(el) {
   }
 }
 
-async function renderLibraryBookmarks(el) {
+/**
+ * @param {HTMLElement} el
+ * @param {{ standalone?: boolean, backHash?: string, backLabel?: string }} [options] - If standalone, show back link and "Bookmarks" title only (e.g. from profile).
+ */
+async function renderLibraryBookmarks(el, options = {}) {
+  const { standalone = false, backHash = '', backLabel = '' } = options;
   const res = await api('GET', '/api/feed/bookmarks/items');
   if (!res.ok) showApiError(res);
   const items = res.ok ? (Array.isArray(res.data) ? res.data : []) : [];
 
+  const backLinkHtml = standalone && backHash && backLabel
+    ? `<a href="${backHash}" onclick="navigate('${backHash}');return false" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-heading mb-4">← ${esc(backLabel)}</a>`
+    : '';
+
   el.innerHTML = `
     <div class="fade-in">
+      ${backLinkHtml}
       <div class="flex items-center justify-between gap-3 mb-4">
-        <h1 class="text-xl font-bold text-heading">Library</h1>
+        <h1 class="text-xl font-bold text-heading">${standalone ? 'Bookmarks' : 'Library'}</h1>
         <button type="button" onclick="refreshLibrary()" id="library-refresh-btn" class="p-2 rounded-xl text-muted hover:text-heading hover:bg-surface-hover transition-colors active:scale-95" aria-label="Refresh list" title="Refresh list">
           <span class="material-icons-round text-xl">refresh</span>
         </button>
       </div>
-      ${libraryTabsHtml('bookmarks')}
+      ${!standalone ? libraryTabsHtml('bookmarks') : ''}
 
       ${items.length === 0 ? `
         <div class="flex flex-col items-center justify-center py-16 text-center">
@@ -190,6 +199,9 @@ function collectionsContentHtml(cols, cats) {
  * Renders the standalone Collections page (list of collections + categories).
  * Used by route #collections.
  */
+/** Renders the bookmarks list; use options.standalone for profile/bookmarks view. */
+export { renderLibraryBookmarks };
+
 export async function renderCollectionsPage(el) {
   const [colRes, catRes] = await Promise.all([
     api('GET', '/api/collections'),
@@ -210,13 +222,19 @@ export async function renderCollectionsPage(el) {
 async function refreshLibrary() {
   const pageEl = document.getElementById('page');
   if (!pageEl) return;
+  const hash = (window.location.hash || '').replace(/^#/, '');
+  const [page, id] = hash.split('/');
   const btn = document.getElementById('library-refresh-btn');
   if (btn) {
     btn.disabled = true;
     const icon = btn.querySelector('.material-icons-round');
     if (icon) icon.classList.add('animate-spin');
   }
-  await renderLibrary(pageEl, _libraryTab);
+  if (page === 'profile' && id === 'bookmarks') {
+    await renderLibraryBookmarks(pageEl, { standalone: true, backHash: '#profile', backLabel: 'Profile' });
+  } else {
+    await renderLibrary(pageEl, _libraryTab);
+  }
   if (btn) {
     btn.disabled = false;
     const icon = btn.querySelector('.material-icons-round');

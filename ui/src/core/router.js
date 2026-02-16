@@ -9,7 +9,7 @@ import { esc } from '../utils/helpers.js';
 
 import { renderAuth } from '../pages/auth.js';
 import { renderHome } from '../pages/home.js';
-import { renderLibrary, renderCollectionsPage } from '../pages/library.js';
+import { renderLibrary, renderCollectionsPage, renderLibraryBookmarks } from '../pages/library.js';
 import { renderContentDetail } from '../pages/content-detail.js';
 import { renderCollectionDetail } from '../pages/collection-detail.js';
 import { renderGoals } from '../pages/goals.js';
@@ -94,13 +94,15 @@ export async function router() {
     queueMicrotask(() => router());
     return;
   }
-  // Backward compat: library routes → home or collections
+  // Backward compat: library routes → home, collections, or profile/bookmarks
   if (page === 'library') {
     const sub = id === 'collections' ? 'collections' : id === 'bookmarks' ? 'bookmarks' : 'saved';
     if (sub === 'collections') {
       replaceHash('#collections');
+    } else if (sub === 'bookmarks') {
+      replaceHash('#profile/bookmarks');
     } else {
-      replaceHash(sub === 'saved' ? '#home' : `#home/${sub}`);
+      replaceHash('#home');
     }
     queueMicrotask(() => router());
     return;
@@ -109,6 +111,12 @@ export async function router() {
   // #home/collections → dedicated collections page
   if (page === 'home' && id === 'collections') {
     replaceHash('#collections');
+    queueMicrotask(() => router());
+    return;
+  }
+  // Bookmarks live in profile only: redirect #home/bookmarks → #profile/bookmarks
+  if (page === 'home' && id === 'bookmarks') {
+    replaceHash('#profile/bookmarks');
     queueMicrotask(() => router());
     return;
   }
@@ -190,7 +198,14 @@ export async function router() {
         case 'goal-detail': await renderGoalDetail(main, id); if (myNavId !== _navId) return; break;
         case 'search': await renderSearch(main); if (myNavId !== _navId) return; break;
         case 'knowledge': await renderKnowledge(main); if (myNavId !== _navId) return; break;
-        case 'profile': await renderProfile(main); if (myNavId !== _navId) return; break;
+        case 'profile':
+          if (id === 'bookmarks') {
+            await renderLibraryBookmarks(main, { standalone: true, backHash: '#profile', backLabel: 'Profile' });
+          } else {
+            await renderProfile(main);
+          }
+          if (myNavId !== _navId) return;
+          break;
         case 'admin': await renderAdmin(main); if (myNavId !== _navId) return; break;
         default:
           replaceHash('#home');

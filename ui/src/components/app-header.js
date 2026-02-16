@@ -13,8 +13,15 @@ export function createAppHeader() {
   header.setAttribute('role', 'banner');
   header.className = 'hidden sticky top-0 z-30 bg-transparent px-5 py-3 flex items-center justify-between safe-top mt-4';
 
+  const base = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/app/';
   header.innerHTML = `
-    <span class="text-lg font-bold tracking-tight text-neutral-900 dark:text-white">Zuno</span>
+    <a href="#home" class="flex items-center gap-2 text-neutral-900 dark:text-white no-underline hover:opacity-90 transition-opacity relative" aria-label="Zuno home">
+      <span class="relative w-8 h-8 shrink-0 block">
+        <img src="${base}logo.svg" alt="" class="w-8 h-8 absolute inset-0 opacity-100 dark:opacity-0 dark:pointer-events-none" width="32" height="32" />
+        <img src="${base}logo-dark.svg" alt="" class="w-8 h-8 absolute inset-0 opacity-0 dark:opacity-100 pointer-events-none dark:pointer-events-auto" width="32" height="32" />
+      </span>
+      <span class="text-lg font-bold tracking-tight">Zuno</span>
+    </a>
     <div class="flex items-center gap-2">
       <button onclick="navigate('#search')" class="topnav-btn p-2 rounded-md text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-white/10 transition-all" aria-label="Search">
         <i data-lucide="search" class="nav-lucide w-5 h-5"></i>

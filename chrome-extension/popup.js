@@ -12,6 +12,13 @@ function shareUrlFireAndForget(url, onReset) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Set logo src using extension URL so it loads in popup context
+  const logoUrl = chrome.runtime.getURL('assets/logo.svg');
+  const popupLogo = document.getElementById('popup-logo');
+  const connectLogo = document.getElementById('connect-logo');
+  if (popupLogo) popupLogo.src = logoUrl;
+  if (connectLogo) connectLogo.src = logoUrl;
+
   const { zuno_token } = await chrome.storage.sync.get('zuno_token');
   const shareBtn = document.getElementById('share-btn');
   const connectDiv = document.getElementById('connect');

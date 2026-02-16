@@ -37,17 +37,19 @@ pre { white-space: pre-wrap; word-break: break-word; }
   display: block;
 }
 
-/* ── Bottom nav (black/white, medical-style); Lucide SVGs inherit color ── */
+/* ── Bottom nav (white active, minimal roundness); Lucide SVGs inherit color ── */
 #bottomnav .nav-btn svg {
   stroke: currentColor;
 }
 #bottomnav .nav-btn[aria-current="page"] {
   color: #171717;
-  background: rgba(0, 0, 0, 0.08);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 .dark #bottomnav .nav-btn[aria-current="page"] {
   color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* ── Scrollbar ── */

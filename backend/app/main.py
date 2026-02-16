@@ -1,6 +1,7 @@
 """FastAPI application entry point."""
 
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -256,12 +257,19 @@ _static_dir = Path(__file__).resolve().parent.parent / "static"
 _app_index = _static_dir / "app" / "index.html"
 
 
+# No-cache for app shell so browsers always get latest index.html (and thus latest hashed JS/CSS)
+_APP_INDEX_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+}
+
+
 @app.get("/app", include_in_schema=False)
 @app.get("/app/", include_in_schema=False)
 async def serve_app_spa():
     """Serve app SPA index.html for /app and /app/. Hash routes (#auth, #home) are client-side."""
     if _app_index.is_file():
-        return FileResponse(str(_app_index))
+        return FileResponse(str(_app_index), headers=_APP_INDEX_HEADERS)
     raise StarletteHTTPException(status_code=404, detail="App not built. Run scripts/build-ui.sh")
 
 
@@ -272,9 +280,13 @@ if _static_dir.is_dir():
 if __name__ == "__main__":
     import uvicorn
 
+    # Reload uses a subprocess; on Windows this can trigger multiprocessing WinError 87. Default: off on Windows.
+    use_reload = os.environ.get("RELOAD", "").lower() in ("1", "true", "yes") or (
+        os.name != "nt" and os.environ.get("RELOAD", "1").lower() not in ("0", "false", "no")
+    )
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=settings.backend_port,
-        reload=True,
+        reload=use_reload,
     )

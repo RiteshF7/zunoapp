@@ -56,7 +56,7 @@ export async function renderContentDetail(el, id) {
         ${c.ai_processed
           ? '<span class="text-success text-xs flex items-center gap-0.5"><span class="material-icons-round text-sm">check_circle</span>AI Processed</span>'
           : isProcessing
-            ? '<span class="text-accent/80 text-xs flex items-center gap-1.5" role="status" aria-busy="true"><span class="progress-bar-inline w-16 h-1"><span class="progress-bar-inline-inner block h-full rounded"></span></span><span class="material-icons-round text-sm">auto_awesome</span> Processing with AI</span>'
+            ? '<span class="text-accent/80 text-xs flex items-center gap-1.5" role="status" aria-busy="true"><span class="progress-bar-inline w-16 h-1"><span class="progress-bar-inline-inner block h-full rounded"></span></span><span class="material-icons-round text-sm">auto_awesome</span> Getting insights…</span>'
             : '<span class="text-muted-foreground text-xs">Not AI processed</span>'}
       </div>
 
@@ -74,7 +74,7 @@ export async function renderContentDetail(el, id) {
       <!-- Primary Action -->
       ${!c.ai_processed && !isProcessing ? `
         <button onclick="processWithAI('${c.id}')" id="ai-btn" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.97] mb-3 shadow-sm min-h-[44px]">
-          <span class="material-icons-round text-lg">auto_awesome</span> Process with AI
+          <span class="material-icons-round text-lg">auto_awesome</span> Get insights
         </button>` : ''}
 
       <button onclick="openAddToCollectionModal('${c.id}')" class="w-full flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-border text-heading font-semibold py-3 rounded-xl transition-colors active:scale-[0.97] shadow-sm">
@@ -116,7 +116,7 @@ function renderContentTabBody(c, tags) {
           </div>
           <p class="text-body text-sm leading-relaxed">${esc(c.ai_summary)}</p>
         </div>`
-      : `<div class="text-center py-8"><p class="text-muted-foreground text-sm">No AI summary available yet</p>${!c.ai_processed ? '<p class="text-muted-foreground text-xs mt-1">Process with AI to generate a summary</p>' : ''}</div>`;
+      : `<div class="text-center py-8"><p class="text-muted-foreground text-sm">No summary yet</p>${!c.ai_processed ? '<p class="text-muted-foreground text-xs mt-1">Get insights to generate a summary</p>' : ''}</div>`;
   }
   if (_contentDetailTab === 'tags') {
     return tags.length > 0
@@ -132,7 +132,7 @@ function renderContentTabBody(c, tags) {
         <div><label class="text-xs text-muted-foreground font-medium block mb-1">Platform</label><p class="text-body text-sm flex items-center gap-1"><span class="material-icons-round text-base">${platformIcon(c.platform)}</span>${esc(c.platform || 'Unknown')}</p></div>
         <div><label class="text-xs text-muted-foreground font-medium block mb-1">Type</label><p class="text-body text-sm">${esc(c.content_type || 'Unknown')}</p></div>
       </div>
-      <div><label class="text-xs text-muted-foreground font-medium block mb-1">Status</label><p class="text-sm ${c.ai_processed ? 'text-success' : 'text-muted-foreground'}">${c.ai_processed ? 'AI Processed' : 'Not processed'}</p></div>
+      <div><label class="text-xs text-muted-foreground font-medium block mb-1">Status</label><p class="text-sm ${c.ai_processed ? 'text-success' : 'text-muted-foreground'}">${c.ai_processed ? 'Ready' : 'Not ready'}</p></div>
     </div>`;
 }
 

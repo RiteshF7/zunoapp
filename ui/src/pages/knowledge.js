@@ -18,7 +18,7 @@ export async function renderKnowledge(el) {
       <div class="flex items-center justify-between mb-4 flex-shrink-0">
         <div>
           <h1 class="text-xl font-bold text-heading">Knowledge Q&A</h1>
-          ${stats ? `<p class="text-muted-foreground text-xs mt-0.5">${stats.total_chunks || stats.chunks || 0} chunks indexed</p>` : ''}
+          ${stats ? `<p class="text-muted-foreground text-xs mt-0.5">${stats.total_chunks || stats.chunks || 0} items in your knowledge base</p>` : ''}
         </div>
         <button onclick="openKnowledgeSettings()" class="p-2 rounded-md hover:bg-surface-hover transition-colors" aria-label="Knowledge settings">
           <span class="material-icons-round text-xl text-muted-foreground">settings</span>
@@ -33,7 +33,7 @@ export async function renderKnowledge(el) {
               <span class="material-icons-round text-4xl text-primary">psychology</span>
             </div>
             <p class="text-heading font-semibold mb-1">Ask anything about your content</p>
-            <p class="text-muted-foreground text-sm mb-5 opacity-90">Powered by RAG over your knowledge base</p>
+            <p class="text-muted-foreground text-sm mb-5 opacity-90">Answers from your saved content</p>
             <div class="flex flex-wrap gap-2 justify-center">
               ${_suggestedQuestions.map(q => `
                 <button onclick="askSuggested(this.textContent)" class="px-3 py-2 rounded-md bg-card border border-border text-xs text-foreground hover:border-primary hover:text-primary transition-colors shadow-sm">${q}</button>
@@ -65,7 +65,7 @@ function renderKnowledgeMessage(msg) {
         <p class="text-body text-sm leading-relaxed whitespace-pre-wrap">${esc(msg.text)}</p>
         ${msg.sources && msg.sources.length > 0 ? `
           <div class="mt-3 pt-3 border-t border-border">
-            <p class="text-muted-foreground text-[10px] uppercase tracking-wide font-semibold mb-2">Sources</p>
+            <p class="text-muted-foreground text-[10px] uppercase tracking-wide font-semibold mb-2">From your content</p>
             <div class="space-y-1.5">
               ${msg.sources.map(s => `
                 <div class="bg-bg rounded-md px-3 py-2.5 cursor-pointer hover:bg-card-hover transition-colors" onclick="navigate('#content-detail/${s.content_id}')">
@@ -115,7 +115,7 @@ function openKnowledgeSettings() {
     <div class="space-y-2">
       <button onclick="closeModal();doReindex()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-md hover:bg-card-hover transition-colors text-left">
         <span class="material-icons-round text-xl text-accent">refresh</span>
-        <div><p class="text-heading text-sm font-medium">Reindex Content</p><p class="text-muted-foreground text-xs">Rebuild the knowledge base index</p></div>
+        <div><p class="text-heading text-sm font-medium">Refresh knowledge base</p><p class="text-muted-foreground text-xs">Re-scan your saved content so answers use the latest</p></div>
       </button>
       <button onclick="closeModal();clearKnowledgeAndRender()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-md hover:bg-card-hover transition-colors text-left">
         <span class="material-icons-round text-xl text-muted-foreground">delete_sweep</span>
@@ -126,10 +126,10 @@ function openKnowledgeSettings() {
 }
 
 async function doReindex() {
-  toast('Reindexing...');
+  toast('Updating knowledge base...');
   const res = await api('POST', '/api/knowledge/reindex', {});
-  if (res.ok) toast(`Reindexed: ${res.data.content_processed} items, ${res.data.chunks_created} chunks`);
-  else toast(res.data?.detail || 'Reindex failed', true);
+  if (res.ok) toast(`Updated: ${res.data.content_processed} items in your knowledge base`);
+  else toast(res.data?.detail || 'Update failed', true);
 }
 
 function clearKnowledgeAndRender() {

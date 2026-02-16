@@ -159,7 +159,7 @@ function collectionsContentHtml(cols, cats) {
   return `
     ${cats.length > 0 ? `
       <div class="mb-5">
-        <h2 class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">AI Categories</h2>
+        <h2 class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Topics</h2>
         <div class="flex flex-wrap gap-1.5">
           ${cats.map(c => `<span class="px-2.5 py-1 rounded-lg bg-surface border border-border text-xs text-body">${esc(typeof c === 'string' ? c : c.name || c.category || '')}</span>`).join('')}
         </div>

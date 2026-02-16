@@ -29,9 +29,9 @@ export async function renderSearch(el) {
 
       <!-- Search Type Tabs -->
       <div class="flex gap-2 mb-5" role="tablist" aria-label="Search type">
-        <button onclick="setSearchType('fts')" id="st-fts" role="tab" class="search-type px-4 py-2 rounded-md text-xs font-semibold transition-all duration-200 ${_searchType === 'fts' ? 'bg-primary text-primary-foreground border-primary/30' : 'bg-card text-foreground border border-border shadow-sm hover:shadow-md'}">Full-text</button>
-        <button onclick="setSearchType('hybrid')" id="st-hybrid" role="tab" class="search-type px-4 py-2 rounded-md text-xs font-semibold transition-all duration-200 ${_searchType === 'hybrid' ? 'bg-primary text-primary-foreground border-primary/30' : 'bg-card text-foreground border border-border shadow-sm hover:shadow-md'}">Hybrid</button>
-        <button onclick="setSearchType('tag')" id="st-tag" role="tab" class="search-type px-4 py-2 rounded-md text-xs font-semibold transition-all duration-200 ${_searchType === 'tag' ? 'bg-primary text-primary-foreground border-primary/30' : 'bg-card text-foreground border border-border shadow-sm hover:shadow-md'}">By Tag</button>
+        <button onclick="setSearchType('fts')" id="st-fts" role="tab" class="search-type px-4 py-2 rounded-md text-xs font-semibold transition-all duration-200 ${_searchType === 'fts' ? 'bg-primary text-primary-foreground border-primary/30' : 'bg-card text-foreground border border-border shadow-sm hover:shadow-md'}">Keywords</button>
+        <button onclick="setSearchType('hybrid')" id="st-hybrid" role="tab" class="search-type px-4 py-2 rounded-md text-xs font-semibold transition-all duration-200 ${_searchType === 'hybrid' ? 'bg-primary text-primary-foreground border-primary/30' : 'bg-card text-foreground border border-border shadow-sm hover:shadow-md'}">Smart</button>
+        <button onclick="setSearchType('tag')" id="st-tag" role="tab" class="search-type px-4 py-2 rounded-md text-xs font-semibold transition-all duration-200 ${_searchType === 'tag' ? 'bg-primary text-primary-foreground border-primary/30' : 'bg-card text-foreground border border-border shadow-sm hover:shadow-md'}">By topic</button>
       </div>
 
       ${recent.length > 0 ? `
@@ -44,7 +44,7 @@ export async function renderSearch(el) {
 
       ${tags.length > 0 ? `
         <section class="mb-5" aria-label="Popular tags">
-          <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Popular Tags</h3>
+          <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Popular topics</h3>
           <div class="flex flex-wrap gap-1.5">
             ${tags.map(t => `<button onclick="searchByTag('${esc(t.slug)}')" class="px-3 py-1.5 rounded-md bg-card border border-border text-xs text-body hover:border-accent transition-colors">${esc(t.name)} <span class="text-muted-foreground">${t.count || t.usage_count || ''}</span></button>`).join('')}
           </div>

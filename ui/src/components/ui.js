@@ -35,11 +35,11 @@ export function contentCardHtml(item, opts = {}) {
   const aiStatusHtml = !showAiStatus ? '' : isProcessing
     ? `<span class="text-accent/80 text-[10px] flex items-center gap-1 shrink-0" role="status" aria-busy="true">
         <span class="progress-bar-inline flex-1 min-w-[48px] max-w-[80px]"><span class="progress-bar-inline-inner block h-full rounded"></span></span>
-        <span class="material-icons-round text-xs">auto_awesome</span> Processing with AI
+        <span class="material-icons-round text-xs">auto_awesome</span> Getting insights…
        </span>`
     : aiProcessed
-      ? '<span class="text-success text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">check_circle</span>AI</span>'
-      : '<span class="text-muted-foreground text-[10px]">Pending</span>';
+      ? '<span class="text-success text-[10px] flex items-center gap-0.5"><span class="material-icons-round text-xs">check_circle</span>Ready</span>'
+      : '<span class="text-muted-foreground text-[10px]">In queue</span>';
 
   return `
     <article class="bg-card ${cardRound} p-4 border border-border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-[0.97] group"

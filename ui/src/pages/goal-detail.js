@@ -57,8 +57,8 @@ export async function renderGoalDetail(el, id) {
         </div>
         <p class="text-body text-sm leading-relaxed">${esc(g.description)}</p>
         <div class="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
-          <span class="flex items-center gap-1"><span class="material-icons-round text-sm">trending_up</span>${confidence}% confidence</span>
-          <span class="flex items-center gap-1"><span class="material-icons-round text-sm">link</span>${evidenceCount} sources</span>
+          <span class="flex items-center gap-1"><span class="material-icons-round text-sm">trending_up</span>${confidence}% match</span>
+          <span class="flex items-center gap-1"><span class="material-icons-round text-sm">link</span>${evidenceCount} from your content</span>
           <span class="flex items-center gap-1"><span class="material-icons-round text-sm">checklist</span>${completedCount}/${totalSteps} steps</span>
         </div>
       </section>

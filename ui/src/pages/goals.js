@@ -135,7 +135,7 @@ function mergeSuggestionCard(suggestion) {
           <span class="material-icons-round text-xl text-purple-400">merge_type</span>
         </div>
         <div class="flex-1 min-w-0">
-          <span class="inline-block text-[10px] font-semibold uppercase tracking-wide text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded-full mb-1.5">Merge Suggestion</span>
+          <span class="inline-block text-[10px] font-semibold uppercase tracking-wide text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded-full mb-1.5">Suggested merge</span>
           <h3 class="font-semibold text-heading text-sm leading-snug">${esc(suggestion.suggested_parent_title)}</h3>
           <p class="text-muted-foreground text-xs mt-1 line-clamp-3">${esc(suggestion.ai_reasoning || suggestion.suggested_parent_description)}</p>
           <p class="text-purple-400/70 text-[10px] mt-1.5"><span class="material-icons-round text-xs align-middle">account_tree</span> Merges ${childCount} goal${childCount !== 1 ? 's' : ''}</p>
@@ -163,11 +163,11 @@ function openGoalsMenu() {
     <div class="space-y-2">
       <button onclick="closeModal();reanalyzeGoals()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-md hover:bg-surface-hover transition-colors text-left">
         <span class="material-icons-round text-xl text-accent">refresh</span>
-        <div><p class="text-heading text-sm font-medium">Reanalyze Goals</p><p class="text-muted-foreground text-xs">Re-scan content for new goals</p></div>
+        <div><p class="text-heading text-sm font-medium">Refresh goals</p><p class="text-muted-foreground text-xs">Scan your content for new goals</p></div>
       </button>
       <button onclick="closeModal();triggerConsolidate()" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-md hover:bg-surface-hover transition-colors text-left">
         <span class="material-icons-round text-xl text-purple-400">merge_type</span>
-        <div><p class="text-heading text-sm font-medium">Consolidate Goals</p><p class="text-muted-foreground text-xs">Find goals to merge together</p></div>
+        <div><p class="text-heading text-sm font-medium">Combine similar goals</p><p class="text-muted-foreground text-xs">Find goals that can be merged</p></div>
       </button>
     </div>
   `);
@@ -192,15 +192,15 @@ async function dismissSuggestion(id) {
 async function triggerConsolidate() {
   toast('Starting consolidation...');
   const res = await api('POST', '/api/goals/consolidate');
-  if (res.ok) toast(res.data?.message || 'Consolidation started!');
-  else toast(res.data?.detail || 'Consolidation failed', true);
+  if (res.ok) toast(res.data?.message || 'Finding similar goals…');
+  else toast(res.data?.detail || 'Couldn\'t find goals to combine', true);
 }
 
 async function reanalyzeGoals() {
-  toast('Reanalyzing goals...');
+  toast('Refreshing goals…');
   const res = await api('POST', '/api/goals/reanalyze');
-  if (res.ok) toast(res.data?.message || 'Reanalysis started!');
-  else toast(res.data?.detail || 'Reanalysis failed', true);
+  if (res.ok) toast(res.data?.message || 'Goals refreshed!');
+  else toast(res.data?.detail || 'Refresh failed', true);
 }
 
 function setGoalsFilterAndRender(status) {

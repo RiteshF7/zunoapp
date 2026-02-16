@@ -45,7 +45,12 @@ export function getApiBase() {
 
   // Native app (Capacitor): origin is always http://localhost — use env API base or emulator backend.
   if (isCapacitor()) {
-    const envBase = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE;
+    let envBase = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE;
+    // Android emulator: localhost points to the device; 10.0.2.2 is the host machine.
+    // When dev env uses localhost, substitute so emulator can reach host backend.
+    if (envBase && envBase.includes('localhost') && typeof window?.Capacitor?.getPlatform === 'function' && window.Capacitor.getPlatform() === 'android') {
+      envBase = envBase.replace(/localhost/g, '10.0.2.2');
+    }
     if (envBase) return envBase;
     if (typeof window !== 'undefined' && window.ZUNO_API_BASE) return window.ZUNO_API_BASE;
     // Android emulator dev: backend at 10.0.2.2:8000

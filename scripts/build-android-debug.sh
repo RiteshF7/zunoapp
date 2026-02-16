@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo "Resolving env (dev) and building UI for development (base=. for Capacitor WebView)..."
-"$ROOT/scripts/resolve-env.sh"
+python "$ROOT/backend/scripts/resolve_env.py" --mode dev
 cd "$ROOT/ui"
 npx vite build --mode development --base ./ --outDir "$ROOT/backend/static/app-mobile"
 cd "$ROOT"

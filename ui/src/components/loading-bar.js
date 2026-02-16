@@ -1,65 +1,65 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// GLOBAL PROGRESS BAR — universal loading indicator
-// Shown during navigation, API calls, save, AI processing, etc.
-// Ref-counted so multiple concurrent operations keep the bar visible until all finish.
+// GLOBAL LOADING OVERLAY — universal loading indicator
+// Overlay + centered round spinner during navigation, API calls, save, AI processing.
+// Ref-counted so multiple concurrent operations keep it visible until all finish.
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SHOW_DELAY_MS = 80;   // Don't show bar for very fast operations
-const MIN_SHOW_MS = 200;    // Keep bar visible at least this long to avoid flash
+const SHOW_DELAY_MS = 80;   // Don't show for very fast operations
+const MIN_SHOW_MS = 200;    // Keep visible at least this long to avoid flash
 
-let _barEl = null;
+let _overlayEl = null;
 let _visible = false;
 let _count = 0;
 let _showTimeout = null;
 let _hideTimeout = null;
 let _showTime = 0;
 
-function ensureBar() {
-  if (_barEl) return _barEl;
-  _barEl = document.createElement('div');
-  _barEl.id = 'global-loading-bar';
-  _barEl.setAttribute('role', 'progressbar');
-  _barEl.setAttribute('aria-label', 'Loading');
-  _barEl.setAttribute('aria-hidden', 'true');
-  _barEl.className = 'global-loading-bar hidden';
-  _barEl.innerHTML = '<div class="global-loading-bar-inner"></div>';
-  document.body.appendChild(_barEl);
-  return _barEl;
+function ensureOverlay() {
+  if (_overlayEl) return _overlayEl;
+  _overlayEl = document.createElement('div');
+  _overlayEl.id = 'global-loading-overlay';
+  _overlayEl.setAttribute('role', 'progressbar');
+  _overlayEl.setAttribute('aria-label', 'Loading');
+  _overlayEl.setAttribute('aria-hidden', 'true');
+  _overlayEl.className = 'global-loading-overlay hidden';
+  _overlayEl.innerHTML = '<div class="global-loading-spinner"></div>';
+  document.body.appendChild(_overlayEl);
+  return _overlayEl;
 }
 
 function actuallyShow() {
-  if (!_barEl || _visible) return;
+  if (!_overlayEl || _visible) return;
   if (_hideTimeout) {
     clearTimeout(_hideTimeout);
     _hideTimeout = null;
   }
-  _barEl.classList.remove('hidden');
-  _barEl.setAttribute('aria-hidden', 'false');
+  _overlayEl.classList.remove('hidden');
+  _overlayEl.setAttribute('aria-hidden', 'false');
   _visible = true;
   _showTime = Date.now();
 }
 
 function actuallyHide() {
-  if (!_barEl) return;
+  if (!_overlayEl) return;
   const elapsed = Date.now() - _showTime;
   const wait = Math.max(0, MIN_SHOW_MS - elapsed);
   if (wait > 0 && _visible) {
     _hideTimeout = setTimeout(() => {
       _hideTimeout = null;
-      _barEl.classList.add('hidden');
-      _barEl.setAttribute('aria-hidden', 'true');
+      _overlayEl.classList.add('hidden');
+      _overlayEl.setAttribute('aria-hidden', 'true');
       _visible = false;
     }, wait);
   } else {
-    _barEl.classList.add('hidden');
-    _barEl.setAttribute('aria-hidden', 'true');
+    _overlayEl.classList.add('hidden');
+    _overlayEl.setAttribute('aria-hidden', 'true');
     _visible = false;
   }
 }
 
 export function showProgress() {
   _count++;
-  ensureBar();
+  ensureOverlay();
   if (_count === 1) {
     if (_hideTimeout) {
       clearTimeout(_hideTimeout);

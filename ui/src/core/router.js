@@ -30,12 +30,9 @@ function getTransition(page) {
   return 'fade-in';
 }
 
-function runWithViewTransition(callback) {
-  if (typeof document.startViewTransition === 'function') {
-    return document.startViewTransition(callback);
-  }
+function runRouterCallback(callback) {
   const p = callback();
-  return p && typeof p.then === 'function' ? p.then(() => {}) : Promise.resolve();
+  return p && typeof p.then === 'function' ? p : Promise.resolve();
 }
 
 export async function router() {
@@ -158,7 +155,7 @@ export async function router() {
   };
 
   try {
-    await runWithViewTransition(async () => {
+    await runRouterCallback(async () => {
       if (myNavId !== _navId) return;
       main.innerHTML = `<div class="${transition}">${skeletonMap[page] || loadingSpinner()}</div>`;
 

@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo "Resolving env (prod) and building UI for production (base=. for Capacitor WebView)..."
-"$ROOT/scripts/resolve-env.sh"
+python "$ROOT/backend/scripts/resolve_env.py" --mode prod
 # Build with base . so script/css paths are relative; WebView loads from file/capacitor:// and /app/assets/ would 404
 cd "$ROOT/ui"
 npx vite build --mode production --base ./ --outDir "$ROOT/backend/static/app-mobile"

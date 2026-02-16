@@ -26,6 +26,13 @@
     .hint { font-size: 11px; color: #94a3b8; margin-top: 10px; }
     .connect { margin-bottom: 10px; }
     .zuno-link { width: 100%; padding: 6px 8px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 8px; box-sizing: border-box; background: #f8fafc; }
+    .add-link-section { margin-bottom: 14px; }
+    .add-link-section label { display: block; font-size: 12px; margin-bottom: 6px; color: #475569; }
+    #add-link-url { width: 100%; padding: 6px 8px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 6px; box-sizing: border-box; background: #fff; }
+    #add-link-url:focus { outline: none; border-color: #6366f1; }
+    .add-link-hint { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+    .add-link-error { font-size: 11px; color: #dc2626; margin-top: 4px; margin-bottom: 4px; }
+    #add-link-btn { margin-bottom: 4px; }
     #copy-btn { margin-top: 0; background: #64748b; }
     #copy-btn:hover { background: #475569; }
   </style>
@@ -33,6 +40,13 @@
 <body>
   <div id="content">
     <h3>Share to Zuno</h3>
+    <div class="add-link-section">
+      <label for="add-link-url">Add a link</label>
+      <input type="text" id="add-link-url" placeholder="https://..." />
+      <p class="add-link-hint">Paste or type a URL</p>
+      <p class="add-link-error" id="add-link-error" style="display:none"></p>
+      <button type="button" id="add-link-btn">Save link</button>
+    </div>
     <div class="url" id="url"></div>
     <button id="share-btn">Share this page</button>
     <p class="hint">Right-click a page or link for Share to Zuno</p>

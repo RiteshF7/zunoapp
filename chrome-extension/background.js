@@ -20,9 +20,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
   if (msg.type === 'SHARE_URL' && msg.url) {
-    shareUrl(msg.url).then((done) => {
-      sendResponse({ ok: !!done });
-    });
+    shareUrl(msg.url)
+      .then((done) => { sendResponse({ ok: !!done }); })
+      .catch(() => { sendResponse({ ok: false }); });
     return true;
   }
 });

@@ -1,4 +1,15 @@
 const ZUNO_APP = 'https://zunoapp.onrender.com/app/';
+const RESET_BUTTON_MS = 1800;
+
+function shareUrlFireAndForget(url, onReset) {
+  chrome.runtime.sendMessage({ type: 'SHARE_URL', url }, (res) => {
+    if (chrome.runtime.lastError) return;
+    if (res?.ok && typeof onReset.closePopup === 'function') onReset.closePopup();
+  });
+  setTimeout(() => {
+    if (typeof onReset.resetButton === 'function') onReset.resetButton();
+  }, RESET_BUTTON_MS);
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const { zuno_token } = await chrome.storage.sync.get('zuno_token');
@@ -20,6 +31,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  const addLinkUrl = document.getElementById('add-link-url');
+  const addLinkBtn = document.getElementById('add-link-btn');
+  const addLinkError = document.getElementById('add-link-error');
+
+  function showAddLinkError(msg) {
+    addLinkError.textContent = msg;
+    addLinkError.style.display = 'block';
+    setTimeout(() => {
+      addLinkError.textContent = '';
+      addLinkError.style.display = 'none';
+    }, 3000);
+  }
+
+  addLinkBtn.onclick = () => {
+    const trimmedUrl = (addLinkUrl.value || '').trim();
+    if (!trimmedUrl || (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://'))) {
+      showAddLinkError('Enter a valid URL');
+      return;
+    }
+    addLinkError.style.display = 'none';
+    addLinkBtn.disabled = true;
+    addLinkBtn.textContent = 'Saving...';
+    shareUrlFireAndForget(trimmedUrl, {
+      resetButton: () => {
+        addLinkBtn.textContent = 'Save link';
+        addLinkBtn.disabled = false;
+      },
+      closePopup: () => setTimeout(() => window.close(), 500),
+    });
+  };
+
+  addLinkUrl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addLinkBtn.click();
+  });
+
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || '';
   const urlEl = document.getElementById('url');
@@ -27,13 +73,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
     urlEl.textContent = url;
     shareBtn.disabled = false;
-    shareBtn.onclick = async () => {
+    shareBtn.onclick = () => {
       shareBtn.disabled = true;
       shareBtn.textContent = 'Sharing...';
-      const res = await chrome.runtime.sendMessage({ type: 'SHARE_URL', url });
-      shareBtn.textContent = res?.ok ? 'Shared!' : 'Share this page';
-      if (res?.ok) setTimeout(() => window.close(), 500);
-      else shareBtn.disabled = false;
+      shareUrlFireAndForget(url, {
+        resetButton: () => {
+          shareBtn.textContent = 'Share this page';
+          shareBtn.disabled = false;
+        },
+        closePopup: () => setTimeout(() => window.close(), 500),
+      });
     };
   } else {
     urlEl.textContent = 'Cannot share this page';

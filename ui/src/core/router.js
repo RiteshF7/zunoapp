@@ -135,6 +135,7 @@ export async function router() {
 
   const transition = getTransition(page);
   setPrevPage(page);
+  if (typeof window.showProgress === 'function') window.showProgress();
 
   const skeletonMap = {
     home: skeletonCards(3),
@@ -147,12 +148,13 @@ export async function router() {
     admin: loadingSpinner(),
   };
 
-  await runWithViewTransition(async () => {
-    if (myNavId !== _navId) return;
-    main.innerHTML = `<div class="${transition}">${skeletonMap[page] || loadingSpinner()}</div>`;
+  try {
+    await runWithViewTransition(async () => {
+      if (myNavId !== _navId) return;
+      main.innerHTML = `<div class="${transition}">${skeletonMap[page] || loadingSpinner()}</div>`;
 
-    try {
-      switch (page) {
+      try {
+        switch (page) {
         case 'auth': renderAuth(main); break;
         case 'home':
           await renderLibrary(main, id || 'saved');
@@ -194,18 +196,21 @@ export async function router() {
           replaceHash('#home');
           queueMicrotask(() => router());
           return;
+        }
+      } catch (err) {
+        if (myNavId !== _navId) return;
+        const errMsg = typeof err?.message === 'string' ? err.message : 'Something went wrong';
+        main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in" role="alert" aria-live="assertive">
+          <span class="material-icons-round text-5xl text-danger/40 mb-3">error_outline</span>
+          <p class="text-heading font-semibold mb-1">Something went wrong</p>
+          <p class="text-muted-foreground text-sm mb-4">${esc(errMsg)}</p>
+          <button type="button" onclick="router()" class="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Try again</button>
+        </div>`;
       }
-    } catch (err) {
-      if (myNavId !== _navId) return;
-      const errMsg = typeof err?.message === 'string' ? err.message : 'Something went wrong';
-      main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in" role="alert" aria-live="assertive">
-        <span class="material-icons-round text-5xl text-danger/40 mb-3">error_outline</span>
-        <p class="text-heading font-semibold mb-1">Something went wrong</p>
-        <p class="text-muted-foreground text-sm mb-4">${esc(errMsg)}</p>
-        <button type="button" onclick="router()" class="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Try again</button>
-      </div>`;
-    }
-  });
+    });
+  } finally {
+    if (typeof window.hideProgress === 'function') window.hideProgress();
+  }
 }
 
 // Expose router globally so pages can call it

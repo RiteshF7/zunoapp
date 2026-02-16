@@ -1,4 +1,4 @@
-const DEFAULT_ZUNO_APP = 'https://zunoapp.onrender.com/app/';
+const DEFAULT_ZUNO_APP = 'http://localhost:5173/app/';
 const RESET_BUTTON_MS = 1800;
 
 function shareUrlFireAndForget(url, onReset) {

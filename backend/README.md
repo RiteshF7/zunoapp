@@ -21,7 +21,10 @@ cp .env.example .env
 
 # Run the server
 uvicorn app.main:app --reload --port 8000
+# Or: python -m uvicorn app.main:app --port 8000
 ```
+
+**Windows:** Hot reload is off by default to avoid `multiprocessing` WinError 87. Run as above (no reload) or set `RELOAD=1` if you need reload and your environment supports it.
 
 ## Environment Variables
 

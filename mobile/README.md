@@ -84,16 +84,76 @@ For a production build, either:
 
 **Android** — release APK:
 
+From repo root (builds UI for prod, copies to `www/`, syncs, then assembles):
+
 ```bash
-npx cap sync android
-cd android
-./gradlew assembleRelease
+./scripts/build-android-release.sh
+# or: npm run build:android:release
 ```
 
-The APK will be at `android/app/build/outputs/apk/release/`.
+Or manually: `npx cap sync android` then `cd android && ./gradlew assembleRelease`.
+
+The APK will be at `android/app/build/outputs/apk/release/`. Without signing it will be **unsigned** (`app-release-unsigned.apk`); Android will not install it until it is signed.
+
+### Signing the release APK
+
+To get a **signed** release APK (installable or for Play Store), use one of these:
+
+**Option A — Environment variables (CI / scripts)**
+
+1. Create a release keystore (once):
+   ```bash
+   keytool -genkey -v -keystore zuno-release.keystore -alias zuno -keyalg RSA -keysize 2048 -validity 10000
+   ```
+   Store the keystore somewhere safe (e.g. `mobile/android/app/` or a secrets path). **Do not commit it.**
+
+2. Set these env vars before running `assembleRelease`:
+   - `ZUNO_RELEASE_STORE_FILE` — path to the `.keystore` file (absolute or relative to `android/app/`)
+   - `ZUNO_RELEASE_STORE_PASSWORD` — keystore password
+   - `ZUNO_RELEASE_KEY_ALIAS` — key alias (e.g. `zuno`)
+   - `ZUNO_RELEASE_KEY_PASSWORD` — key password
+
+   Example (Windows, Git Bash):
+   ```bash
+   export ZUNO_RELEASE_STORE_FILE="app/zuno-release.keystore"
+   export ZUNO_RELEASE_STORE_PASSWORD="your-keystore-password"
+   export ZUNO_RELEASE_KEY_ALIAS="zuno"
+   export ZUNO_RELEASE_KEY_PASSWORD="your-key-password"
+   cd mobile/android && ./gradlew assembleRelease
+   ```
+
+**Option B — keystore.properties (local only)**
+
+1. Create the keystore as above.
+2. In `mobile/android/app/`, create `keystore.properties` (add this file to `.gitignore` — do not commit):
+   ```properties
+   storeFile=zuno-release.keystore
+   storePassword=your-keystore-password
+   keyAlias=zuno
+   keyPassword=your-key-password
+   ```
+   Paths in `storeFile` are relative to `android/app/`.
+
+3. Run `./gradlew assembleRelease` from `mobile/android/`. The release build will use this config and produce a signed APK.
+
+**Output:** Signed APK at `android/app/build/outputs/apk/release/app-release.apk`. You can install it with `adb install app-release.apk` or distribute it.
 
 **iOS** — same `server.url` or `ZUNO_API_BASE` approach; build and archive in Xcode (Product → Archive) for App Store or ad-hoc distribution.
 
 ### Share to Zuno (iOS)
 
 To show "Share to Zuno" in the iOS Share sheet (share URLs, text, or images from Safari, etc.), add the Share Extension target in Xcode and enable App Groups. See [docs/IOS_SHARE_EXTENSION_SETUP.md](../docs/IOS_SHARE_EXTENSION_SETUP.md) for step-by-step instructions.
+
+## Debugging Android (adb)
+
+To see why "Failed to save to Zuno" or API errors occur, capture logs while reproducing the action:
+
+```bash
+# All app + Chromium console output (recommended)
+adb logcat -s "chromium:I" "Console:I" "Capacitor:*" "com.zuno.app:*"
+
+# Or broader: last 500 lines after you share a link
+adb logcat -d -t 500 | grep -iE "zuno|api|fetch|error|failed|CORS|ShareHandler|Console"
+```
+
+The app logs `[API]` and `[ShareHandler]` errors to the WebView console; Chromium forwards them to logcat. Backend request logging: every request is logged as `METHOD /path origin=... -> status` (see `RequestLoggingMiddleware`). If no log appears for a request, the call never reached the server (wrong URL, CORS, or network).

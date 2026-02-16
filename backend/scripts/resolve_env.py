@@ -140,6 +140,18 @@ def main() -> int:
     (ui_dir / ".env.development").write_text(_env_to_output(ui_dev), encoding="utf-8")
     (ui_dir / ".env.production").write_text(_env_to_output(ui_prod), encoding="utf-8")
 
+    # Inject Chrome extension defaults from current mode (ZUNO_APP_URL, ZUNO_API_BASE)
+    env = dev_env if mode == "development" else prod_env
+    app_url = (env.get("ZUNO_APP_URL") or "https://zunoapp.onrender.com/app/").rstrip("/") + "/"
+    api_base = (env.get("ZUNO_API_BASE") or "https://zunoapp.onrender.com").rstrip("/")
+    ext_dir = ROOT_DIR / "chrome-extension"
+    for name in ("background.js", "popup.js", "content.js"):
+        path = ext_dir / name
+        if path.exists():
+            text = path.read_text(encoding="utf-8")
+            text = text.replace("__ZUNO_APP_URL__", app_url).replace("__ZUNO_API_BASE__", api_base)
+            path.write_text(text, encoding="utf-8")
+
     return 0
 
 

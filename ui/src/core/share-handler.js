@@ -87,14 +87,12 @@ async function handleImageShare(base64Data, mimeType) {
   const formData = new FormData();
   formData.append('file', blob, fileName);
 
-  // Use raw fetch for multipart (api() sets Content-Type: application/json)
-  const API_BASE = window.ZUNO_API_BASE
-    || (window.location.hostname === 'localhost' && !window.location.port
-        ? 'http://10.0.2.2:8000'
-        : window.location.origin);
+  // Use raw fetch for multipart (api() sets Content-Type: application/json). Same API base as api.js.
+  const { getApiBase } = await import('./config.js');
+  const apiBase = getApiBase();
 
   const token = localStorage.getItem('zuno_token');
-  const res = await fetch(`${API_BASE}/api/v1/content/upload`, {
+  const res = await fetch(`${apiBase}/api/v1/content/upload`, {
     method: 'POST',
     headers: token ? { 'Authorization': `Bearer ${token}` } : {},
     body: formData,

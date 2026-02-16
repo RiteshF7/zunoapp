@@ -17,8 +17,30 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            // Set env vars (or create android/keystore.properties) so release APK is signed.
+            // See mobile/README.md or docs: how to create keystore and sign release.
+            if (System.getenv("ZUNO_RELEASE_STORE_FILE")) {
+                storeFile file(System.getenv("ZUNO_RELEASE_STORE_FILE"))
+                storePassword System.getenv("ZUNO_RELEASE_STORE_PASSWORD")
+                keyAlias System.getenv("ZUNO_RELEASE_KEY_ALIAS")
+                keyPassword System.getenv("ZUNO_RELEASE_KEY_PASSWORD")
+            } else if (project.file("keystore.properties").exists()) {
+                def keystoreProps = new Properties()
+                keystoreProps.load(new FileInputStream(project.file("keystore.properties")))
+                storeFile file(keystoreProps["storeFile"])
+                storePassword keystoreProps["storePassword"]
+                keyAlias keystoreProps["keyAlias"]
+                keyPassword keystoreProps["keyPassword"]
+            }
+        }
+    }
     buildTypes {
         release {
+            if (System.getenv("ZUNO_RELEASE_STORE_FILE") || project.file("keystore.properties").exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

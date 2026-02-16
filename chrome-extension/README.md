@@ -19,10 +19,10 @@ So: **auth verification = same as your web app.** One token, one validation path
 
 ## Install (developer mode)
 
-1. Open Chrome and go to `chrome://extensions/`
-2. Turn on **Developer mode** (top right)
-3. Click **Load unpacked**
-4. Select the `chrome-extension` folder
+1. **Inject env (from root `.env`):** Run `./scripts/resolve-env.sh` from the repo root so the extension gets the correct app/API URLs for your current `ZUNO_MODE` (dev → localhost, prod → zunoapp.onrender.com).
+2. Open Chrome and go to `chrome://extensions/`
+3. Turn on **Developer mode** (top right)
+4. Click **Load unpacked** and select the `chrome-extension` folder
 
 ## First-time setup: Connect
 

@@ -101,13 +101,11 @@ if [[ "$PREP" == true && "$MODE" == "prod" ]]; then
   fi
 fi
 
-# Prod: build UI (always for prod backend)
+# Prod: build UI (same as scripts/build-ui.sh — one source of truth for production static)
 if [[ "$MODE" == "prod" && ("$RUN" == "backend" || "$RUN" == "both") ]]; then
   echo ""
-  echo "=== Building UI ==="
-  cd "$ROOT/ui" && npm run build
-  cd "$ROOT/landing-ui" && npm run build
-  cd "$ROOT"
+  echo "=== Building UI (app + landing → backend/static/) ==="
+  "$ROOT/scripts/build-ui.sh"
 fi
 
 cleanup() {

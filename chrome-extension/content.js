@@ -9,7 +9,7 @@
     if (!token) return;
 
     // Prefer app-set API base (dev vs prod); fallback to origin then prod default
-    const apiBase = (typeof window !== 'undefined' && (window.ZUNO_API_BASE || window.location?.origin)) || 'https://zunoapp.onrender.com';
+    const apiBase = (typeof window !== 'undefined' && (window.ZUNO_API_BASE || window.location?.origin)) || 'http://localhost:8000';
     chrome.runtime.sendMessage({ type: 'ZUNO_TOKEN', token, apiBase: String(apiBase).replace(/\/?$/, '') });
   }
 

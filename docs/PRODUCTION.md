@@ -1,8 +1,8 @@
 # Zuno — Production Runbook
 
-Single runbook for taking Zuno to production (www.zuno.com or your domain). Excludes app store submission. Use with [scripts/README.md](../scripts/README.md) for CLI steps (e.g. `./scripts/start.sh prod --prep`).
+Single runbook for taking Zuno to production (www.zuno.com or your domain). Excludes app store submission. **Before going live:** use [PRE_LAUNCH_CHECKLIST.md](PRE_LAUNCH_CHECKLIST.md). Use with [scripts/README.md](../scripts/README.md) for CLI steps (e.g. `./scripts/start.sh prod --prep`).
 
-**Production** means: backend with `ENVIRONMENT=production`, a **separate** production Supabase project, production Render service, and production Google OAuth client. UI build uses production `VITE_SUPABASE_*` and optional `VITE_API_BASE`. No code or deploy flow changes—only env and Dashboard configuration.
+**Production** means: a **separate** Render server and a **separate** Supabase database (not shared with dev), with `ENVIRONMENT=production`, production Google OAuth client, and UI build using production `VITE_SUPABASE_*` and optional `VITE_API_BASE`. No code or deploy flow changes—only env and Dashboard configuration.
 
 ---
 
@@ -26,7 +26,7 @@ Single runbook for taking Zuno to production (www.zuno.com or your domain). Excl
 | UI config (env vars) | ✅ Uses `VITE_*` from env |
 | Health checks | ✅ Uses `profiles` table |
 | Supabase schema | ✅ Migrations ready |
-| Security headers | ⚠️ Basic done; CSP/HSTS pending |
+| Security headers | ✅ Basic + CSP/HSTS when `ENVIRONMENT=production` |
 | Domain-specific config | ❌ Needs prod values |
 | Hosting & DNS | ❌ Not deployed |
 
@@ -56,13 +56,12 @@ Single runbook for taking Zuno to production (www.zuno.com or your domain). Excl
 
 - [ ] `EXPO_PUBLIC_BACKEND_URL=https://www.zuno.com` or `https://api.zuno.com`
 
-### Using the same DB as production (for now)
+### Alternative: Using the same DB as production (temporary)
 
-- Keep current Supabase URL/keys in `backend/.env` and `ui/.env`
-- Set `ENVIRONMENT=production` in backend
-- Add your **Render backend URL** to `CORS_ORIGINS`
-- Add same URL to Supabase Auth redirect URLs when you have a web app at that domain
-- When moving to a dedicated prod DB: new Supabase project, update env, re-fetch JWKS, push migrations
+If you ever run prod and dev against the same Supabase (not recommended long-term):
+
+- Set `ENVIRONMENT=production` in backend; add your **Render backend URL** to `CORS_ORIGINS` and Supabase Auth redirect URLs
+- Prefer a **separate** production Render server and Supabase database for production
 
 ---
 
@@ -153,15 +152,15 @@ Commit `backend/jwks.json` so Render (or your host) has it. Re-run after JWT key
 
 ### To do
 
-- [ ] **CSP & HSTS** — Add `Content-Security-Policy` and `Strict-Transport-Security` when `ENVIRONMENT=production` in `backend/app/middleware.py`
 - [ ] Confirm no `.env` or real keys in version control
 - [ ] GCP credentials via env/secret manager at runtime only
 
 ### Already in place
 
 - Basic security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, etc.)
+- **CSP & HSTS** when `ENVIRONMENT=production` (see `backend/app/middleware.py`)
 - CORS via `CORS_ORIGINS`
-- JWT validation via JWKS
+- JWT validation via JWKS (fetched at runtime from Supabase URL)
 
 ---
 
@@ -201,7 +200,7 @@ Commit `backend/jwks.json` so Render (or your host) has it. Re-run after JWT key
 - [ ] Backend deployed with prod env
 - [ ] UI built with prod env and deployed
 - [ ] HTTPS everywhere
-- [ ] CSP & HSTS enabled (recommended)
+- [ ] CSP & HSTS enabled (automatic when `ENVIRONMENT=production`)
 
 ### Manual steps (after script)
 

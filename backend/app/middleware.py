@@ -2,6 +2,7 @@
 
 Provides:
 - Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+- CSP and HSTS in production
 - Request ID generation (UUID4 on every request)
 - Request timing (X-Response-Time header)
 """
@@ -19,8 +20,14 @@ from starlette.responses import Response
 logger = logging.getLogger(__name__)
 
 
+def _get_environment() -> str:
+    """Lazy load to avoid circular import."""
+    from app.config import get_settings
+    return get_settings().environment
+
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Add standard security headers to every response."""
+    """Add standard security headers to every response. In production, add CSP and HSTS."""
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         response = await call_next(request)
@@ -29,6 +36,20 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=()"
+        if _get_environment() == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+            # CSP: allow same origin, inline scripts (Vite), and common CDNs used by the app
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https: blob:; "
+                "connect-src 'self' https://*.supabase.co https://*.onrender.com wss:; "
+                "frame-ancestors 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'"
+            )
         return response
 
 
@@ -58,4 +79,20 @@ class TimingMiddleware(BaseHTTPMiddleware):
                 request.url.path,
                 duration_ms,
             )
+        return response
+
+
+class RequestLoggingMiddleware(BaseHTTPMiddleware):
+    """Log every request (method, path, origin, status) so API traffic is visible in backend logs."""
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        response = await call_next(request)
+        origin = request.headers.get("origin") or "-"
+        logger.info(
+            "%s %s origin=%s -> %d",
+            request.method,
+            request.url.path,
+            origin,
+            response.status_code,
+        )
         return response

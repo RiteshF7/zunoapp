@@ -18,7 +18,7 @@
             surface: 'var(--c-surface)',
             'surface-hover': 'var(--c-surface-hover)',
             border: 'var(--c-border)',
-            accent: { DEFAULT: '#6366f1', hover: '#818cf8' },
+            accent: { DEFAULT: 'var(--c-accent)', hover: 'var(--c-accent-hover)' },
             muted: 'var(--c-muted)',
             heading: 'var(--c-heading)',
             body: 'var(--c-body)',
@@ -39,8 +39,8 @@
     };
   </script>
   <style>html,body{background:#FAFAF9;margin:0;min-height:100vh}</style>
-  <script type="module" crossorigin src="./assets/index-CQRmiNlx.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-D-DuzcW6.css">
+  <script type="module" crossorigin src="./assets/index-Bfr9yQRZ.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-D7HZwEew.css">
 </head>
 <body class="min-h-screen antialiased">
 
@@ -109,6 +109,7 @@
       s.style.opacity = '0';
       setTimeout(function() { s.style.display = 'none'; s.remove(); }, 500);
     }
+    window.hideSplash = hideSplash;
   </script>
 
   <!-- Skip to content (accessibility) -->
@@ -116,51 +117,20 @@
     Skip to content
   </a>
 
+  <!-- Dev indicator (shown only in development via main.js) -->
+  <div id="dev-indicator" class="hidden fixed top-2 left-2 z-[90] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-md bg-amber-500/90 text-amber-950 pointer-events-none" aria-hidden="true">DEV</div>
+
   <!-- ======================= APP SHELL ======================= -->
   <div id="app" class="max-w-2xl mx-auto min-h-screen flex flex-col relative">
 
-    <!-- Top Nav -->
-    <header id="topnav" role="banner" class="hidden sticky top-0 z-30 nav-glass border-b border-border px-5 py-3 items-center justify-between safe-top">
-      <span class="text-lg font-bold tracking-tight text-heading">Zuno</span>
-      <div class="flex items-center gap-1">
-        <button onclick="navigate('#search')" class="p-2.5 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Search">
-          <span class="material-icons-round text-[22px] text-muted">search</span>
-        </button>
-        <button onclick="navigate('#profile')" class="p-2.5 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Profile">
-          <span class="material-icons-round text-[22px] text-muted">account_circle</span>
-        </button>
-      </div>
-    </header>
+    <!-- App header (mounted by components/app-header.js) -->
+    <div id="app-header-root"></div>
 
     <!-- Page Content -->
-    <main id="page" role="main" class="flex-1 px-5 py-4 pb-24" aria-live="polite"></main>
+    <main id="page" role="main" class="flex-1 px-5 pt-2 pb-24" aria-live="polite"></main>
 
-    <!-- FAB (Library page only) -->
-    <button id="fab-btn" class="hidden fixed bottom-24 right-5 z-20 w-14 h-14 bg-accent hover:bg-accent-hover text-white rounded-full shadow-elevated flex items-center justify-center active:scale-90 transition-transform" aria-label="Add content" onclick="openSaveContentModal()">
-      <span class="material-icons-round text-2xl">add</span>
-    </button>
-
-    <!-- Bottom Nav (4 tabs) -->
-    <nav id="bottomnav" role="navigation" aria-label="Main navigation" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-2xl nav-glass border-t border-border z-30 safe-bottom">
-      <div class="flex justify-around py-1.5">
-        <button onclick="navigate('#home')" data-tab="home" class="nav-btn flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Home">
-          <span class="material-icons-round text-[22px]">home</span>
-          <span class="text-[10px] font-medium">Home</span>
-        </button>
-        <button onclick="navigate('#library')" data-tab="library" class="nav-btn flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Library">
-          <span class="material-icons-round text-[22px]">collections_bookmark</span>
-          <span class="text-[10px] font-medium">Library</span>
-        </button>
-        <button onclick="navigate('#goals')" data-tab="goals" class="nav-btn flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Goals">
-          <span class="material-icons-round text-[22px]">flag</span>
-          <span class="text-[10px] font-medium">Goals</span>
-        </button>
-        <button onclick="navigate('#knowledge')" data-tab="knowledge" class="nav-btn flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Ask AI">
-          <span class="material-icons-round text-[22px]">psychology</span>
-          <span class="text-[10px] font-medium">Ask</span>
-        </button>
-      </div>
-    </nav>
+    <!-- Bottom Nav (mounted by components/bottom-nav.js) -->
+    <div id="bottom-nav-root"></div>
   </div>
 
   <!-- ======================= MODAL OVERLAY ======================= -->
@@ -181,5 +151,6 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 </body>
 </html>

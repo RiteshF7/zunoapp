@@ -139,9 +139,15 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Middleware (order: last added = outermost = runs first) ───────────────
 from fastapi.middleware.gzip import GZipMiddleware
-from app.middleware import SecurityHeadersMiddleware, RequestIDMiddleware, TimingMiddleware
+from app.middleware import (
+    SecurityHeadersMiddleware,
+    RequestIDMiddleware,
+    TimingMiddleware,
+    RequestLoggingMiddleware,
+)
 
 # Innermost → outermost (add order is reversed from execution order)
+app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(TimingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestIDMiddleware)

@@ -77,6 +77,24 @@ function runWhenReady(fn) {
 
 window.addEventListener('hashchange', router);
 
+// Splash: ensure we always hide it (Android/native can hang on API or OAuth; max 4s then show app)
+const MIN_SPLASH_MS = 2000;
+const MAX_SPLASH_MS = 4000;
+
+function scheduleHideSplash() {
+  const hide = typeof window.hideSplash === 'function' ? window.hideSplash : (typeof hideSplash === 'function' ? hideSplash : null);
+  if (!hide) return;
+  const elapsed = (typeof window._splashStart === 'number') ? Date.now() - window._splashStart : 0;
+  const wait = Math.max(0, MIN_SPLASH_MS - elapsed);
+  setTimeout(hide, wait);
+}
+
+// Fallback: always hide splash after MAX_SPLASH_MS so we never get stuck (e.g. slow/failing API in app load)
+runWhenReady(() => {
+  const fallback = typeof window.hideSplash === 'function' ? window.hideSplash : (typeof hideSplash === 'function' ? hideSplash : null);
+  if (fallback) setTimeout(fallback, MAX_SPLASH_MS);
+});
+
 runWhenReady(async () => {
   // Mount app header and bottom nav so #topnav and #bottomnav exist before router
   renderAppHeader();
@@ -92,23 +110,20 @@ runWhenReady(async () => {
     window.history.replaceState({}, '', u.pathname + u.search + (u.hash || ''));
   }
 
-  // If Supabase redirected back with tokens in the hash (web flow), handle them first
-  await handleOAuthCallback();
-  await router();
+  try {
+    // If Supabase redirected back with tokens in the hash (web flow), handle them first
+    await handleOAuthCallback();
+    await router();
 
-  // iOS Share Extension: sync token + apiBase to App Group so Share to Zuno works
-  syncAuthToNativeIfIOS();
+    // iOS Share Extension: sync token + apiBase to App Group so Share to Zuno works
+    syncAuthToNativeIfIOS();
 
-  // Lucide: replace data-lucide placeholders with SVG icons (bottom nav)
-  if (typeof window.lucide !== 'undefined') {
-    window.lucide.createIcons({ nameAttr: 'data-lucide' });
-  }
-
-  // Splash: only place that controls duration — change this value to change splash time (ms)
-  const MIN_SPLASH_MS = 2000;
-  if (typeof hideSplash === 'function') {
-    const elapsed = (typeof window._splashStart === 'number') ? Date.now() - window._splashStart : 0;
-    const wait = Math.max(0, MIN_SPLASH_MS - elapsed);
-    setTimeout(hideSplash, wait);
+    // Lucide: replace data-lucide placeholders with SVG icons (bottom nav)
+    if (typeof window.lucide !== 'undefined') {
+      window.lucide.createIcons({ nameAttr: 'data-lucide' });
+    }
+  } finally {
+    // Splash: hide after min duration (or immediately if we already passed it); always run so we never get stuck
+    scheduleHideSplash();
   }
 });

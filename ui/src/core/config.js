@@ -37,19 +37,25 @@ export function isCapacitor() {
 
 /**
  * API base URL — single source of truth for the backend base (used by api.js and iOS Share Extension sync).
- * When the app is loaded from localhost or 127.0.0.1 (Vite dev or backend serving UI), we use same origin
- * so API calls hit the local backend and CORS is avoided.
+ * In Capacitor, origin is http://localhost (not the backend), so we use VITE_API_BASE or emulator host.
  */
 export function getApiBase() {
   const host = typeof window !== 'undefined' && window.location?.hostname;
   const isLocal = host === 'localhost' || host === '127.0.0.1';
-  // Local: use same origin so /api goes to the same server (Vite proxy or backend).
+
+  // Native app (Capacitor): origin is always http://localhost — use env API base or emulator backend.
+  if (isCapacitor()) {
+    const envBase = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE;
+    if (envBase) return envBase;
+    if (typeof window !== 'undefined' && window.ZUNO_API_BASE) return window.ZUNO_API_BASE;
+    // Android emulator dev: backend at 10.0.2.2:8000
+    if (host === 'localhost') return 'http://10.0.2.2:8000';
+    return '';
+  }
+
+  // Browser: local dev use same origin; otherwise use env or origin.
   if (isLocal && typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
-  }
-  // Android emulator: backend often at 10.0.2.2:8000
-  if (host === 'localhost' && !window.location?.port) {
-    return 'http://10.0.2.2:8000';
   }
   return (
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE) ||

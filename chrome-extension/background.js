@@ -1,6 +1,6 @@
-// Default Zuno URLs
-const DEFAULT_ZUNO_APP = 'https://zunoapp.onrender.com/app/';
-const DEFAULT_API_BASE = 'https://zunoapp.onrender.com';
+// Default Zuno URLs (replaced by resolve_env.py from root .env; fallback = prod)
+const DEFAULT_ZUNO_APP = 'http://localhost:5173/app/';
+const DEFAULT_API_BASE = 'http://localhost:8000';
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({

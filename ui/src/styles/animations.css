@@ -15,6 +15,7 @@
 
 /* ── Spinner ── */
 .spinner { border: 3px solid var(--c-border); border-top-color: var(--c-accent); border-radius: 50%; width: 24px; height: 24px; animation: spin .6s linear infinite; display: inline-block; }
+.animate-spin { animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Skeleton Shimmer ── */

@@ -11,6 +11,39 @@ import { contentCardHtml } from '../components/ui.js';
 import { esc } from '../utils/helpers.js';
 import { showApiError } from '../utils/api-error.js';
 
+let _processingPollInterval = null;
+
+function stopProcessingPoll() {
+  if (_processingPollInterval) {
+    clearInterval(_processingPollInterval);
+    _processingPollInterval = null;
+  }
+}
+
+/**
+ * Poll for content that was "Processing with AI"; when any have ai_processed=true, clear state and refresh list.
+ */
+async function pollProcessingContent(el) {
+  const hash = window.location.hash || '#home';
+  const onLibrary = hash === '#home' || hash.startsWith('#home/saved');
+  if (getProcessingIds().size === 0 || !onLibrary) {
+    stopProcessingPoll();
+    return;
+  }
+  const res = await api('GET', '/api/content', null, { limit: 50 });
+  if (!res.ok) return;
+  const raw = res.data;
+  const items = Array.isArray(raw) ? raw : (raw?.items ?? []);
+  let updated = false;
+  items.forEach((item) => {
+    if (getProcessingIds().has(item.id) && item.ai_processed) {
+      removeProcessingId(item.id);
+      updated = true;
+    }
+  });
+  if (updated && onLibrary) await renderLibrarySaved(el);
+}
+
 /**
  * Renders the library page (saved content, collections, or bookmarks). Fetches content list, collections + categories, or bookmarked feed items.
  * @param {HTMLElement} el - Container element
@@ -48,7 +81,12 @@ async function renderLibrarySaved(el) {
 
   el.innerHTML = `
     <div class="fade-in">
-      <h1 class="text-xl font-bold text-heading mb-4">Library</h1>
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <h1 class="text-xl font-bold text-heading">Library</h1>
+        <button type="button" onclick="refreshLibrary()" id="library-refresh-btn" class="p-2 rounded-xl text-muted hover:text-heading hover:bg-surface-hover transition-colors active:scale-95" aria-label="Refresh list" title="Refresh list">
+          <span class="material-icons-round text-xl">refresh</span>
+        </button>
+      </div>
       ${libraryTabsHtml('saved')}
 
       ${items.length === 0 ? `
@@ -63,6 +101,10 @@ async function renderLibrarySaved(el) {
           ${items.map(item => contentCardHtml(item, { showAiStatus: true, processingIds: getProcessingIds() })).join('')}
         </div>`}
     </div>`;
+  if (getProcessingIds().size > 0) {
+    stopProcessingPoll();
+    _processingPollInterval = setInterval(() => pollProcessingContent(el), 4500);
+  }
 }
 
 async function renderLibraryBookmarks(el) {
@@ -72,7 +114,12 @@ async function renderLibraryBookmarks(el) {
 
   el.innerHTML = `
     <div class="fade-in">
-      <h1 class="text-xl font-bold text-heading mb-4">Library</h1>
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <h1 class="text-xl font-bold text-heading">Library</h1>
+        <button type="button" onclick="refreshLibrary()" id="library-refresh-btn" class="p-2 rounded-xl text-muted hover:text-heading hover:bg-surface-hover transition-colors active:scale-95" aria-label="Refresh list" title="Refresh list">
+          <span class="material-icons-round text-xl">refresh</span>
+        </button>
+      </div>
       ${libraryTabsHtml('bookmarks')}
 
       ${items.length === 0 ? `
@@ -158,6 +205,23 @@ export async function renderCollectionsPage(el) {
       <h1 class="text-xl font-bold text-heading mb-4">Collections</h1>
       ${collectionsContentHtml(cols, cats)}
     </div>`;
+}
+
+async function refreshLibrary() {
+  const pageEl = document.getElementById('page');
+  if (!pageEl) return;
+  const btn = document.getElementById('library-refresh-btn');
+  if (btn) {
+    btn.disabled = true;
+    const icon = btn.querySelector('.material-icons-round');
+    if (icon) icon.classList.add('animate-spin');
+  }
+  await renderLibrary(pageEl, _libraryTab);
+  if (btn) {
+    btn.disabled = false;
+    const icon = btn.querySelector('.material-icons-round');
+    if (icon) icon.classList.remove('animate-spin');
+  }
 }
 
 function switchLibraryTab(tab) {
@@ -318,6 +382,7 @@ async function doCreateCollection() {
 }
 
 // Expose globally for onclick handlers
+window.refreshLibrary = refreshLibrary;
 window.switchLibraryTab = switchLibraryTab;
 window.openSaveContentModal = openSaveContentModal;
 window.doSaveContent = doSaveContent;

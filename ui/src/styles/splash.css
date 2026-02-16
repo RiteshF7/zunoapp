@@ -22,12 +22,12 @@
 }
 .splash-dark .splash-stroke { stroke: #e5e5e5; stroke-opacity: 0.15; }
 .splash-dark .splash-dot { fill: #e5e5e5; }
-.splash-dark .splash-text { color: #fafafa; }
+#splash-screen.splash-dark .splash-text { color: #ffffff !important; }
 .splash-dark .splash-divider { background-color: rgba(250,250,250,0.1); }
-.splash-dark .splash-loading-text { color: rgba(250,250,250,0.5); }
-.splash-dark .splash-track { background-color: rgba(250,250,250,0.05); }
-.splash-dark .splash-bar { background-color: rgba(250,250,250,0.3); }
-.splash-dark .splash-footer-text { color: rgba(250,250,250,0.2); }
+#splash-screen.splash-dark .splash-loading-text { color: rgba(255,255,255,0.9); }
+#splash-screen.splash-dark .splash-track { background-color: rgba(255,255,255,0.1); }
+#splash-screen.splash-dark .splash-bar { background-color: rgba(255,255,255,0.5); }
+#splash-screen.splash-dark .splash-footer-text { color: rgba(255,255,255,0.7); }
 .splash-dark .splash-glow-1 { background-color: rgba(250,250,250,0.02); }
 .splash-dark .splash-glow-2 { background-color: rgba(250,250,250,0.02); }
 .splash-dark .splash-icon-glow {

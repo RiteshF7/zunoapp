@@ -9,10 +9,30 @@ export function setUserProfile(val) {
   _userProfile = val;
 }
 
+/** Update header profile circle with avatar image when available */
+export function setHeaderProfileAvatar(avatarUrl) {
+  const btn = document.querySelector('#topnav .header-profile-btn');
+  const span = document.getElementById('header-profile-avatar');
+  if (!btn || !span) return;
+  if (avatarUrl) {
+    span.style.backgroundImage = `url(${encodeURI(avatarUrl)})`;
+    span.classList.remove('hidden');
+    btn.classList.add('has-avatar');
+  } else {
+    span.style.backgroundImage = '';
+    span.classList.add('hidden');
+    btn.classList.remove('has-avatar');
+  }
+}
+
 export async function getUserProfile(force = false) {
-  if (_userProfile && !force) return _userProfile;
+  if (_userProfile && !force) {
+    setHeaderProfileAvatar(_userProfile.avatar_url || null);
+    return _userProfile;
+  }
   const res = await api('GET', '/api/profile');
   if (res.ok) _userProfile = res.data;
+  setHeaderProfileAvatar(_userProfile?.avatar_url || null);
   return _userProfile || {};
 }
 

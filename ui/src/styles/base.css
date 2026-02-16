@@ -24,6 +24,32 @@ pre { white-space: pre-wrap; word-break: break-word; }
   -webkit-backdrop-filter: blur(16px);
 }
 
+/* ── Top nav (transparent, black/white); Lucide SVGs inherit color ── */
+#topnav .topnav-btn svg,
+#topnav .nav-lucide {
+  stroke: currentColor;
+}
+/* Profile avatar circle: when .has-avatar is set, show background img and hide icon */
+#topnav .header-profile-btn.has-avatar .header-profile-icon {
+  display: none;
+}
+#topnav .header-profile-btn.has-avatar #header-profile-avatar {
+  display: block;
+}
+
+/* ── Bottom nav (black/white, medical-style); Lucide SVGs inherit color ── */
+#bottomnav .nav-btn svg {
+  stroke: currentColor;
+}
+#bottomnav .nav-btn[aria-current="page"] {
+  color: #171717;
+  background: rgba(0, 0, 0, 0.08);
+}
+.dark #bottomnav .nav-btn[aria-current="page"] {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

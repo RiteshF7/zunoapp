@@ -92,6 +92,11 @@ runWhenReady(async () => {
   // iOS Share Extension: sync token + apiBase to App Group so Share to Zuno works
   syncAuthToNativeIfIOS();
 
+  // Lucide: replace data-lucide placeholders with SVG icons (bottom nav)
+  if (typeof window.lucide !== 'undefined') {
+    window.lucide.createIcons({ nameAttr: 'data-lucide' });
+  }
+
   // Splash: only place that controls duration — change this value to change splash time (ms)
   const MIN_SPLASH_MS = 2000;
   if (typeof hideSplash === 'function') {

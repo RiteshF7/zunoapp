@@ -1,4 +1,4 @@
-const ZUNO_APP = 'https://zunoapp.onrender.com/app/';
+const DEFAULT_ZUNO_APP = 'https://zunoapp.onrender.com/app/';
 const RESET_BUTTON_MS = 1800;
 
 function shareUrlFireAndForget(url, onReset) {
@@ -22,10 +22,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     connectDiv.style.display = 'block';
     const linkInput = document.getElementById('zuno-link');
     const copyBtn = document.getElementById('copy-btn');
-    copyBtn.onclick = () => {
-      linkInput.select();
-      document.execCommand('copy');
-      copyBtn.textContent = 'Copied!';
+    const { zuno_app_url } = await chrome.storage.sync.get('zuno_app_url');
+    const base = (zuno_app_url || DEFAULT_ZUNO_APP).replace(/\/?$/, '/');
+    linkInput.value = base + '#connect-extension';
+    copyBtn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(linkInput.value);
+        copyBtn.textContent = 'Copied!';
+      } catch {
+        linkInput.select();
+        document.execCommand('copy');
+        copyBtn.textContent = 'Copied!';
+      }
       setTimeout(() => { copyBtn.textContent = 'Copy link'; }, 1500);
     };
     return;

@@ -81,6 +81,29 @@ export async function renderContentDetail(el, id) {
         <span class="material-icons-round text-lg">folder</span> Add to Collection
       </button>
     </div>`;
+
+  if (isProcessing) {
+    if (window._contentDetailPoll) clearInterval(window._contentDetailPoll);
+    const contentId = c.id;
+    window._contentDetailPoll = setInterval(async () => {
+      if ((window.location.hash || '').indexOf('content-detail/' + contentId) === -1) {
+        if (window._contentDetailPoll) clearInterval(window._contentDetailPoll);
+        window._contentDetailPoll = null;
+        return;
+      }
+      const r = await api('GET', `/api/content/${contentId}`);
+      if (r.ok && r.data.ai_processed) {
+        if (window._contentDetailPoll) clearInterval(window._contentDetailPoll);
+        window._contentDetailPoll = null;
+        removeProcessingId(contentId);
+        setContentDetailTab('summary');
+        await renderContentDetail(el, contentId);
+      }
+    }, 4000);
+  } else if (window._contentDetailPoll) {
+    clearInterval(window._contentDetailPoll);
+    window._contentDetailPoll = null;
+  }
 }
 
 function renderContentTabBody(c, tags) {

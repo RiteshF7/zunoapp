@@ -21,27 +21,38 @@
       theme: {
         extend: {
           colors: {
-            primary: "#E2E8F0",
-            "background-light": "#F8FAFC",
-            "background-dark": "#1A1C1E",
-            "card-dark": "#2D2F31",
-            "accent-blue": "#4D96FF",
+            background: "hsl(0 0% 100%)",
+            foreground: "hsl(0 0% 3.9%)",
+            "background-dark": "hsl(0 0% 3.9%)",
+            "foreground-dark": "hsl(0 0% 98%)",
+            card: "hsl(0 0% 100%)",
+            "card-dark": "hsl(0 0% 6%)",
+            muted: "hsl(0 0% 45.1%)",
+            "muted-dark": "hsl(0 0% 63.9%)",
+            border: "hsl(0 0% 89.8%)",
+            "border-dark": "hsl(0 0% 14.9%)",
+            accent: "hsl(217 91% 60%)",
+            "accent-blue": "hsl(217 91% 60%)",
+            secondary: "hsl(0 0% 96.1%)",
+            "secondary-dark": "hsl(0 0% 14.9%)",
           },
-          fontFamily: { display: ["Inter", "sans-serif"] },
-          borderRadius: { DEFAULT: "1.25rem", xl: "1.5rem", "2xl": "2rem" },
+          fontFamily: { display: ["Inter", "system-ui", "sans-serif"] },
+          borderRadius: { lg: "0.5rem", DEFAULT: "0.5rem", xl: "1rem", "2xl": "1rem" },
+          boxShadow: { "card": "0 1px 2px 0 rgb(0 0 0 / 0.05)", "card-hover": "0 4px 6px -1px rgb(0 0 0 / 0.1)" },
         },
       },
     };
   </script>
   <style>
     html { font-size: 16px; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; -moz-text-size-adjust: 100%; text-size-adjust: 100%; }
-    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .hero-gradient { background: linear-gradient(135deg, rgba(77,150,255,0.08) 0%, rgba(139,92,246,0.06) 50%, transparent 100%); }
-    .dark .hero-gradient { background: linear-gradient(135deg, rgba(77,150,255,0.12) 0%, rgba(139,92,246,0.08) 50%, transparent 100%); }
-    .ai-glow { box-shadow: 0 0 60px -12px rgba(77,150,255,0.25); }
-    .dark .ai-glow { box-shadow: 0 0 60px -12px rgba(77,150,255,0.2); }
+    .text-balance { text-wrap: balance; }
+    .hero-gradient { background: linear-gradient(to bottom right, hsl(0 0% 100%), hsl(0 0% 98%)); }
+    .dark .hero-gradient { background: linear-gradient(to bottom right, hsl(0 0% 6%), hsl(0 0% 3.9%)); }
+    .ai-glow { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+    .dark .ai-glow { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.2); }
     /* Animations */
     .fade-up { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
     .fade-up.visible { opacity: 1; transform: translateY(0); }
@@ -57,30 +68,32 @@
     .float-d1 { animation: float 3s ease-in-out 0.5s infinite; }
     .float-d2 { animation: float 3s ease-in-out 1s infinite; }
     .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+    /* Medical-style card decorative blur */
+    .card-blur::before { content: ''; position: absolute; inset: 0; opacity: 0.15; pointer-events: none; background: radial-gradient(circle at 20% 20%, rgba(148,163,184,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(148,163,184,0.3) 0%, transparent 45%); filter: blur(32px); }
     /* Glass */
-    .glass { background: rgba(255,255,255,0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.3); }
-    .dark .glass { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.1); }
+    .glass { background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid hsl(0 0% 90%); box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+    .dark .glass { background: rgba(255,255,255,0.08); border-color: hsl(0 0% 15%); }
   </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
+<body class="bg-white dark:bg-background-dark text-foreground dark:text-foreground-dark min-h-screen transition-colors duration-200">
 
   <!-- ====== HEADER ====== -->
-  <header class="px-6 py-4 flex items-center justify-between sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md z-30 border-b border-slate-200/50 dark:border-slate-800/50">
+  <header class="px-6 py-4 flex items-center justify-between sticky top-0 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md z-30 border-b border-border dark:border-border-dark">
     <a href="#" class="flex items-center gap-3">
       <img id="logo-header" src="assets/logo.svg" alt="Zuno" class="w-10 h-10" data-logo-light="assets/logo.svg" data-logo-dark="assets/logo-dark.svg"/>
       <span class="text-xl font-bold tracking-tight">Zuno</span>
     </a>
     <nav class="hidden md:flex items-center gap-6">
-      <a href="#screens" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Screens</a>
-      <a href="#features" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
-      <a href="#how" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">How it works</a>
-      <a href="#faq" class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">FAQ</a>
+      <a href="#screens" class="text-sm font-medium text-muted dark:text-muted-dark hover:text-foreground dark:hover:text-foreground-dark transition-colors">Screens</a>
+      <a href="#features" class="text-sm font-medium text-muted dark:text-muted-dark hover:text-foreground dark:hover:text-foreground-dark transition-colors">Features</a>
+      <a href="#how" class="text-sm font-medium text-muted dark:text-muted-dark hover:text-foreground dark:hover:text-foreground-dark transition-colors">How it works</a>
+      <a href="#faq" class="text-sm font-medium text-muted dark:text-muted-dark hover:text-foreground dark:hover:text-foreground-dark transition-colors">FAQ</a>
     </nav>
     <div class="flex items-center gap-2">
-      <button id="themeToggle" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200 active:scale-95" aria-label="Toggle theme">
+      <button id="themeToggle" class="p-2 rounded-lg hover:bg-secondary dark:hover:bg-secondary-dark transition-colors duration-200 active:scale-95" aria-label="Toggle theme">
         <span class="material-icons-round text-lg">dark_mode</span>
       </button>
-      <a href="/app/#auth" class="px-5 py-2.5 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold text-sm hover:opacity-90 active:scale-95 transition-all duration-200">
+      <a href="/app/#auth" class="px-5 py-2.5 rounded-full bg-foreground dark:bg-foreground-dark text-white dark:text-foreground font-semibold text-sm shadow-sm hover:shadow-card-hover active:scale-95 transition-all duration-200">
         Get Started
       </a>
     </div>
@@ -91,24 +104,24 @@
     <!-- ====== HERO ====== -->
     <section class="px-6 py-20 md:py-28 hero-gradient">
       <div class="max-w-4xl mx-auto text-center fade-up">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-blue/10 dark:bg-accent-blue/20 text-accent-blue text-sm font-medium mb-6">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-card-dark shadow-sm border border-border dark:border-border-dark text-accent text-sm font-medium mb-6">
           <span class="material-icons-round text-sm">auto_awesome</span>
           AI-powered content library
         </div>
-        <p class="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-3">Zuno is your one place for everything you save — from every app.</p>
-        <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 leading-tight">
+        <p class="text-base md:text-lg text-muted dark:text-muted-dark max-w-2xl mx-auto mb-3">Zuno is your one place for everything you save — from every app.</p>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-foreground dark:text-foreground-dark text-balance mb-6 leading-tight">
           Share from anywhere.<br/>
-          <span class="text-accent-blue">Search anytime.</span>
+          <span class="text-accent">Search anytime.</span>
         </h1>
-        <p class="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10">
+        <p class="text-lg md:text-xl text-muted dark:text-muted-dark max-w-2xl mx-auto mb-10">
           Save reels, articles, videos, and posts from Instagram, YouTube, Twitter, LinkedIn, and more with one tap (Share → Zuno) or paste a URL. AI categorizes and organizes everything. Search in plain language over <em>your</em> library — personalized results from your saves, so you can find “that recipe video I saved last month” in seconds.
         </p>
         <div class="flex flex-wrap justify-center gap-4">
-          <a href="/app/#auth" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all">
+          <a href="/app/#auth" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-foreground dark:bg-foreground-dark text-white dark:text-foreground font-bold shadow-sm hover:shadow-card-hover active:scale-95 transition-all border border-transparent">
             <span class="material-icons-round">rocket_launch</span>
             Get Started
           </a>
-          <a href="flow/" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-slate-200 dark:bg-card-dark text-slate-900 dark:text-slate-100 font-semibold hover:bg-slate-300 dark:hover:bg-slate-700 active:scale-95 transition-all">
+          <a href="flow/" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white dark:bg-card-dark text-foreground dark:text-foreground-dark font-semibold shadow-sm border border-border dark:border-border-dark hover:shadow-card-hover hover:bg-secondary dark:hover:bg-secondary-dark active:scale-95 transition-all">
             <span class="material-icons-round">slideshow</span>
             See the Flow
           </a>
@@ -126,41 +139,41 @@
     </section>
 
     <!-- ====== PROBLEM ====== -->
-    <section class="px-6 py-16 border-t border-slate-200 dark:border-slate-800">
+    <section class="px-6 py-16 border-t border-border dark:border-border-dark">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-4 text-center fade-up">Content everywhere. Finding it? Nowhere.</h2>
-        <p class="text-slate-600 dark:text-slate-400 text-center mb-10 max-w-xl mx-auto fade-up">Every app has its own save. Nothing connects. Your saved content becomes a graveyard.</p>
+        <h2 class="text-2xl md:text-3xl font-bold text-foreground dark:text-foreground-dark mb-4 text-center text-balance fade-up">Content everywhere. Finding it? Nowhere.</h2>
+        <p class="text-muted dark:text-muted-dark text-center mb-10 max-w-xl mx-auto fade-up">Every app has its own save. Nothing connects. Your saved content becomes a graveyard.</p>
         <div class="grid md:grid-cols-3 gap-6 stagger">
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
-            <span class="material-icons-round text-red-400 text-2xl mb-3">folder_off</span>
-            <h3 class="font-bold text-slate-800 dark:text-white mb-2">Scattered saves</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Reels on Instagram, videos on YouTube, articles in browser — each with its own save button.</p>
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/30 dark:to-red-950/30 border border-border dark:border-border-dark shadow-sm relative overflow-hidden card-blur">
+            <span class="material-icons-round text-red-400 text-2xl mb-3 relative z-10">folder_off</span>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark mb-2 text-balance relative z-10">Scattered saves</h3>
+            <p class="text-sm text-muted dark:text-muted-dark relative z-10">Reels on Instagram, videos on YouTube, articles in browser — each with its own save button.</p>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
-            <span class="material-icons-round text-red-400 text-2xl mb-3">search_off</span>
-            <h3 class="font-bold text-slate-800 dark:text-white mb-2">Impossible to find</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">No unified search across platforms. You forget what you saved and where.</p>
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-border dark:border-border-dark shadow-sm relative overflow-hidden card-blur">
+            <span class="material-icons-round text-amber-500 text-2xl mb-3 relative z-10">search_off</span>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark mb-2 text-balance relative z-10">Impossible to find</h3>
+            <p class="text-sm text-muted dark:text-muted-dark relative z-10">No unified search across platforms. You forget what you saved and where.</p>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
-            <span class="material-icons-round text-red-400 text-2xl mb-3">inventory_2</span>
-            <h3 class="font-bold text-slate-800 dark:text-white mb-2">Library graveyard</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Bulk saved content becomes useless. Manual organizing is tedious and never happens.</p>
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50 border border-border dark:border-border-dark shadow-sm relative overflow-hidden card-blur">
+            <span class="material-icons-round text-muted dark:text-muted-dark text-2xl mb-3 relative z-10">inventory_2</span>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark mb-2 text-balance relative z-10">Library graveyard</h3>
+            <p class="text-sm text-muted dark:text-muted-dark relative z-10">Bulk saved content becomes useless. Manual organizing is tedious and never happens.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ====== SCREEN PREVIEWS ====== -->
-    <section id="screens" class="px-6 py-16 md:py-20 bg-slate-100/50 dark:bg-slate-900/30">
+    <section id="screens" class="px-6 py-16 md:py-20 bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-5xl mx-auto text-center">
-        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 fade-up">See the app</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-12 max-w-xl mx-auto fade-up">Two core screens — your organized library and a personalized feed.</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-foreground dark:text-foreground-dark mb-4 text-balance fade-up">See the app</h2>
+        <p class="text-muted dark:text-muted-dark mb-12 max-w-xl mx-auto fade-up">Two core screens — your organized library and a personalized feed.</p>
 
         <div class="grid md:grid-cols-2 gap-10 max-w-3xl mx-auto">
 
           <!-- Home Screen Mockup -->
           <div class="fade-up">
-            <div class="rounded-[2.5rem] bg-white dark:bg-card-dark border-[3px] border-slate-300 dark:border-slate-600 shadow-2xl overflow-hidden mx-auto" style="max-width: 320px;">
+            <div class="rounded-[2.5rem] bg-white dark:bg-card-dark border-[3px] border-border dark:border-border-dark shadow-2xl overflow-hidden mx-auto" style="max-width: 320px;">
               <!-- Notch -->
               <div class="h-7 bg-white dark:bg-card-dark flex items-center justify-center">
                 <div class="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
@@ -170,66 +183,66 @@
                 <div class="flex items-center gap-2">
                   <img src="assets/logo.svg" alt="Zuno" class="w-8 h-8" data-logo-light="assets/logo.svg" data-logo-dark="assets/logo-dark.svg"/>
                   <div class="text-left">
-                    <p class="text-[9px] text-slate-400">Pick your</p>
-                    <p class="text-sm font-bold text-slate-900 dark:text-white -mt-0.5">Zuno</p>
+                    <p class="text-[9px] text-muted">Pick your</p>
+                    <p class="text-sm font-bold text-foreground dark:text-foreground-dark -mt-0.5">Zuno</p>
                   </div>
                 </div>
                 <div class="flex gap-1.5">
-                  <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><span class="material-icons-round text-slate-500 dark:text-slate-400 text-sm">notifications</span></div>
-                  <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><span class="material-icons-round text-slate-500 dark:text-slate-400 text-sm">settings</span></div>
+                  <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><span class="material-icons-round text-muted dark:text-muted-dark text-sm">notifications</span></div>
+                  <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><span class="material-icons-round text-muted dark:text-muted-dark text-sm">settings</span></div>
                 </div>
               </div>
               <!-- Filter pills -->
               <div class="px-3 py-2 flex gap-1.5 overflow-x-auto no-scrollbar">
                 <span class="px-3 py-1.5 rounded-full bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 text-[10px] font-semibold whitespace-nowrap">All</span>
-                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Recent</span>
-                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Ideas</span>
-                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Research</span>
-                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Personal</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Recent</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Ideas</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Research</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Personal</span>
               </div>
               <!-- Collection grid -->
               <div class="px-3 pb-16 grid grid-cols-2 gap-2.5">
                 <div class="bg-blue-50 dark:bg-[#2A303C] p-3 rounded-xl h-28 flex flex-col justify-between">
                   <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center"><span class="material-icons-round text-blue-600 dark:text-blue-400 text-sm">gavel</span></div>
-                  <div><p class="text-[10px] font-bold text-slate-800 dark:text-white leading-tight">Important Documents</p><p class="text-[9px] text-slate-400">12 items</p></div>
+                  <div><p class="text-[10px] font-bold text-foreground dark:text-foreground-dark leading-tight">Important Documents</p><p class="text-[9px] text-muted">12 items</p></div>
                 </div>
                 <div class="bg-green-50 dark:bg-[#2A3430] p-3 rounded-xl h-28 flex flex-col justify-between">
                   <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center"><span class="material-icons-round text-green-600 dark:text-green-400 text-sm">smart_toy</span></div>
-                  <div><p class="text-[10px] font-bold text-slate-800 dark:text-white leading-tight">Daily Helpers</p><p class="text-[9px] text-slate-400">37 items</p></div>
+                  <div><p class="text-[10px] font-bold text-foreground dark:text-foreground-dark leading-tight">Daily Helpers</p><p class="text-[9px] text-muted">37 items</p></div>
                 </div>
                 <div class="bg-purple-50 dark:bg-[#342A38] p-3 rounded-xl h-28 flex flex-col justify-between">
                   <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center"><span class="material-icons-round text-purple-600 dark:text-purple-400 text-sm">auto_awesome</span></div>
-                  <div><p class="text-[10px] font-bold text-slate-800 dark:text-white leading-tight">Creative Projects</p><p class="text-[9px] text-slate-400">8 items</p></div>
+                  <div><p class="text-[10px] font-bold text-foreground dark:text-foreground-dark leading-tight">Creative Projects</p><p class="text-[9px] text-muted">8 items</p></div>
                 </div>
                 <div class="bg-amber-50 dark:bg-[#38332A] p-3 rounded-xl h-28 flex flex-col justify-between">
                   <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center"><span class="material-icons-round text-amber-600 dark:text-amber-400 text-sm">architecture</span></div>
-                  <div><p class="text-[10px] font-bold text-slate-800 dark:text-white leading-tight">Home & DIY</p><p class="text-[9px] text-slate-400">21 items</p></div>
+                  <div><p class="text-[10px] font-bold text-foreground dark:text-foreground-dark leading-tight">Home & DIY</p><p class="text-[9px] text-muted">21 items</p></div>
                 </div>
                 <div class="bg-rose-50 dark:bg-[#382A2A] p-3 rounded-xl h-28 flex flex-col justify-between">
                   <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center"><span class="material-icons-round text-rose-600 dark:text-rose-400 text-sm">psychology</span></div>
-                  <div><p class="text-[10px] font-bold text-slate-800 dark:text-white leading-tight">Personal Notes</p><p class="text-[9px] text-slate-400">5 items</p></div>
+                  <div><p class="text-[10px] font-bold text-foreground dark:text-foreground-dark leading-tight">Personal Notes</p><p class="text-[9px] text-muted">5 items</p></div>
                 </div>
                 <div class="bg-indigo-50 dark:bg-[#2A2E38] p-3 rounded-xl h-28 flex flex-col justify-between">
                   <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center"><span class="material-icons-round text-indigo-600 dark:text-indigo-400 text-sm">science</span></div>
-                  <div><p class="text-[10px] font-bold text-slate-800 dark:text-white leading-tight">Learning & Discovery</p><p class="text-[9px] text-slate-400">14 items</p></div>
+                  <div><p class="text-[10px] font-bold text-foreground dark:text-foreground-dark leading-tight">Learning & Discovery</p><p class="text-[9px] text-muted">14 items</p></div>
                 </div>
               </div>
               <!-- Bottom nav bar -->
               <div class="relative">
                 <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-40 h-12 glass rounded-full flex items-center justify-between px-2">
-                  <div class="flex-1 flex justify-center"><div class="w-9 h-9 bg-slate-300/80 dark:bg-white/20 rounded-full flex items-center justify-center"><span class="material-icons-round text-slate-900 dark:text-white text-sm">home</span></div></div>
-                  <div class="flex-1 flex justify-center"><span class="material-icons-round text-slate-400 text-sm">add</span></div>
-                  <div class="flex-1 flex justify-center"><span class="material-icons-round text-slate-400 text-sm">account_circle</span></div>
+                  <div class="flex-1 flex justify-center"><div class="w-9 h-9 bg-slate-300/80 dark:bg-white/20 rounded-full flex items-center justify-center"><span class="material-icons-round text-foreground dark:text-foreground-dark text-sm">home</span></div></div>
+                  <div class="flex-1 flex justify-center"><span class="material-icons-round text-muted text-sm">add</span></div>
+                  <div class="flex-1 flex justify-center"><span class="material-icons-round text-muted text-sm">account_circle</span></div>
                 </div>
               </div>
             </div>
-            <p class="text-sm font-bold text-slate-800 dark:text-white mt-4">Home Screen</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">AI-organized collections, filters, and quick access.</p>
+            <p class="text-sm font-bold text-foreground dark:text-foreground-dark mt-4">Home Screen</p>
+            <p class="text-xs text-muted dark:text-muted-dark">AI-organized collections, filters, and quick access.</p>
           </div>
 
           <!-- Feed Screen Mockup -->
           <div class="fade-up">
-            <div class="rounded-[2.5rem] bg-white dark:bg-card-dark border-[3px] border-slate-300 dark:border-slate-600 shadow-2xl overflow-hidden mx-auto relative" style="max-width: 320px;">
+            <div class="rounded-[2.5rem] bg-white dark:bg-card-dark border-[3px] border-border dark:border-border-dark shadow-2xl overflow-hidden mx-auto relative" style="max-width: 320px;">
               <!-- Notch -->
               <div class="h-7 bg-white dark:bg-card-dark flex items-center justify-center">
                 <div class="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
@@ -238,63 +251,63 @@
               <div class="px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <img src="assets/logo.svg" alt="Zuno" class="w-7 h-7" data-logo-light="assets/logo.svg" data-logo-dark="assets/logo-dark.svg"/>
-                  <span class="text-sm font-bold text-slate-900 dark:text-white">Feed</span>
+                  <span class="text-sm font-bold text-foreground dark:text-foreground-dark">Feed</span>
                 </div>
                 <div class="flex gap-1.5">
-                  <span class="material-icons-round text-slate-400 text-lg">search</span>
-                  <span class="material-icons-round text-slate-400 text-lg">tune</span>
+                  <span class="material-icons-round text-muted text-lg">search</span>
+                  <span class="material-icons-round text-muted text-lg">tune</span>
                 </div>
               </div>
               <!-- Filter bar -->
-              <div class="px-3 py-2 flex gap-1.5 overflow-x-auto no-scrollbar border-b border-slate-100 dark:border-slate-800">
+              <div class="px-3 py-2 flex gap-1.5 overflow-x-auto no-scrollbar border-b border-border dark:border-border-dark">
                 <span class="px-3 py-1.5 rounded-full bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 text-[10px] font-semibold whitespace-nowrap">All</span>
-                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Videos</span>
-                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Audio</span>
-                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Articles</span>
-                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-[10px] font-medium whitespace-nowrap">Posts</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Videos</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Audio</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Articles</span>
+                <span class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 text-muted dark:text-muted-dark text-[10px] font-medium whitespace-nowrap">Posts</span>
               </div>
               <!-- Feed cards -->
               <div class="px-3 py-3 space-y-2.5" style="height: 370px; overflow: hidden;">
                 <!-- Video card -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm overflow-hidden">
                   <div class="h-20 bg-gradient-to-br from-red-300 to-red-500 dark:from-red-800 dark:to-red-600 relative flex items-center justify-center">
                     <div class="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center"><span class="material-icons-round text-white text-lg">play_arrow</span></div>
                     <span class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[8px] px-1 py-0.5 rounded font-medium">3:42</span>
                   </div>
                   <div class="p-2.5 flex items-start justify-between gap-1.5">
                     <div class="flex-1 min-w-0">
-                      <p class="text-[10px] font-bold text-slate-800 dark:text-white truncate">Quick Pad Thai in 5 Minutes</p>
-                      <p class="text-[9px] text-slate-400 mt-0.5">12K views</p>
+                      <p class="text-[10px] font-bold text-foreground dark:text-foreground-dark truncate">Quick Pad Thai in 5 Minutes</p>
+                      <p class="text-[9px] text-muted mt-0.5">12K views</p>
                     </div>
                     <span class="tag bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[8px] py-0.5 px-1.5">Video</span>
                   </div>
                 </div>
                 <!-- Podcast card -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2.5">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm p-2.5">
                   <div class="flex items-center gap-2.5">
                     <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-white text-lg">headphones</span></div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-[10px] font-bold text-slate-800 dark:text-white truncate">The Future of AI Agents</p>
-                      <p class="text-[9px] text-slate-400 mt-0.5">Tech Podcast · 45 min</p>
+                      <p class="text-[10px] font-bold text-foreground dark:text-foreground-dark truncate">The Future of AI Agents</p>
+                      <p class="text-[9px] text-muted mt-0.5">Tech Podcast · 45 min</p>
                     </div>
                     <span class="tag bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[8px] py-0.5 px-1.5 flex-shrink-0">Podcast</span>
                   </div>
                 </div>
                 <!-- Article card -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2.5">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm p-2.5">
                   <div class="flex items-start gap-2.5">
                     <div class="flex-1 min-w-0">
-                      <p class="text-[10px] font-bold text-slate-800 dark:text-white leading-snug">Why Tailwind CSS Dominates in 2026</p>
-                      <p class="text-[9px] text-slate-400 mt-1">4 min read</p>
+                      <p class="text-[10px] font-bold text-foreground dark:text-foreground-dark leading-snug">Why Tailwind CSS Dominates in 2026</p>
+                      <p class="text-[9px] text-muted mt-1">4 min read</p>
                     </div>
                     <span class="tag bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[8px] py-0.5 px-1.5 flex-shrink-0">Article</span>
                   </div>
                 </div>
                 <!-- Image card -->
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-border dark:border-border-dark shadow-sm overflow-hidden">
                   <div class="h-16 bg-gradient-to-br from-pink-300 to-orange-300 dark:from-pink-800 dark:to-orange-700"></div>
                   <div class="p-2.5 flex items-start justify-between gap-1.5">
-                    <p class="text-[10px] font-bold text-slate-800 dark:text-white truncate flex-1">Minimalist Desk Setup</p>
+                    <p class="text-[10px] font-bold text-foreground dark:text-foreground-dark truncate flex-1">Minimalist Desk Setup</p>
                     <span class="tag bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 text-[8px] py-0.5 px-1.5 flex-shrink-0">Image</span>
                   </div>
                 </div>
@@ -302,8 +315,8 @@
               <!-- Fade overlay -->
               <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-card-dark to-transparent pointer-events-none rounded-b-[2.3rem]"></div>
             </div>
-            <p class="text-sm font-bold text-slate-800 dark:text-white mt-4">Feed Screen</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">All content types, all sources, one personalized feed.</p>
+            <p class="text-sm font-bold text-foreground dark:text-foreground-dark mt-4">Feed Screen</p>
+            <p class="text-xs text-muted dark:text-muted-dark">All content types, all sources, one personalized feed.</p>
           </div>
 
         </div>
@@ -313,122 +326,122 @@
     <!-- ====== AI FEATURES ====== -->
     <section id="features" class="px-6 py-16 md:py-20">
       <div class="max-w-4xl mx-auto text-center">
-        <p class="text-sm font-medium text-accent-blue tracking-wide uppercase mb-3 fade-up">Powered by AI</p>
-        <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-4 fade-up">Your content, understood.</h2>
-        <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-12 fade-up">Zuno uses AI to categorize, search, and recommend — so you never lose anything again.</p>
+        <p class="text-sm font-medium text-accent tracking-wide uppercase mb-3 fade-up">Powered by AI</p>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-foreground dark:text-foreground-dark mb-4 text-balance fade-up">Your content, understood.</h2>
+        <p class="text-muted dark:text-muted-dark max-w-2xl mx-auto mb-12 fade-up">Zuno uses AI to categorize, search, and recommend — so you never lose anything again.</p>
         <div class="grid md:grid-cols-3 gap-6 stagger">
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 ai-glow">
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border border-border dark:border-border-dark shadow-sm ai-glow relative overflow-hidden card-blur">
             <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mb-4 mx-auto"><span class="material-icons-round text-blue-600 dark:text-blue-400 text-2xl">auto_awesome</span></div>
-            <h3 class="font-bold text-slate-800 dark:text-white text-lg mb-2">AI Categorization</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Content is tagged and grouped automatically — Ideas, Research, Personal — zero manual effort.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark text-lg mb-2">AI Categorization</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">Content is tagged and grouped automatically — Ideas, Research, Personal — zero manual effort.</p>
           </div>
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 ai-glow">
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm ai-glow">
             <div class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center mb-4 mx-auto"><span class="material-icons-round text-indigo-600 dark:text-indigo-400 text-2xl">summarize</span></div>
-            <h3 class="font-bold text-slate-800 dark:text-white text-lg mb-2">AI Summary Cards</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Every saved item gets a short AI summary so you know what you saved without opening it.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark text-lg mb-2">AI Summary Cards</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">Every saved item gets a short AI summary so you know what you saved without opening it.</p>
           </div>
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 ai-glow">
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm ai-glow">
             <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mb-4 mx-auto"><span class="material-icons-round text-purple-600 dark:text-purple-400 text-2xl">chat</span></div>
-            <h3 class="font-bold text-slate-800 dark:text-white text-lg mb-2">Natural Language Search</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Ask in plain words: "that cooking video from last month" — Zuno understands context.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark text-lg mb-2">Natural Language Search</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">Ask in plain words: "that cooking video from last month" — Zuno understands context.</p>
           </div>
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 ai-glow">
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm ai-glow">
             <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mb-4 mx-auto"><span class="material-icons-round text-amber-600 dark:text-amber-400 text-2xl">forum</span></div>
-            <h3 class="font-bold text-slate-800 dark:text-white text-lg mb-2">Ask Zuno</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Ask questions like "Do I have any cooking videos?" — get answers from your library like a smart assistant.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark text-lg mb-2">Ask Zuno</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">Ask questions like "Do I have any cooking videos?" — get answers from your library like a smart assistant.</p>
           </div>
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 ai-glow">
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm ai-glow">
             <div class="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-4 mx-auto"><span class="material-icons-round text-green-600 dark:text-green-400 text-2xl">psychology</span></div>
-            <h3 class="font-bold text-slate-800 dark:text-white text-lg mb-2">Personalized Feed</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Discover new content from across social media, curated to your interests.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark text-lg mb-2">Personalized Feed</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">Discover new content from across social media, curated to your interests.</p>
           </div>
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 ai-glow">
-            <div class="w-12 h-12 rounded-xl bg-accent-blue/20 flex items-center justify-center mb-4 mx-auto"><span class="material-icons-round text-accent-blue text-2xl">auto_awesome</span></div>
-            <h3 class="font-bold text-slate-800 dark:text-white text-lg mb-2">"Why This?" Explainability</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Every recommendation shows why it's there — e.g. "Because you saved 24 cooking videos."</p>
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm ai-glow">
+            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4 mx-auto"><span class="material-icons-round text-accent text-2xl">auto_awesome</span></div>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark text-lg mb-2">"Why This?" Explainability</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">Every recommendation shows why it's there — e.g. "Because you saved 24 cooking videos."</p>
           </div>
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 ai-glow">
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm ai-glow">
             <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mb-4 mx-auto"><span class="material-icons-round text-emerald-600 dark:text-emerald-400 text-2xl">flag</span></div>
-            <h3 class="font-bold text-slate-800 dark:text-white text-lg mb-2">Goals from what you save</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">AI detects what you're working toward from your saves and suggests actionable steps tied to your content.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark text-lg mb-2">Goals from what you save</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">AI detects what you're working toward from your saves and suggests actionable steps tied to your content.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ====== GOALS (optional) ====== -->
-    <section class="px-6 py-16 bg-slate-100/50 dark:bg-slate-900/30">
+    <section class="px-6 py-16 bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-3xl mx-auto text-center">
-        <h2 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-4 fade-up">Goals, automatically</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-8 fade-up">Zuno infers goals from your saved content — no manual entry. Each goal gets steps linked to your saves; complete, dismiss, or edit anytime.</p>
+        <h2 class="text-2xl md:text-3xl font-bold text-foreground dark:text-foreground-dark mb-4 fade-up">Goals, automatically</h2>
+        <p class="text-muted dark:text-muted-dark mb-8 fade-up">Zuno infers goals from your saved content — no manual entry. Each goal gets steps linked to your saves; complete, dismiss, or edit anytime.</p>
         <div class="grid md:grid-cols-2 gap-4 text-left stagger">
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
             <span class="material-icons-round text-emerald-500 text-2xl mb-2">auto_awesome</span>
-            <h3 class="font-bold text-slate-800 dark:text-white mb-1">Automatic</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">We infer goals like "Master AI video editing" or "Plan a trip" from what you save.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Automatic</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">We infer goals like "Master AI video editing" or "Plan a trip" from what you save.</p>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
             <span class="material-icons-round text-emerald-500 text-2xl mb-2">check_circle</span>
-            <h3 class="font-bold text-slate-800 dark:text-white mb-1">Actionable steps</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Steps link to your saved items — e.g. "Watch the saved Runway tutorial." Mark steps complete.</p>
+            <h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Actionable steps</h3>
+            <p class="text-sm text-muted dark:text-muted-dark">Steps link to your saved items — e.g. "Watch the saved Runway tutorial." Mark steps complete.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ====== MORE FEATURES ====== -->
-    <section class="px-6 py-16 bg-slate-100/50 dark:bg-slate-900/30">
+    <section class="px-6 py-16 bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-4 text-center fade-up">Everything you need</h2>
-        <p class="text-slate-600 dark:text-slate-400 text-center mb-12 max-w-xl mx-auto fade-up">One app to save, organize, search, and discover.</p>
+        <h2 class="text-3xl font-bold text-foreground dark:text-foreground-dark mb-4 text-center fade-up">Everything you need</h2>
+        <p class="text-muted dark:text-muted-dark text-center mb-12 max-w-xl mx-auto fade-up">One app to save, organize, search, and discover.</p>
         <div class="grid md:grid-cols-2 gap-5 stagger">
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-slate-700 dark:text-slate-300">ios_share</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Share to Zuno</h3><p class="text-sm text-slate-500 dark:text-slate-400">From Instagram, YouTube, Twitter, LinkedIn, TikTok — tap Share, choose Zuno.</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-foreground/90 dark:text-foreground-dark/90">ios_share</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Share to Zuno</h3><p class="text-sm text-muted dark:text-muted-dark">From Instagram, YouTube, Twitter, LinkedIn, TikTok — tap Share, choose Zuno.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-slate-700 dark:text-slate-300">folder_special</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Unified Library</h3><p class="text-sm text-slate-500 dark:text-slate-400">All content — reels, shorts, articles, posts — in one organized place.</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-foreground/90 dark:text-foreground-dark/90">folder_special</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Unified Library</h3><p class="text-sm text-muted dark:text-muted-dark">All content — reels, shorts, articles, posts — in one organized place.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-slate-700 dark:text-slate-300">sell</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Smart Tags</h3><p class="text-sm text-slate-500 dark:text-slate-400">AI-generated and user-created tags. Combine them to filter instantly.</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-foreground/90 dark:text-foreground-dark/90">sell</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Smart Tags</h3><p class="text-sm text-muted dark:text-muted-dark">AI-generated and user-created tags. Combine them to filter instantly.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-slate-700 dark:text-slate-300">group</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Collaborative Collections</h3><p class="text-sm text-slate-500 dark:text-slate-400">Share collections with friends or teams. Plan trips, courses, or projects together.</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-foreground/90 dark:text-foreground-dark/90">group</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Collaborative Collections</h3><p class="text-sm text-muted dark:text-muted-dark">Share collections with friends or teams. Plan trips, courses, or projects together.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-slate-700 dark:text-slate-300">insights</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Weekly Digest</h3><p class="text-sm text-slate-500 dark:text-slate-400">See your saving patterns, trending interests, and content reminders.</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-foreground/90 dark:text-foreground-dark/90">insights</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Weekly Digest</h3><p class="text-sm text-muted dark:text-muted-dark">See your saving patterns, trending interests, and content reminders.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-slate-700 dark:text-slate-300">hub</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Cross-Platform Links</h3><p class="text-sm text-slate-500 dark:text-slate-400">AI connects related content saved from different apps automatically.</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-foreground/90 dark:text-foreground-dark/90">hub</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Cross-Platform Links</h3><p class="text-sm text-muted dark:text-muted-dark">AI connects related content saved from different apps automatically.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
             <div class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-blue-600 dark:text-blue-400">summarize</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">AI Summary Cards</h3><p class="text-sm text-slate-500 dark:text-slate-400">Every saved item gets a short AI summary so you know what you saved at a glance.</p></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">AI Summary Cards</h3><p class="text-sm text-muted dark:text-muted-dark">Every saved item gets a short AI summary so you know what you saved at a glance.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
             <div class="w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-purple-600 dark:text-purple-400">chat</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Ask Zuno</h3><p class="text-sm text-slate-500 dark:text-slate-400">Ask questions like "Do I have any cooking videos?" and get answers from your library.</p></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Ask Zuno</h3><p class="text-sm text-muted dark:text-muted-dark">Ask questions like "Do I have any cooking videos?" and get answers from your library.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-accent-blue/20 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-accent-blue">auto_awesome</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">"Why This?" Explainability</h3><p class="text-sm text-slate-500 dark:text-slate-400">Every feed recommendation shows why it's there — e.g. "Because you saved 12 cooking videos."</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-accent">auto_awesome</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">"Why This?" Explainability</h3><p class="text-sm text-muted dark:text-muted-dark">Every feed recommendation shows why it's there — e.g. "Because you saved 12 cooking videos."</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
             <div class="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-amber-600 dark:text-amber-400">notifications_active</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Content Reminders</h3><p class="text-sm text-slate-500 dark:text-slate-400">Nudges to revisit saved content you haven't opened or that matches what you just saved.</p></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Content Reminders</h3><p class="text-sm text-muted dark:text-muted-dark">Nudges to revisit saved content you haven't opened or that matches what you just saved.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-slate-700 dark:text-slate-300">extension</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Browser Extension</h3><p class="text-sm text-slate-500 dark:text-slate-400">Save to Zuno from any webpage — articles, docs, news — with one click.</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-foreground/90 dark:text-foreground-dark/90">extension</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Browser Extension</h3><p class="text-sm text-muted dark:text-muted-dark">Save to Zuno from any webpage — articles, docs, news — with one click.</p></div>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 flex gap-4">
-            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-slate-700 dark:text-slate-300">mic</span></div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1">Voice Search</h3><p class="text-sm text-slate-500 dark:text-slate-400">"Hey Zuno, find that recipe video I saved last week." Hands-free search.</p></div>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0"><span class="material-icons-round text-foreground/90 dark:text-foreground-dark/90">mic</span></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1">Voice Search</h3><p class="text-sm text-muted dark:text-muted-dark">"Hey Zuno, find that recipe video I saved last week." Hands-free search.</p></div>
           </div>
         </div>
       </div>
@@ -437,62 +450,62 @@
     <!-- ====== HOW IT WORKS ====== -->
     <section id="how" class="px-6 py-16 md:py-20">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 text-center fade-up">How it works</h2>
-        <p class="text-slate-600 dark:text-slate-400 text-center mb-12 max-w-xl mx-auto fade-up">Three steps. Zero effort.</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-foreground dark:text-foreground-dark mb-4 text-center fade-up">How it works</h2>
+        <p class="text-muted dark:text-muted-dark text-center mb-12 max-w-xl mx-auto fade-up">Three steps. Zero effort.</p>
         <div class="max-w-2xl mx-auto space-y-0">
           <div class="flex gap-5 items-start fade-up">
             <div class="flex flex-col items-center">
-              <div class="w-12 h-12 rounded-full bg-accent-blue text-white font-bold flex items-center justify-center text-lg flex-shrink-0">1</div>
-              <div class="w-0.5 h-12 bg-accent-blue/20 dark:bg-accent-blue/30"></div>
+              <div class="w-12 h-12 rounded-full bg-accent text-white font-bold flex items-center justify-center text-lg flex-shrink-0">1</div>
+              <div class="w-0.5 h-12 bg-accent/20 dark:bg-accent/30"></div>
             </div>
-            <div class="pb-8"><h3 class="font-bold text-slate-800 dark:text-white mb-1 text-lg">Share from any app</h3><p class="text-sm text-slate-500 dark:text-slate-400">See a reel, article, or post? Tap Share and choose Zuno. One tap, saved.</p></div>
+            <div class="pb-8"><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1 text-lg">Share from any app</h3><p class="text-sm text-muted dark:text-muted-dark">See a reel, article, or post? Tap Share and choose Zuno. One tap, saved.</p></div>
           </div>
           <div class="flex gap-5 items-start fade-up">
             <div class="flex flex-col items-center">
-              <div class="w-12 h-12 rounded-full bg-accent-blue text-white font-bold flex items-center justify-center text-lg flex-shrink-0">2</div>
-              <div class="w-0.5 h-12 bg-accent-blue/20 dark:bg-accent-blue/30"></div>
+              <div class="w-12 h-12 rounded-full bg-accent text-white font-bold flex items-center justify-center text-lg flex-shrink-0">2</div>
+              <div class="w-0.5 h-12 bg-accent/20 dark:bg-accent/30"></div>
             </div>
-            <div class="pb-8"><h3 class="font-bold text-slate-800 dark:text-white mb-1 text-lg">AI organizes instantly</h3><p class="text-sm text-slate-500 dark:text-slate-400">AI tags, categorizes, summarizes, and files into smart collections. No manual work.</p></div>
+            <div class="pb-8"><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1 text-lg">AI organizes instantly</h3><p class="text-sm text-muted dark:text-muted-dark">AI tags, categorizes, summarizes, and files into smart collections. No manual work.</p></div>
           </div>
           <div class="flex gap-5 items-start fade-up">
             <div class="flex flex-col items-center">
-              <div class="w-12 h-12 rounded-full bg-accent-blue text-white font-bold flex items-center justify-center text-lg flex-shrink-0">3</div>
+              <div class="w-12 h-12 rounded-full bg-accent text-white font-bold flex items-center justify-center text-lg flex-shrink-0">3</div>
             </div>
-            <div><h3 class="font-bold text-slate-800 dark:text-white mb-1 text-lg">Search & discover</h3><p class="text-sm text-slate-500 dark:text-slate-400">Find anything with natural language. Get a personalized feed of new content matched to you.</p></div>
+            <div><h3 class="font-bold text-foreground dark:text-foreground-dark mb-1 text-lg">Search & discover</h3><p class="text-sm text-muted dark:text-muted-dark">Find anything with natural language. Get a personalized feed of new content matched to you.</p></div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ====== TESTIMONIALS ====== -->
-    <section class="px-6 py-16 bg-slate-100/50 dark:bg-slate-900/30">
+    <section class="px-6 py-16 bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-4 fade-up">What people are saying</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-12 fade-up">Early testers love it.</p>
+        <h2 class="text-3xl font-bold text-foreground dark:text-foreground-dark mb-4 fade-up">What people are saying</h2>
+        <p class="text-muted dark:text-muted-dark mb-12 fade-up">Early testers love it.</p>
         <div class="grid md:grid-cols-3 gap-6 stagger">
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-left">
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm text-left">
             <div class="flex items-center gap-3 mb-4">
               <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-white font-bold text-sm">A</div>
-              <div><p class="text-sm font-bold text-slate-800 dark:text-white">Arjun M.</p><p class="text-xs text-slate-400">Product Designer</p></div>
+              <div><p class="text-sm font-bold text-foreground dark:text-foreground-dark">Arjun M.</p><p class="text-xs text-muted">Product Designer</p></div>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">"I save tons of design reels and articles. Zuno finally lets me find them without scrolling through Instagram saves for 20 minutes."</p>
+            <p class="text-sm text-muted dark:text-muted-dark">"I save tons of design reels and articles. Zuno finally lets me find them without scrolling through Instagram saves for 20 minutes."</p>
             <div class="flex gap-0.5 mt-3"><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span></div>
           </div>
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-left">
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm text-left">
             <div class="flex items-center gap-3 mb-4">
               <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">S</div>
-              <div><p class="text-sm font-bold text-slate-800 dark:text-white">Sneha R.</p><p class="text-xs text-slate-400">Content Creator</p></div>
+              <div><p class="text-sm font-bold text-foreground dark:text-foreground-dark">Sneha R.</p><p class="text-xs text-muted">Content Creator</p></div>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">"The AI tagging is insanely good. I shared 50 cooking videos and it organized them into cuisines, techniques, and quick meals."</p>
+            <p class="text-sm text-muted dark:text-muted-dark">"The AI tagging is insanely good. I shared 50 cooking videos and it organized them into cuisines, techniques, and quick meals."</p>
             <div class="flex gap-0.5 mt-3"><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span></div>
           </div>
-          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-left">
+          <div class="p-6 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm text-left">
             <div class="flex items-center gap-3 mb-4">
               <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center text-white font-bold text-sm">R</div>
-              <div><p class="text-sm font-bold text-slate-800 dark:text-white">Rohan K.</p><p class="text-xs text-slate-400">Software Engineer</p></div>
+              <div><p class="text-sm font-bold text-foreground dark:text-foreground-dark">Rohan K.</p><p class="text-xs text-muted">Software Engineer</p></div>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">"Natural language search is a game changer. I just type what I'm looking for and it finds the exact video or article. Magic."</p>
-            <div class="flex gap-0.5 mt-3"><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-slate-300 dark:text-slate-600 text-lg">star</span></div>
+            <p class="text-sm text-muted dark:text-muted-dark">"Natural language search is a game changer. I just type what I'm looking for and it finds the exact video or article. Magic."</p>
+            <div class="flex gap-0.5 mt-3"><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-amber-400 text-lg">star</span><span class="material-icons-round text-muted/50 text-lg">star</span></div>
           </div>
         </div>
       </div>
@@ -501,80 +514,80 @@
     <!-- ====== TECH STACK ====== -->
     <section class="px-6 py-16">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-4 fade-up">Built with modern tech</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-12 max-w-xl mx-auto fade-up">Designed for speed, privacy, and intelligence.</p>
+        <h2 class="text-3xl font-bold text-foreground dark:text-foreground-dark mb-4 fade-up">Built with modern tech</h2>
+        <p class="text-muted dark:text-muted-dark mb-12 max-w-xl mx-auto fade-up">Designed for speed, privacy, and intelligence.</p>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 stagger">
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
-            <span class="material-icons-round text-accent-blue text-2xl mb-2">memory</span>
-            <p class="text-sm font-bold text-slate-800 dark:text-white">AI / ML</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Transformer models for categorization and search</p>
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
+            <span class="material-icons-round text-accent text-2xl mb-2">memory</span>
+            <p class="text-sm font-bold text-foreground dark:text-foreground-dark">AI / ML</p>
+            <p class="text-xs text-muted dark:text-muted-dark mt-1">Transformer models for categorization and search</p>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
             <span class="material-icons-round text-green-500 text-2xl mb-2">phone_android</span>
-            <p class="text-sm font-bold text-slate-800 dark:text-white">Mobile First</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Native share sheet integration on iOS & Android</p>
+            <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Mobile First</p>
+            <p class="text-xs text-muted dark:text-muted-dark mt-1">Native share sheet integration on iOS & Android</p>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
             <span class="material-icons-round text-purple-500 text-2xl mb-2">cloud</span>
-            <p class="text-sm font-bold text-slate-800 dark:text-white">Cloud Sync</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Real-time sync across all your devices</p>
+            <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Cloud Sync</p>
+            <p class="text-xs text-muted dark:text-muted-dark mt-1">Real-time sync across all your devices</p>
           </div>
-          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700">
+          <div class="p-5 rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm">
             <span class="material-icons-round text-amber-500 text-2xl mb-2">lock</span>
-            <p class="text-sm font-bold text-slate-800 dark:text-white">Privacy First</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Your data stays yours. End-to-end encryption</p>
+            <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Privacy First</p>
+            <p class="text-xs text-muted dark:text-muted-dark mt-1">Your data stays yours. End-to-end encryption</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ====== FAQ ====== -->
-    <section id="faq" class="px-6 py-16 bg-slate-100/50 dark:bg-slate-900/30">
+    <section id="faq" class="px-6 py-16 bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-3xl mx-auto">
-        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-4 text-center fade-up">Frequently asked questions</h2>
-        <p class="text-slate-600 dark:text-slate-400 text-center mb-12 fade-up">Everything you need to know about Zuno.</p>
+        <h2 class="text-3xl font-bold text-foreground dark:text-foreground-dark mb-4 text-center fade-up">Frequently asked questions</h2>
+        <p class="text-muted dark:text-muted-dark text-center mb-12 fade-up">Everything you need to know about Zuno.</p>
         <div class="space-y-4 stagger" id="faqList">
-          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-slate-800 dark:text-white">
+          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden">
+            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-foreground dark:text-foreground-dark">
               How does "Share to Zuno" work?
-              <span class="material-icons-round text-slate-400 group-open:rotate-180 transition-transform duration-200">expand_more</span>
+              <span class="material-icons-round text-muted group-open:rotate-180 transition-transform duration-200">expand_more</span>
             </summary>
-            <div class="px-6 pb-5 text-sm text-slate-600 dark:text-slate-400">When you see content in Instagram, YouTube, Twitter, or any app, tap the native Share button and select Zuno from the share sheet. The content is instantly saved to your Zuno library with all metadata (title, source, thumbnail). Works on both Android and iOS.</div>
+            <div class="px-6 pb-5 text-sm text-muted dark:text-muted-dark">When you see content in Instagram, YouTube, Twitter, or any app, tap the native Share button and select Zuno from the share sheet. The content is instantly saved to your Zuno library with all metadata (title, source, thumbnail). Works on both Android and iOS.</div>
           </details>
-          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-slate-800 dark:text-white">
+          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden">
+            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-foreground dark:text-foreground-dark">
               What does AI categorization mean?
-              <span class="material-icons-round text-slate-400 group-open:rotate-180 transition-transform duration-200">expand_more</span>
+              <span class="material-icons-round text-muted group-open:rotate-180 transition-transform duration-200">expand_more</span>
             </summary>
-            <div class="px-6 pb-5 text-sm text-slate-600 dark:text-slate-400">When content is saved, AI analyzes it and automatically assigns tags (e.g., #recipe, #tech, #travel), a brief summary, and places it in the appropriate collection. You can also add your own tags. No manual filing needed.</div>
+            <div class="px-6 pb-5 text-sm text-muted dark:text-muted-dark">When content is saved, AI analyzes it and automatically assigns tags (e.g., #recipe, #tech, #travel), a brief summary, and places it in the appropriate collection. You can also add your own tags. No manual filing needed.</div>
           </details>
-          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-slate-800 dark:text-white">
+          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden">
+            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-foreground dark:text-foreground-dark">
               What is the personalized feed?
-              <span class="material-icons-round text-slate-400 group-open:rotate-180 transition-transform duration-200">expand_more</span>
+              <span class="material-icons-round text-muted group-open:rotate-180 transition-transform duration-200">expand_more</span>
             </summary>
-            <div class="px-6 pb-5 text-sm text-slate-600 dark:text-slate-400">The feed shows you new, related content from across social media — not your saved items, but new discoveries. It's curated based on your personality inferred from what you save. Videos, articles, podcasts, posts, all in one scrollable feed.</div>
+            <div class="px-6 pb-5 text-sm text-muted dark:text-muted-dark">The feed shows you new, related content from across social media — not your saved items, but new discoveries. It's curated based on your personality inferred from what you save. Videos, articles, podcasts, posts, all in one scrollable feed.</div>
           </details>
-          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-slate-800 dark:text-white">
+          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden">
+            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-foreground dark:text-foreground-dark">
               Is my data private?
-              <span class="material-icons-round text-slate-400 group-open:rotate-180 transition-transform duration-200">expand_more</span>
+              <span class="material-icons-round text-muted group-open:rotate-180 transition-transform duration-200">expand_more</span>
             </summary>
-            <div class="px-6 pb-5 text-sm text-slate-600 dark:text-slate-400">Yes. Zuno is built with privacy first. Your saved content and preferences are encrypted. We don't sell your data. AI processing happens in a secure environment. You own your data and can export or delete anytime.</div>
+            <div class="px-6 pb-5 text-sm text-muted dark:text-muted-dark">Yes. Zuno is built with privacy first. Your saved content and preferences are encrypted. We don't sell your data. AI processing happens in a secure environment. You own your data and can export or delete anytime.</div>
           </details>
-          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-slate-800 dark:text-white">
+          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden">
+            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-foreground dark:text-foreground-dark">
               Which platforms are supported?
-              <span class="material-icons-round text-slate-400 group-open:rotate-180 transition-transform duration-200">expand_more</span>
+              <span class="material-icons-round text-muted group-open:rotate-180 transition-transform duration-200">expand_more</span>
             </summary>
-            <div class="px-6 pb-5 text-sm text-slate-600 dark:text-slate-400">Instagram, YouTube, Facebook, Twitter/X, LinkedIn, TikTok, Reddit, Pinterest, Spotify, Medium, and any app with a Share action. We also plan a browser extension for saving articles and web content.</div>
+            <div class="px-6 pb-5 text-sm text-muted dark:text-muted-dark">Instagram, YouTube, Facebook, Twitter/X, LinkedIn, TikTok, Reddit, Pinterest, Spotify, Medium, and any app with a Share action. We also plan a browser extension for saving articles and web content.</div>
           </details>
-          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-slate-800 dark:text-white">
+          <details class="group rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm overflow-hidden">
+            <summary class="px-6 py-5 cursor-pointer flex items-center justify-between font-bold text-foreground dark:text-foreground-dark">
               Is Zuno free?
-              <span class="material-icons-round text-slate-400 group-open:rotate-180 transition-transform duration-200">expand_more</span>
+              <span class="material-icons-round text-muted group-open:rotate-180 transition-transform duration-200">expand_more</span>
             </summary>
-            <div class="px-6 pb-5 text-sm text-slate-600 dark:text-slate-400">Zuno will offer a free tier with generous limits. A Pro plan will unlock unlimited storage, advanced AI features, collaborative collections, and priority support. Join the waitlist to get early access and special pricing.</div>
+            <div class="px-6 pb-5 text-sm text-muted dark:text-muted-dark">Zuno will offer a free tier with generous limits. A Pro plan will unlock unlimited storage, advanced AI features, collaborative collections, and priority support. Join the waitlist to get early access and special pricing.</div>
           </details>
         </div>
       </div>
@@ -583,109 +596,109 @@
     <!-- ====== PRICING / WAITLIST ====== -->
     <section id="waitlist" class="px-6 py-16 md:py-20">
       <div class="max-w-5xl mx-auto text-center">
-        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 fade-up">Simple pricing. Start free.</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-12 max-w-xl mx-auto fade-up">Join the waitlist for Pro features. Initial users get a discount — enter a code below if you have one.</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-foreground dark:text-foreground-dark mb-4 fade-up">Simple pricing. Start free.</h2>
+        <p class="text-muted dark:text-muted-dark mb-12 max-w-xl mx-auto fade-up">Join the waitlist for Pro features. Initial users get a discount — enter a code below if you have one.</p>
         <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto stagger mb-16">
           <!-- Free tier -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-7 text-left">
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Free</p>
-            <p class="text-3xl font-bold text-slate-900 dark:text-white mb-1">$0<span class="text-lg font-normal text-slate-400">/mo</span></p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">Perfect for getting started</p>
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-7 text-left">
+            <p class="text-sm font-medium text-muted dark:text-muted-dark mb-2">Free</p>
+            <p class="text-3xl font-bold text-foreground dark:text-foreground-dark mb-1">$0<span class="text-lg font-normal text-muted">/mo</span></p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-6">Perfect for getting started</p>
             <ul class="space-y-3 mb-8">
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Up to 200 saved items</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> AI categorization</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Natural language search</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Personalized feed</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Up to 200 saved items</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> AI categorization</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Natural language search</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Personalized feed</li>
             </ul>
-            <a href="/app/#auth" class="block w-full py-3 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 active:scale-95 transition-all duration-200 text-center">Get Started Free</a>
+            <a href="/app/#auth" class="block w-full py-3 rounded-full bg-slate-200 dark:bg-slate-700 text-foreground dark:text-foreground-dark font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 active:scale-95 transition-all duration-200 text-center">Get Started Free</a>
           </div>
           <!-- Pro tier -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border-2 border-accent-blue p-7 text-left relative">
-            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-accent-blue text-white text-xs font-bold">Popular</div>
-            <p class="text-sm font-medium text-accent-blue mb-2">Pro</p>
-            <p class="text-3xl font-bold text-slate-900 dark:text-white mb-1">$5<span class="text-lg font-normal text-slate-400">/mo</span></p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">For power users</p>
+          <div class="rounded-2xl bg-white dark:bg-card-dark border-2 border-accent p-7 text-left relative">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-accent text-white text-xs font-bold">Popular</div>
+            <p class="text-sm font-medium text-accent mb-2">Pro</p>
+            <p class="text-3xl font-bold text-foreground dark:text-foreground-dark mb-1">$5<span class="text-lg font-normal text-muted">/mo</span></p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-6">For power users</p>
             <ul class="space-y-3 mb-8">
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Unlimited saved items</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Advanced AI features</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Ask Zuno (AI chat)</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Collaborative collections</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Weekly digest & reminders</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Priority support</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Unlimited saved items</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Advanced AI features</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Ask Zuno (AI chat)</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Collaborative collections</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Weekly digest & reminders</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Priority support</li>
             </ul>
-            <a href="/app/#auth" class="block w-full py-3 rounded-full bg-accent-blue text-white font-bold hover:opacity-90 active:scale-95 transition-all duration-200 text-center">Get Started — Pro</a>
+            <a href="/app/#auth" class="block w-full py-3 rounded-full bg-accent text-white font-bold hover:opacity-90 active:scale-95 transition-all duration-200 text-center">Get Started — Pro</a>
           </div>
           <!-- Pro Plus tier -->
-          <div class="rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-7 text-left">
+          <div class="rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-7 text-left">
             <p class="text-sm font-medium text-purple-500 dark:text-purple-400 mb-2">Pro Plus</p>
-            <p class="text-3xl font-bold text-slate-900 dark:text-white mb-1">$12<span class="text-lg font-normal text-slate-400">/mo</span></p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">Teams & power creators</p>
+            <p class="text-3xl font-bold text-foreground dark:text-foreground-dark mb-1">$12<span class="text-lg font-normal text-muted">/mo</span></p>
+            <p class="text-xs text-muted dark:text-muted-dark mb-6">Teams & power creators</p>
             <ul class="space-y-3 mb-8">
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Everything in Pro</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Shared team libraries</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Early access to new features</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Dedicated support</li>
-              <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Custom integrations</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Everything in Pro</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Shared team libraries</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Early access to new features</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Dedicated support</li>
+              <li class="flex items-center gap-2 text-sm text-foreground/90 dark:text-foreground-dark/90"><span class="material-icons-round text-green-500 text-lg">check_circle</span> Custom integrations</li>
             </ul>
-            <a href="#waitlist-form" class="block w-full py-3 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 active:scale-95 transition-all duration-200 text-center">Join waitlist</a>
+            <a href="#waitlist-form" class="block w-full py-3 rounded-full bg-slate-200 dark:bg-slate-700 text-foreground dark:text-foreground-dark font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 active:scale-95 transition-all duration-200 text-center">Join waitlist</a>
           </div>
         </div>
         <!-- Waitlist form -->
-        <div id="waitlist-form" class="max-w-md mx-auto rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-6 md:p-8 text-left stagger">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Join the Pro waitlist</h3>
-          <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Initial users get a discount. Have a referral or discount code? Add it below.</p>
+        <div id="waitlist-form" class="max-w-md mx-auto rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-6 md:p-8 text-left stagger">
+          <h3 class="text-lg font-bold text-foreground dark:text-foreground-dark mb-2">Join the Pro waitlist</h3>
+          <p class="text-sm text-muted dark:text-muted-dark mb-4">Initial users get a discount. Have a referral or discount code? Add it below.</p>
           <form id="pro-waitlist-form" class="space-y-4">
             <div>
-              <label for="wl-email" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Email *</label>
-              <input id="wl-email" name="email" type="email" required placeholder="you@example.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent text-sm" />
+              <label for="wl-email" class="block text-xs font-medium text-muted dark:text-muted-dark mb-1.5">Email *</label>
+              <input id="wl-email" name="email" type="email" required placeholder="you@example.com" class="w-full px-4 py-3 rounded-xl border border-border dark:border-border-dark shadow-sm bg-white dark:bg-slate-800 text-foreground dark:text-foreground-dark placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Tier</label>
+              <label class="block text-xs font-medium text-muted dark:text-muted-dark mb-1.5">Tier</label>
               <div class="flex gap-3">
-                <label class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer has-[:checked]:border-accent-blue has-[:checked]:bg-accent-blue/10">
+                <label class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-border dark:border-border-dark cursor-pointer has-[:checked]:border-accent has-[:checked]:bg-accent/10">
                   <input type="radio" name="tier" value="pro" checked class="sr-only" />
-                  <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Pro</span>
+                  <span class="text-sm font-medium text-foreground/90 dark:text-foreground-dark/90">Pro</span>
                 </label>
-                <label class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 cursor-pointer has-[:checked]:border-accent-blue has-[:checked]:bg-accent-blue/10">
+                <label class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-border dark:border-border-dark cursor-pointer has-[:checked]:border-accent has-[:checked]:bg-accent/10">
                   <input type="radio" name="tier" value="pro_plus" class="sr-only" />
-                  <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Pro Plus</span>
+                  <span class="text-sm font-medium text-foreground/90 dark:text-foreground-dark/90">Pro Plus</span>
                 </label>
               </div>
             </div>
             <div>
-              <label for="wl-code" class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Discount / referral code (optional)</label>
-              <input id="wl-code" name="discount_code" type="text" placeholder="e.g. EARLY100" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent text-sm" />
+              <label for="wl-code" class="block text-xs font-medium text-muted dark:text-muted-dark mb-1.5">Discount / referral code (optional)</label>
+              <input id="wl-code" name="discount_code" type="text" placeholder="e.g. EARLY100" class="w-full px-4 py-3 rounded-xl border border-border dark:border-border-dark shadow-sm bg-white dark:bg-slate-800 text-foreground dark:text-foreground-dark placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-sm" />
             </div>
             <div id="waitlist-msg" class="text-sm hidden"></div>
-            <button type="submit" id="waitlist-submit" class="w-full py-3.5 rounded-full bg-accent-blue text-white font-bold hover:opacity-90 active:scale-95 transition-all duration-200">Join waitlist</button>
+            <button type="submit" id="waitlist-submit" class="w-full py-3.5 rounded-full bg-accent text-white font-bold hover:opacity-90 active:scale-95 transition-all duration-200">Join waitlist</button>
           </form>
         </div>
       </div>
     </section>
 
     <!-- ====== TEAM ====== -->
-    <section class="px-6 py-16 bg-slate-100/50 dark:bg-slate-900/30">
+    <section class="px-6 py-16 bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-4 fade-up">Meet the team</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-12 max-w-xl mx-auto fade-up">Built by creators who were tired of losing content.</p>
+        <h2 class="text-3xl font-bold text-foreground dark:text-foreground-dark mb-4 fade-up">Meet the team</h2>
+        <p class="text-muted dark:text-muted-dark mb-12 max-w-xl mx-auto fade-up">Built by creators who were tired of losing content.</p>
         <div class="flex flex-wrap justify-center gap-8 stagger">
           <div class="text-center">
-            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-accent-blue to-purple-500 flex items-center justify-center mx-auto mb-3 text-white text-2xl font-bold">Z</div>
-            <p class="text-sm font-bold text-slate-800 dark:text-white">Zuno Team</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Founders & Builders</p>
+            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center mx-auto mb-3 text-white text-2xl font-bold">Z</div>
+            <p class="text-sm font-bold text-foreground dark:text-foreground-dark">Zuno Team</p>
+            <p class="text-xs text-muted dark:text-muted-dark">Founders & Builders</p>
           </div>
         </div>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-8 fade-up">We're a small, passionate team building the future of content management. Reach out at <a href="mailto:hello@zuno.app" class="text-accent-blue hover:underline">hello@zuno.app</a></p>
+        <p class="text-sm text-muted dark:text-muted-dark mt-8 fade-up">We're a small, passionate team building the future of content management. Reach out at <a href="mailto:hello@zuno.app" class="text-accent hover:underline">hello@zuno.app</a></p>
       </div>
     </section>
 
     <!-- ====== DOWNLOAD CTA ====== -->
     <section class="px-6 py-16 md:py-20">
-      <div class="max-w-2xl mx-auto text-center rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 p-10 md:p-14 fade-up">
+      <div class="max-w-2xl mx-auto text-center rounded-2xl bg-white dark:bg-card-dark border border-border dark:border-border-dark shadow-sm p-10 md:p-14 fade-up">
         <img src="assets/logo.svg" alt="Zuno" class="w-16 h-16 mx-auto mb-6" data-logo-light="assets/logo.svg" data-logo-dark="assets/logo-dark.svg"/>
-        <h2 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-4">Ready to try Zuno?</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-3">One place for all your content. Share from any app. AI does the rest.</p>
-        <p class="text-sm text-accent-blue font-semibold mb-8">Coming soon to iOS & Android</p>
+        <h2 class="text-2xl md:text-3xl font-bold text-foreground dark:text-foreground-dark mb-4">Ready to try Zuno?</h2>
+        <p class="text-muted dark:text-muted-dark mb-3">One place for all your content. Share from any app. AI does the rest.</p>
+        <p class="text-sm text-accent font-semibold mb-8">Coming soon to iOS & Android</p>
         <div class="flex flex-wrap justify-center gap-4">
           <button class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold hover:opacity-90 active:scale-95 transition-all duration-200">
             <span class="material-icons-round">apple</span>
@@ -696,26 +709,26 @@
             Google Play
           </button>
         </div>
-        <p class="text-xs text-slate-400 mt-4">Join the waitlist to get notified when we launch.</p>
+        <p class="text-xs text-muted mt-4">Join the waitlist to get notified when we launch.</p>
       </div>
     </section>
 
   </main>
 
   <!-- ====== FOOTER ====== -->
-  <footer class="px-6 py-8 border-t border-slate-200 dark:border-slate-800">
+  <footer class="px-6 py-8 border-t border-border dark:border-border-dark">
     <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <img src="assets/logo.svg" alt="Zuno" class="w-8 h-8" data-logo-light="assets/logo.svg" data-logo-dark="assets/logo-dark.svg"/>
-        <span class="font-bold text-slate-800 dark:text-white">Zuno</span>
+        <span class="font-bold text-foreground dark:text-foreground-dark">Zuno</span>
       </div>
-      <p class="text-sm text-slate-500 dark:text-slate-400">Share from anywhere. Search anytime.</p>
-      <div class="flex items-center gap-6 text-sm text-slate-500 dark:text-slate-400">
-        <a href="#features" class="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a>
-        <a href="#faq" class="hover:text-slate-900 dark:hover:text-white transition-colors">FAQ</a>
-        <a href="flow/" class="hover:text-slate-900 dark:hover:text-white transition-colors">Investor Flow</a>
+      <p class="text-sm text-muted dark:text-muted-dark">Share from anywhere. Search anytime.</p>
+      <div class="flex items-center gap-6 text-sm text-muted dark:text-muted-dark">
+        <a href="#features" class="hover:text-foreground dark:hover:text-foreground-dark transition-colors">Features</a>
+        <a href="#faq" class="hover:text-foreground dark:hover:text-foreground-dark transition-colors">FAQ</a>
+        <a href="flow/" class="hover:text-foreground dark:hover:text-foreground-dark transition-colors">Investor Flow</a>
       </div>
-      <p class="text-xs text-slate-400">&copy; 2026 Zuno. All rights reserved.</p>
+      <p class="text-xs text-muted">&copy; 2026 Zuno. All rights reserved.</p>
     </div>
   </footer>
 

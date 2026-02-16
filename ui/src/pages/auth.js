@@ -17,16 +17,16 @@ export function renderAuth(el) {
     <div class="flex flex-col items-center justify-center min-h-[80vh] fade-in">
       <div class="w-full max-w-sm">
         <div class="text-center mb-8">
-          <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-accent/15 mb-5">
-            <span class="material-icons-round text-4xl text-accent">auto_awesome</span>
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-neutral-200/80 dark:bg-foreground/10 mb-5">
+            <span class="material-icons-round text-4xl text-neutral-900 dark:text-white">auto_awesome</span>
           </div>
-          <h1 class="text-2xl font-bold text-heading">Welcome to Zuno</h1>
-          <p class="text-muted-foreground text-sm mt-2">Your AI-powered content companion</p>
+          <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">Welcome to Zuno</h1>
+          <p class="text-neutral-600 dark:text-neutral-300 text-sm mt-2">Your AI-powered content companion</p>
         </div>
         <div class="space-y-4">
 
           <!-- Google Sign-In Button -->
-          <button id="google-btn" onclick="doGoogleLogin()" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-surface border border-border hover:bg-slate-50 dark:hover:bg-surface-hover font-semibold py-3.5 rounded-xl transition-all active:scale-[0.97] text-slate-700 dark:text-foreground shadow-sm">
+          <button id="google-btn" onclick="doGoogleLogin()" class="w-full flex items-center justify-center gap-3 bg-[#1a1a1a] border border-neutral-700 font-semibold py-3.5 rounded-xl transition-transform active:scale-[0.97] text-white shadow-sm">
             <svg width="20" height="20" viewBox="0 0 48 48" class="flex-shrink-0">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
               <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
@@ -38,7 +38,7 @@ export function renderAuth(el) {
 
           <div id="auth-error" class="hidden text-danger text-sm text-center bg-danger/10 rounded-xl px-4 py-2.5"></div>
 
-          <p class="text-muted-foreground text-xs text-center leading-relaxed mt-4">
+          <p class="text-neutral-600 dark:text-neutral-300 text-xs text-center leading-relaxed mt-4">
             By signing in you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>

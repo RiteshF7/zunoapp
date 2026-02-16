@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { navigate, replaceHash, getRoute } from './navigate.js';
 import { _prevPage, setPrevPage } from './state.js';
-import { showFeed } from './config.js';
+import { showFeed, getApiBase } from './config.js';
 import { skeletonCards, skeletonDetail, loadingSpinner } from '../components/skeleton.js';
 import { esc } from '../utils/helpers.js';
 
@@ -73,6 +73,12 @@ export async function router() {
 
   // Chrome extension connect (fix: use main after it's defined)
   if (page === 'connect-extension') {
+    // Expose env-aware API base so content script can send it to the extension (dev vs prod)
+    try {
+      window.ZUNO_API_BASE = getApiBase();
+    } catch (_) {
+      window.ZUNO_API_BASE = window.location?.origin || '';
+    }
     main.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center fade-in">
       <p class="text-heading font-semibold mb-2">Connecting extension…</p>
       <p class="text-muted-foreground text-sm">Make sure you're logged in. If nothing happens, ensure the Share to Zuno extension is installed.</p>

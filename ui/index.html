@@ -120,48 +120,48 @@
   <!-- ======================= APP SHELL ======================= -->
   <div id="app" class="max-w-2xl mx-auto min-h-screen flex flex-col relative">
 
-    <!-- Top Nav -->
-    <header id="topnav" role="banner" class="hidden sticky top-0 z-30 nav-glass border-b border-border px-5 py-3 items-center justify-between safe-top">
-      <span class="text-lg font-bold tracking-tight text-heading">Zuno</span>
-      <div class="flex items-center gap-1">
-        <button onclick="navigate('#search')" class="p-2.5 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Search">
-          <span class="material-icons-round text-[22px] text-muted">search</span>
+    <!-- Top Nav: transparent bg, Zuno left; right: Search, Add, circular Profile -->
+    <header id="topnav" role="banner" class="hidden sticky top-0 z-30 bg-transparent px-5 py-3 flex items-center justify-between safe-top">
+      <span class="text-lg font-bold tracking-tight text-neutral-900 dark:text-white">Zuno</span>
+      <div class="flex items-center gap-2">
+        <button onclick="navigate('#search')" class="topnav-btn p-2 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-white/10 transition-all" aria-label="Search">
+          <i data-lucide="search" class="nav-lucide w-5 h-5"></i>
         </button>
-        <button onclick="navigate('#profile')" class="p-2.5 rounded-xl hover:bg-surface-hover transition-colors" aria-label="Profile">
-          <span class="material-icons-round text-[22px] text-muted">account_circle</span>
+        <button onclick="openSaveContentModal()" class="topnav-btn flex items-center gap-1.5 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-white/10 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-white/20 transition-all" aria-label="Add content">
+          <i data-lucide="plus" class="nav-lucide w-5 h-5"></i>
+          <span class="text-sm font-medium">Add</span>
+        </button>
+        <button onclick="navigate('#profile')" class="topnav-btn header-profile-btn w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:ring-2 hover:ring-neutral-300 dark:hover:ring-neutral-600 transition-all shrink-0" aria-label="Profile">
+          <span id="header-profile-avatar" class="hidden w-full h-full bg-cover bg-center"></span>
+          <i data-lucide="circle-user" class="nav-lucide w-6 h-6 header-profile-icon"></i>
         </button>
       </div>
     </header>
 
     <!-- Page Content -->
-    <main id="page" role="main" class="flex-1 px-5 py-4 pb-24" aria-live="polite"></main>
+    <main id="page" role="main" class="flex-1 px-5 pt-2 pb-24" aria-live="polite"></main>
 
-    <!-- FAB (Library page only) -->
-    <button id="fab-btn" class="hidden fixed bottom-24 right-5 z-20 w-14 h-14 bg-accent hover:bg-accent-hover text-white rounded-full shadow-elevated flex items-center justify-center active:scale-90 transition-transform" aria-label="Add content" onclick="openSaveContentModal()">
-      <span class="material-icons-round text-2xl">add</span>
-    </button>
-
-    <!-- Bottom Nav (4 tabs) -->
-    <nav id="bottomnav" role="navigation" aria-label="Main navigation" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-2xl nav-glass border-t border-border z-30 safe-bottom">
-      <div class="flex justify-around py-1.5">
-        <button onclick="navigate('#home')" data-tab="home" class="nav-btn flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Home">
-          <span class="material-icons-round text-[22px]">home</span>
+    <!-- Bottom Nav (medical-style, black/white, Lucide icons + labels) -->
+    <nav id="bottomnav" role="navigation" aria-label="Main navigation" class="hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 px-6 py-4 z-30 safe-bottom">
+      <div class="flex justify-around items-center max-w-2xl mx-auto">
+        <button onclick="navigate('#home')" data-tab="home" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Home">
+          <i data-lucide="home" class="nav-lucide w-6 h-6"></i>
           <span class="text-[10px] font-medium">Home</span>
         </button>
-        <button onclick="navigate('#collections')" data-tab="collections" class="nav-btn flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Collections">
-          <span class="material-icons-round text-[22px]">collections_bookmark</span>
+        <button onclick="navigate('#collections')" data-tab="collections" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Collections">
+          <i data-lucide="bookmark" class="nav-lucide w-6 h-6"></i>
           <span class="text-[10px] font-medium">Collections</span>
         </button>
-        <button id="nav-feed" onclick="navigate('#feed')" data-tab="feed" class="nav-btn hidden flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Feed">
-          <span class="material-icons-round text-[22px]">dynamic_feed</span>
+        <button id="nav-feed" onclick="navigate('#feed')" data-tab="feed" class="nav-btn hidden flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Feed">
+          <i data-lucide="rss" class="nav-lucide w-6 h-6"></i>
           <span class="text-[10px] font-medium">Feed</span>
         </button>
-        <button onclick="navigate('#goals')" data-tab="goals" class="nav-btn flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Goals">
-          <span class="material-icons-round text-[22px]">flag</span>
+        <button onclick="navigate('#goals')" data-tab="goals" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Goals">
+          <i data-lucide="target" class="nav-lucide w-6 h-6"></i>
           <span class="text-[10px] font-medium">Goals</span>
         </button>
-        <button onclick="navigate('#knowledge')" data-tab="knowledge" class="nav-btn flex flex-col items-center gap-0.5 min-w-[64px] py-2 rounded-xl transition-all duration-200" aria-label="Ask AI">
-          <span class="material-icons-round text-[22px]">psychology</span>
+        <button onclick="navigate('#knowledge')" data-tab="knowledge" class="nav-btn flex flex-col items-center gap-1 min-w-[56px] p-2 rounded-lg transition-all text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300" aria-label="Ask AI">
+          <i data-lucide="brain" class="nav-lucide w-6 h-6"></i>
           <span class="text-[10px] font-medium">Ask</span>
         </button>
       </div>
@@ -186,6 +186,7 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

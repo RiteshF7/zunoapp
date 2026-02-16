@@ -12,7 +12,11 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'ZUNO_TOKEN' && msg.token) {
-    chrome.storage.sync.set({ zuno_token: msg.token }).then(() => {
+    const toStore = { zuno_token: msg.token };
+    if (msg.apiBase && typeof msg.apiBase === 'string') {
+      toStore.zuno_api_base = msg.apiBase.replace(/\/?$/, '');
+    }
+    chrome.storage.sync.set(toStore).then(() => {
       showNotification('Extension connected!');
       if (sender.tab?.id) chrome.tabs.remove(sender.tab.id);
       sendResponse({ ok: true });
@@ -45,13 +49,20 @@ async function shareUrl(urlToShare) {
     return false;
   }
 
-  const ok = await saveViaApi(apiBase, token, urlToShare);
-  if (ok) {
+  const result = await saveViaApi(apiBase, token, urlToShare);
+  if (result.ok) {
     showNotification('Shared to Zuno!');
     return true;
   }
-
-  showNotification('Save failed. Check your connection or log in again at Zuno.');
+  if (result.unauthorized) {
+    await chrome.storage.sync.remove('zuno_token');
+    showNotification('Session expired. Connect again from Zuno (Profile → Connect Extension).');
+    return false;
+  }
+  const msg = result.detail
+    ? 'Save failed: ' + (result.detail.length > 80 ? result.detail.slice(0, 77) + '...' : result.detail)
+    : 'Save failed. Check your connection or log in again at Zuno.';
+  showNotification(msg);
   return false;
 }
 
@@ -66,8 +77,9 @@ function getUrlFromContext(info) {
 }
 
 async function saveViaApi(apiBase, token, url) {
+  const urlToCall = (apiBase.replace(/\/?$/, '') + '/api/v1/content');
   try {
-    const res = await fetch(apiBase + '/api/v1/content', {
+    const res = await fetch(urlToCall, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,10 +87,23 @@ async function saveViaApi(apiBase, token, url) {
       },
       body: JSON.stringify({ url }),
     });
-    if (!res.ok) return false;
-    const data = await res.json();
+    if (res.status === 401) {
+      return { ok: false, unauthorized: true };
+    }
+    const text = await res.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (_) {
+      /* non-JSON response */
+    }
+    if (!res.ok) {
+      let detail = (data && (data.detail || data.error || data.message)) || ('HTTP ' + res.status);
+      if (Array.isArray(detail)) detail = detail[0]?.msg || detail[0] || JSON.stringify(detail);
+      return { ok: false, unauthorized: false, detail: String(detail) };
+    }
     if (data?.id) {
-      fetch(apiBase + '/api/v1/ai/process-content', {
+      fetch(apiBase.replace(/\/?$/, '') + '/api/v1/ai/process-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,9 +112,9 @@ async function saveViaApi(apiBase, token, url) {
         body: JSON.stringify({ content_id: data.id }),
       }).catch(() => {});
     }
-    return true;
-  } catch {
-    return false;
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, unauthorized: false, detail: (err && err.message) || 'Network error' };
   }
 }
 

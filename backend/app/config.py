@@ -51,7 +51,10 @@ def _read_dotenv_file(path: Path) -> dict[str, str]:
 
 
 def _read_dotenv() -> dict[str, str]:
-    """Load env from backend/.env then backend/.env.<mode>; latter overrides. Mode from env or config/env-mode."""
+    """Load env: if backend/.env exists (from resolve_env), use it only. Else load .env + .env.<mode> for backward compat."""
+    single_env = _BACKEND_DIR / ".env"
+    if single_env.exists():
+        return _read_dotenv_file(single_env)
     mode = _get_mode()
     combined: dict[str, str] = {}
     for env_file in (_BACKEND_DIR / ".env", _BACKEND_DIR / f".env.{mode}"):

@@ -43,12 +43,17 @@ import './pages/admin.js';
 // 5. Initialize theme immediately (before DOMContentLoaded)
 initTheme();
 
-// 5b. Show dev indicator in top-left when running in development
-if (import.meta.env.DEV) {
+// 5b. Show dev tag + API base in top-left when built with --mode development (debug APK)
+if (import.meta.env.MODE === 'development') {
   const el = document.getElementById('dev-indicator');
+  const apiBase = getApiBase();
+  console.log('[Zuno] DEV build — API base:', apiBase, '| Debug APK uses host (10.0.2.2), release uses prod');
   if (el) {
     el.classList.remove('hidden');
     el.setAttribute('aria-hidden', 'false');
+    el.textContent = apiBase ? `DEV ${apiBase.replace(/^https?:\/\//, '').replace(/\/$/, '')}` : 'DEV';
+    el.classList.remove('pointer-events-none');
+    el.title = `API: ${apiBase || '(not set)'}. Tap to copy.`;
   }
 }
 

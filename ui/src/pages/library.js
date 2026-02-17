@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { api } from '../core/api.js';
 import { navigate } from '../core/navigate.js';
-import { showFeed } from '../core/config.js';
+import { showFeed, getApiBase } from '../core/config.js';
 import { _libraryTab, setLibraryTab, getProcessingIds, addProcessingId, removeProcessingId } from '../core/state.js';
 import { toast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
@@ -322,6 +322,7 @@ async function doSaveContent() {
   if (modalContent) modalContent.innerHTML = getSaveContentProgressHtml();
 
   try {
+    console.log('[SaveContent] POST', getApiBase() + '/api/v1/content', 'url=', url);
     const res = await api('POST', '/api/content', { url });
     if (res.ok) {
       const contentId = res.data?.id;
@@ -337,7 +338,12 @@ async function doSaveContent() {
       await refreshSavedListOnly(contentId);
     } else {
       if (modalContent) modalContent.innerHTML = getSaveContentFormHtml(url);
-      toast(res.data?.detail || "Couldn't save link. Check the URL and try again.", true);
+      // status 0 = network/CORS error; show actual error (e.g. "Failed to fetch")
+      const msg = res.status === 0
+        ? (res.data?.error || res.data?.detail || 'Network error. Is the backend running?')
+        : (res.data?.detail || "Couldn't save link. Check the URL and try again.");
+      console.error('[SaveContent] Save failed:', res.status, res.data);
+      toast(msg, true);
     }
   } catch (_) {
     if (modalContent) modalContent.innerHTML = getSaveContentFormHtml(url);

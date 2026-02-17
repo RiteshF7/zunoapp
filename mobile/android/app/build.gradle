@@ -37,6 +37,10 @@ android {
         }
     }
     buildTypes {
+        debug {
+            applicationIdSuffix ".dev"
+            versionNameSuffix "-dev"
+        }
         release {
             if (System.getenv("ZUNO_RELEASE_STORE_FILE") || project.file("keystore.properties").exists()) {
                 signingConfig signingConfigs.release

@@ -23,22 +23,38 @@ npx cap add ios
 npx cap sync ios
 ```
 
+## Dev vs prod URLs (Supabase / API)
+
+**Android does not use build variants for API or Supabase URLs.** The URLs are **baked into the web bundle** when the UI is built (Vite). The contents of `mobile/www/` determine which environment the app uses:
+
+| Build | Script | Supabase | API base |
+|-------|--------|----------|----------|
+| **Debug (dev)** | `./scripts/build-android-debug.sh` | **rvp** (`…rvp.supabase.co`) | `http://10.0.2.2:8000` |
+| **Release (prod)** | `./scripts/build-android-release.sh` | **izx** (`…izx.supabase.co`) | `https://zunoapp.onrender.com` |
+
+- **Debug APK** (package `com.zuno.app.dev`, name "Zuno Dev"): run **`./scripts/build-android-debug.sh`** from repo root. It resolves env for dev, builds the UI with `--mode development`, copies the bundle to `mobile/www/`, then syncs and runs `assembleDebug`. If you only run `npx cap sync android` and `./gradlew installDebug` without that script, `www/` may still contain a **production** bundle (izx), so the app will use prod.
+- **Release APK** (package `com.zuno.app`, name "Zuno"): run **`./scripts/build-android-release.sh`** for prod URLs.
+
+**Login (OAuth):** For the dev app to complete Google sign-in, add the dev redirect URL in your **dev** Supabase project: **Authentication → URL Configuration → Redirect URLs** → add `com.zuno.app.dev://callback`. Prod Supabase should have `com.zuno.app://callback`.
+
 ## Development
 
 ### Android
 
 1. Start the backend on your machine:
    ```bash
-   cd ../backend
-   uvicorn app.main:app --reload --port 8000
+   ./scripts/use-dev.sh
+   ./scripts/start.sh dev backend
    ```
 
-2. Open the Android project in Android Studio:
+2. Either use the **bundled** dev APK (no live reload), or **live reload** from the Vite dev server:
+   - **Bundled:** run `./scripts/build-android-debug.sh` from repo root, then open the app on the emulator.
+   - **Live reload (emulator loads from your PC):** create `mobile/.use-dev-server` (e.g. `touch mobile/.use-dev-server`), run `cd ui && npm run dev` (Vite on `0.0.0.0:5173`), then `cd ../mobile && npx cap sync android && npx cap run android`. The app loads from `http://10.0.2.2:5173` (never localhost). Delete `.use-dev-server` when you want the bundled app again.
+
+3. Or open the Android project in Android Studio and run from there:
    ```bash
    npx cap open android
    ```
-
-3. Run the app on an emulator or device from Android Studio.
 
 The app defaults to `http://10.0.2.2:8000` as the API base (Android emulator’s alias for host `localhost:8000`).
 

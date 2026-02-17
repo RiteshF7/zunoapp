@@ -8,6 +8,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: true, // listen on 0.0.0.0 so Android emulator (10.0.2.2:5173) can reach the dev server
     proxy: {
       '/api': 'http://localhost:8000',
       '/health': 'http://localhost:8000',

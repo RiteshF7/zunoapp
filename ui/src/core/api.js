@@ -96,8 +96,8 @@ export async function api(method, path, body = null, params = null) {
     return result;
   } catch (err) {
     const url = `${getApiBase()}${_normalizePath(path)}`;
-    console.error('[API]', method, url, err.message);
-    return { ok: false, status: 0, data: { error: err.message } };
+    console.error('[API] Network error:', method, url, err.message, err);
+    return { ok: false, status: 0, data: { error: err.message, detail: err.message } };
   } finally {
     if (typeof window.hideProgress === 'function') window.hideProgress();
   }

@@ -276,7 +276,7 @@ async def serve_app_spa():
     """Serve app SPA index.html for /app and /app/. Hash routes (#auth, #home) are client-side."""
     if _app_index.is_file():
         return FileResponse(str(_app_index), headers=_APP_INDEX_HEADERS)
-    raise StarletteHTTPException(status_code=404, detail="App not built. Run scripts/build-ui.sh")
+    raise StarletteHTTPException(status_code=404, detail="App not built. Run ./scripts/run.sh web-prod")
 
 
 if _static_dir.is_dir():

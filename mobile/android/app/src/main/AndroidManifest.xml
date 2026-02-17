@@ -24,12 +24,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Deep link for OAuth callback (com.zuno.app://callback) -->
+            <!-- Deep link for OAuth callback (prod: com.zuno.app, dev: com.zuno.app.dev) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.zuno.app" />
+                <data android:scheme="${applicationId}" />
             </intent-filter>
         </activity>
 

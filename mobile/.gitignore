@@ -1,5 +1,8 @@
 node_modules/
 
+# Create this file to load app from http://10.0.2.2:5173 (live reload). Delete to use bundled www/.
+.use-dev-server
+
 # Android build artifacts
 android/.gradle/
 android/build/

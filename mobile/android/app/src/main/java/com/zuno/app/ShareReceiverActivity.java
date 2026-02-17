@@ -91,12 +91,12 @@ public class ShareReceiverActivity extends Activity {
                     // Extract the first URL
                     String url = text.replaceAll("(?s).*?(https?://\\S+).*", "$1");
                     body.put("url", url);
-                    endpoint = API_BASE + "/api/content";
+                    endpoint = API_BASE + "/api/v1/content";
                 } else {
                     String title = text.length() > 80 ? text.substring(0, 77) + "..." : text;
                     body.put("title", title);
                     body.put("source_text", text);
-                    endpoint = API_BASE + "/api/content/text";
+                    endpoint = API_BASE + "/api/v1/content/text";
                 }
 
                 JSONObject result = postJson(endpoint, body.toString(), token);
@@ -135,7 +135,7 @@ public class ShareReceiverActivity extends Activity {
                 String fileName = "shared_" + System.currentTimeMillis() + "." + ext;
 
                 JSONObject result = uploadMultipart(
-                    API_BASE + "/api/content/upload",
+                    API_BASE + "/api/v1/content/upload",
                     imageData, fileName, mimeType, token
                 );
 
@@ -160,7 +160,7 @@ public class ShareReceiverActivity extends Activity {
         try {
             JSONObject body = new JSONObject();
             body.put("content_id", contentId);
-            postJson(API_BASE + "/api/ai/process-content", body.toString(), token);
+            postJson(API_BASE + "/api/v1/ai/process-content", body.toString(), token);
         } catch (Exception ignored) {
             // Non-critical — don't bother the user
         }

@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Resolve root .env (with _DEV/_PROD suffixes) into backend and ui env files.
+"""Single source of truth: root .env → one active env per app.
 
-Reads root .env, resolves VAR_DEV/VAR_PROD based on mode, writes:
-  - backend/.env.development, backend/.env.production
-  - ui/.env.development, ui/.env.production
+Reads root .env (with _DEV/_PROD suffixes), picks one mode, writes:
+  - backend/.env   (single file; ENVIRONMENT=development|production)
+  - ui/.env        (single file; all VITE_* for that mode)
 
-Mode from: --mode, ZUNO_ENV, ENVIRONMENT, or ZUNO_MODE in root .env. Default: development.
+You only edit root .env. Run with --mode or use ZUNO_MODE in root .env.
+Scripts (build-android-debug, build-android-release, start.sh) run this with the right mode.
 
 Usage:
   python backend/scripts/resolve_env.py [--mode dev|prod]
-  Or run from repo root: ./scripts/resolve-env.sh
+  ./scripts/resolve-env.sh              # uses ZUNO_MODE from root .env
+  ./scripts/use-dev.sh                  # switch to dev (then start backend / build UI)
+  ./scripts/use-prod.sh                 # switch to prod
 """
 
 import argparse
@@ -129,16 +132,24 @@ def main() -> int:
     # Build ui envs - only VITE_*
     ui_dev = {k: v for k, v in dev_env.items() if k.startswith("VITE_")}
     ui_prod = {k: v for k, v in prod_env.items() if k.startswith("VITE_")}
+    # OAuth deep link: dev APK uses com.zuno.app.dev, prod uses com.zuno.app (must match Android applicationId)
+    ui_dev["VITE_APP_SCHEME"] = "com.zuno.app.dev"
+    ui_prod["VITE_APP_SCHEME"] = "com.zuno.app"
 
-    # Write backend/.env.development and backend/.env.production
+    # Active env (what backend and UI use by default)
+    backend_active = {**(backend_dev if mode == "development" else backend_prod), "ENVIRONMENT": mode}
+    ui_active = ui_dev if mode == "development" else ui_prod
+
+    (BACKEND_DIR / ".env").write_text(_env_to_output(backend_active), encoding="utf-8")
+    ui_dir = ROOT_DIR / "ui"
+    ui_dir.mkdir(exist_ok=True)
+    (ui_dir / ".env").write_text(_env_to_output(ui_active), encoding="utf-8")
+
+    # Keep .env.development / .env.production for scripts that need both (e.g. clone-prod-to-dev-db)
     (BACKEND_DIR / ".env.development").write_text(_env_to_output(backend_dev), encoding="utf-8")
     (BACKEND_DIR / ".env.production").write_text(_env_to_output(backend_prod), encoding="utf-8")
 
-    # Write ui/.env.development and ui/.env.production
-    ui_dir = ROOT_DIR / "ui"
-    ui_dir.mkdir(exist_ok=True)
-    (ui_dir / ".env.development").write_text(_env_to_output(ui_dev), encoding="utf-8")
-    (ui_dir / ".env.production").write_text(_env_to_output(ui_prod), encoding="utf-8")
+    print(f"Resolved {mode} → backend/.env, ui/.env (active). Also backend/.env.development, .env.production.")
 
     # Inject Chrome extension defaults from current mode (ZUNO_APP_URL, ZUNO_API_BASE)
     env = dev_env if mode == "development" else prod_env

@@ -1,34 +1,39 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
+// Use dev server (10.0.2.2:5173) when: CAPACITOR_DEV_SERVER=1 OR file mobile/.use-dev-server exists
+const useDevServer =
+  process.env.CAPACITOR_DEV_SERVER === '1' ||
+  process.env.CAPACITOR_DEV_SERVER === 'true' ||
+  existsSync(join(__dirname, '.use-dev-server'));
 
 const config: CapacitorConfig = {
   appId: 'com.zuno.app',
   appName: 'Zuno',
   webDir: 'www',
-  // During development the WebView loads local files from www/.
-  // API calls use the API_BASE defined in index.html which defaults
-  // to http://10.0.2.2:8000 (Android emulator → host localhost).
-  //
-  // For production, either:
-  //   1. Set server.url below to your deployed backend, OR
-  //   2. Inject window.ZUNO_API_BASE via server.androidScheme / initialScripts.
-  //
-  // server: {
-  //   url: 'https://api.zuno.app',
-  //   cleartext: true,
-  // },
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
+  // When useDevServer: WebView loads from http://10.0.2.2:5173 (emulator → host Vite). Run "npm run dev" in ui/ first.
+  // Otherwise: WebView loads bundled www/. Create mobile/.use-dev-server to enable dev server without env var.
   android: {
-    // Allow cleartext HTTP for local development (10.0.2.2)
     allowMixedContent: true,
   },
   ios: {
-    // Allow cleartext HTTP for local dev (Simulator: localhost:8000; device: use Mac LAN IP)
     allowMixedContent: true,
   },
-  server: {
-    // Use http scheme so API calls to local backend aren't blocked as mixed content
-    androidScheme: 'http',
-    iosScheme: 'http',
-  },
+  server: (() => {
+    const base = { androidScheme: 'http' as const, iosScheme: 'http' as const };
+    if (useDevServer) {
+      // Android emulator: 10.0.2.2 = host machine. Never use localhost — emulator can't reach it.
+      const serverUrl = process.env.CAPACITOR_SERVER_URL || 'http://10.0.2.2:5173';
+      return { ...base, url: serverUrl, cleartext: true };
+    }
+    return base;
+  })(),
 };
 
 export default config;

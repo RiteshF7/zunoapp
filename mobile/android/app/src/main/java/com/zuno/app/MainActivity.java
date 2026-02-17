@@ -2,6 +2,7 @@ package com.zuno.app;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.webkit.WebView;
 
 import com.getcapacitor.BridgeActivity;
@@ -17,6 +18,20 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+    }
+
+    /**
+     * Ensure the recent-apps (overview) button is not consumed by the WebView.
+     * If we pass KEYCODE_APP_SWITCH to the view hierarchy, the WebView can eat it
+     * and the recents screen never shows. So we don't dispatch it to views and
+     * return false so the system can handle it.
+     */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_APP_SWITCH) {
+            return false;
+        }
+        return super.dispatchKeyEvent(event);
     }
 
     @Override

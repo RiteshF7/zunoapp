@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { api } from '../core/api.js';
 import { navigate } from '../core/navigate.js';
-import { _searchType, setSearchType as setSearchTypeState } from '../core/state.js';
+import { _searchType, setSearchType as setSearchTypeState, getProcessingIds } from '../core/state.js';
 import { contentCardHtml } from '../components/ui.js';
 import { skeletonCards } from '../components/skeleton.js';
 import { esc } from '../utils/helpers.js';
@@ -84,7 +84,7 @@ async function doSearch() {
   resultsEl.innerHTML = items.length === 0
     ? '<div class="text-center py-12"><span class="material-icons-round text-4xl text-muted-foreground/60 mb-2">search_off</span><p class="text-muted-foreground text-sm">No results found</p></div>'
     : `<p class="text-muted-foreground text-xs mb-3">${items.length} result${items.length !== 1 ? 's' : ''}</p>
-       <div class="space-y-3">${items.map(i => contentCardHtml(i, { roundedMinimal: true })).join('')}</div>`;
+       <div class="space-y-3">${items.map(i => contentCardHtml(i, { roundedMinimal: true, showAiStatus: true, processingIds: getProcessingIds() })).join('')}</div>`;
 }
 
 function searchByTag(slug) {

@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { api } from '../core/api.js';
 import { navigate } from '../core/navigate.js';
+import { getProcessingIds } from '../core/state.js';
 import { toast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { customConfirm } from '../components/confirm.js';
@@ -52,13 +53,20 @@ export async function renderCollectionDetail(el, id) {
         <div class="space-y-2">
           ${items.map(item => {
             const ci = item.content || item;
+            const contentId = ci.id || item.content_id;
+            const processingIds = getProcessingIds();
+            const isProcessing = contentId && processingIds.has(contentId);
+            const processingBadge = isProcessing
+              ? '<span class="text-accent/80 text-[10px] flex items-center gap-1 shrink-0" role="status" aria-busy="true"><span class="progress-bar-inline w-12 h-1"><span class="progress-bar-inline-inner block h-full rounded"></span></span><span class="material-icons-round text-xs">auto_awesome</span> Processing…</span>'
+              : '';
             return `
             <div class="bg-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-card-hover transition-colors shadow-sm">
-              <div class="flex-1 min-w-0 cursor-pointer" onclick="navigate('#content-detail/${ci.id || item.content_id}')">
+              <div class="flex-1 min-w-0 cursor-pointer" onclick="navigate('#content-detail/${contentId}')">
                 <p class="text-heading text-sm font-medium truncate">${esc(ci.title || ci.url || 'Untitled')}</p>
                 <p class="text-muted-foreground text-xs truncate">${esc(ci.url || '')}</p>
+                ${processingBadge ? `<div class="mt-1.5">${processingBadge}</div>` : ''}
               </div>
-              <button onclick="removeFromCollection('${c.id}','${ci.id || item.content_id}')" class="p-1.5 rounded-lg hover:bg-danger/10 transition-colors" aria-label="Remove from collection">
+              <button onclick="removeFromCollection('${c.id}','${contentId}')" class="p-1.5 rounded-lg hover:bg-danger/10 transition-colors" aria-label="Remove from collection">
                 <span class="material-icons-round text-base text-danger">close</span>
               </button>
             </div>`;

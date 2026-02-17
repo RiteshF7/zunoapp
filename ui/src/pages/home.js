@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { api } from '../core/api.js';
 import { navigate } from '../core/navigate.js';
-import { getUserProfile } from '../core/state.js';
+import { getUserProfile, getProcessingIds } from '../core/state.js';
 import { router } from '../core/router.js';
 import { contentCardHtml } from '../components/ui.js';
 import { esc, getGreeting, formatDate } from '../utils/helpers.js';
@@ -57,7 +57,7 @@ export async function renderHome(el) {
           <button onclick="navigate('#home')" class="relative z-10 px-4 py-2 bg-card rounded-full text-sm font-medium shadow-sm hover:shadow-md border border-border">Go to Home</button>
         </div>` : `
         <div class="space-y-3" id="feed-list" role="feed" aria-label="Feed items">
-          ${items.map(item => contentCardHtml(item, { showBookmark: true, isBookmarked: bookmarkSet.has(item.id) })).join('')}
+          ${items.map(item => contentCardHtml(item, { showBookmark: true, isBookmarked: bookmarkSet.has(item.id), showAiStatus: true, processingIds: getProcessingIds() })).join('')}
         </div>`}
     </div>`;
 }

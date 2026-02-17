@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// GLOBAL LOADING OVERLAY — universal loading indicator
-// Overlay + centered round spinner during navigation, API calls, save, AI processing.
+// GLOBAL LOADING OVERLAY — used only while saving content (Add URL, Share, image upload).
+// Hide as soon as save succeeds; AI processing is shown on the content card only.
 // Ref-counted so multiple concurrent operations keep it visible until all finish.
 // ═══════════════════════════════════════════════════════════════════════════
 

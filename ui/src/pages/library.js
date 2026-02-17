@@ -321,9 +321,11 @@ async function doSaveContent() {
   const modalContent = document.getElementById('modal-content');
   if (modalContent) modalContent.innerHTML = getSaveContentProgressHtml();
 
+  if (typeof window.showProgress === 'function') window.showProgress();
   try {
     console.log('[SaveContent] POST', getApiBase() + '/api/v1/content', 'url=', url);
     const res = await api('POST', '/api/content', { url });
+    if (typeof window.hideProgress === 'function') window.hideProgress();
     if (res.ok) {
       const contentId = res.data?.id;
       if (contentId) {
@@ -334,11 +336,10 @@ async function doSaveContent() {
         });
       }
       closeModal();
-      toast('Link saved');
+      toast('Saved');
       await refreshSavedListOnly(contentId);
     } else {
       if (modalContent) modalContent.innerHTML = getSaveContentFormHtml(url);
-      // status 0 = network/CORS error; show actual error (e.g. "Failed to fetch")
       const msg = res.status === 0
         ? (res.data?.error || res.data?.detail || 'Network error. Is the backend running?')
         : (res.data?.detail || "Couldn't save link. Check the URL and try again.");
@@ -346,6 +347,7 @@ async function doSaveContent() {
       toast(msg, true);
     }
   } catch (_) {
+    if (typeof window.hideProgress === 'function') window.hideProgress();
     if (modalContent) modalContent.innerHTML = getSaveContentFormHtml(url);
     toast("Couldn't save link. Check the URL and try again.", true);
   }

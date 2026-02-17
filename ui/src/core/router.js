@@ -22,6 +22,7 @@ import { renderAdmin } from '../pages/admin.js';
 
 const _detailPages = ['content-detail', 'collection', 'goal-detail'];
 let _navId = 0;
+let _routerRunning = false;
 
 function getTransition(page) {
   if (!_prevPage) return 'fade-in';
@@ -36,12 +37,16 @@ function runRouterCallback(callback) {
 }
 
 export async function router() {
+  // Prevent concurrent runs (e.g. app resume + hashchange) which cause duplicate API calls and stuck loading
+  if (_routerRunning) return;
+  _routerRunning = true;
   const myNavId = ++_navId;
   const token = localStorage.getItem('zuno_token');
   let { page, id } = getRoute();
 
   // Empty or invalid page → redirect without firing hashchange
   if (!page) {
+    _routerRunning = false;
     replaceHash(token ? '#home' : '#auth');
     queueMicrotask(() => router());
     return;
@@ -49,6 +54,7 @@ export async function router() {
 
   // Collection list (no id) → collections page
   if (page === 'collection' && !id) {
+    _routerRunning = false;
     replaceHash('#collections');
     queueMicrotask(() => router());
     return;
@@ -56,21 +62,27 @@ export async function router() {
 
   // Auth guard
   if (!token && page !== 'auth' && page !== 'connect-extension') {
+    _routerRunning = false;
     replaceHash('#auth');
     queueMicrotask(() => router());
     return;
   }
   if (token && page === 'auth') {
+    _routerRunning = false;
     replaceHash('#home');
     queueMicrotask(() => router());
     return;
   }
 
   const main = document.getElementById('page');
-  if (!main) return;
+  if (!main) {
+    _routerRunning = false;
+    return;
+  }
 
   // Chrome extension connect (fix: use main after it's defined)
   if (page === 'connect-extension') {
+    _routerRunning = false;
     // Expose env-aware API base so content script can send it to the extension (dev vs prod)
     try {
       window.ZUNO_API_BASE = getApiBase();
@@ -88,12 +100,14 @@ export async function router() {
 
   // Feed disabled: redirect #feed to Home (Library Saved)
   if (page === 'feed' && !showFeed()) {
+    _routerRunning = false;
     replaceHash('#home');
     queueMicrotask(() => router());
     return;
   }
   // Backward compat: library routes → home, collections, or profile/bookmarks
   if (page === 'library') {
+    _routerRunning = false;
     const sub = id === 'collections' ? 'collections' : id === 'bookmarks' ? 'bookmarks' : 'saved';
     if (sub === 'collections') {
       replaceHash('#collections');
@@ -105,15 +119,22 @@ export async function router() {
     queueMicrotask(() => router());
     return;
   }
-  if (page === 'content') { replaceHash('#home'); queueMicrotask(() => router()); return; }
+  if (page === 'content') {
+    _routerRunning = false;
+    replaceHash('#home');
+    queueMicrotask(() => router());
+    return;
+  }
   // #home/collections → dedicated collections page
   if (page === 'home' && id === 'collections') {
+    _routerRunning = false;
     replaceHash('#collections');
     queueMicrotask(() => router());
     return;
   }
   // Bookmarks live in profile only: redirect #home/bookmarks → #profile/bookmarks
   if (page === 'home' && id === 'bookmarks') {
+    _routerRunning = false;
     replaceHash('#profile/bookmarks');
     queueMicrotask(() => router());
     return;
@@ -141,7 +162,12 @@ export async function router() {
 
   const transition = getTransition(page);
   setPrevPage(page);
-  if (typeof window.showProgress === 'function') window.showProgress();
+
+  // Persist route so reopening from recents (full reload) can restore the same screen
+  try {
+    const h = window.location.hash || '#home';
+    if (h && h !== '#auth') sessionStorage.setItem('zuno_last_hash', h);
+  } catch (_) {}
 
   const skeletonMap = {
     home: skeletonCards(3),
@@ -210,6 +236,7 @@ export async function router() {
           break;
         case 'admin': await renderAdmin(main); if (myNavId !== _navId) return; break;
         default:
+          _routerRunning = false;
           replaceHash('#home');
           queueMicrotask(() => router());
           return;
@@ -225,9 +252,8 @@ export async function router() {
         </div>`;
       }
     });
-  } finally {
-    if (typeof window.hideProgress === 'function') window.hideProgress();
-  }
+  } catch (_) {}
+  _routerRunning = false;
 }
 
 // Expose router globally so pages can call it

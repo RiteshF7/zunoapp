@@ -89,8 +89,10 @@ const MAX_SPLASH_MS = 4000;
 function scheduleHideSplash() {
   const hide = typeof window.hideSplash === 'function' ? window.hideSplash : (typeof hideSplash === 'function' ? hideSplash : null);
   if (!hide) return;
+  // When restoring route after reopen-from-recents, hide splash quickly so we don't show "Loading" again
+  const restoring = !!window._restoringRoute;
   const elapsed = (typeof window._splashStart === 'number') ? Date.now() - window._splashStart : 0;
-  const wait = Math.max(0, MIN_SPLASH_MS - elapsed);
+  const wait = restoring ? 0 : Math.max(0, MIN_SPLASH_MS - elapsed);
   setTimeout(hide, wait);
 }
 
@@ -118,7 +120,26 @@ runWhenReady(async () => {
   try {
     // If Supabase redirected back with tokens in the hash (web flow), handle them first
     await handleOAuthCallback();
+
+    // Restore last route when reopening from recents (full reload): show same screen instead of always #home
+    const hash = window.location.hash || '';
+    const isDefaultRoute = !hash || hash === '#' || hash === '#home';
+    const isOAuthReturn = hash.includes('access_token') || hash.includes('error=');
+    let restoredRoute = false;
+    if (isDefaultRoute && !isOAuthReturn) {
+      try {
+        const saved = sessionStorage.getItem('zuno_last_hash');
+        if (saved && saved !== '#' && saved !== '#auth') {
+          history.replaceState(null, '', window.location.pathname + window.location.search + saved);
+          restoredRoute = true;
+          window._restoringRoute = true;
+        }
+      } catch (_) {}
+    }
+
     await router();
+
+    if (restoredRoute) window._restoringRoute = false;
 
     // iOS Share Extension: sync token + apiBase to App Group so Share to Zuno works
     syncAuthToNativeIfIOS();

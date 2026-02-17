@@ -102,7 +102,7 @@ public class ShareReceiverActivity extends Activity {
                 JSONObject result = postJson(endpoint, body.toString(), token);
 
                 if (result != null && result.has("id")) {
-                    showToast("Saved to Zuno!");
+                    showToast("Saved");
                     // Fire-and-forget AI processing
                     triggerAiProcessing(result.getString("id"), token);
                 } else {
@@ -140,7 +140,7 @@ public class ShareReceiverActivity extends Activity {
                 );
 
                 if (result != null && result.has("id")) {
-                    showToast("Image saved to Zuno!");
+                    showToast("Saved");
                     triggerAiProcessing(result.getString("id"), token);
                 } else {
                     showToast("Failed to save image");

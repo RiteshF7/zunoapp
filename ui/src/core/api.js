@@ -67,7 +67,6 @@ async function _doFetch(method, path, body, params) {
  * @returns {Promise<ApiResponse>}
  */
 export async function api(method, path, body = null, params = null) {
-  if (typeof window.showProgress === 'function') window.showProgress();
   try {
     let result = await _doFetch(method, path, body, params);
 
@@ -98,8 +97,6 @@ export async function api(method, path, body = null, params = null) {
     const url = `${getApiBase()}${_normalizePath(path)}`;
     console.error('[API] Network error:', method, url, err.message, err);
     return { ok: false, status: 0, data: { error: err.message, detail: err.message } };
-  } finally {
-    if (typeof window.hideProgress === 'function') window.hideProgress();
   }
 }
 

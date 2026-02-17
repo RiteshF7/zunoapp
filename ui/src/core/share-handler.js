@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 import { api } from './api.js';
 import { toast } from '../components/toast.js';
+import { addProcessingId } from './state.js';
 
 // Simple URL regex — matches http(s) links inside shared text
 const URL_RE = /https?:\/\/[^\s)<>]+/i;
@@ -53,9 +54,12 @@ async function handleTextShare(text) {
     const url = urlMatch[0];
     const res = await api('POST', '/api/content', { url });
     if (res.ok) {
-      toast('Saved to Zuno!');
-      // Fire background AI processing (non-blocking)
-      api('POST', '/api/ai/process-content', { content_id: res.data.id });
+      toast('Saved');
+      const contentId = res.data?.id;
+      if (contentId) {
+        addProcessingId(contentId);
+        api('POST', '/api/ai/process-content', { content_id: contentId }).catch(() => {});
+      }
     } else {
       toast(res.data?.detail || 'Failed to save link', true);
     }
@@ -63,8 +67,8 @@ async function handleTextShare(text) {
     // Plain text — save as a note
     const title = text.length > 80 ? text.slice(0, 77) + '...' : text;
     const res = await api('POST', '/api/content/text', { title, source_text: text });
-    if (res.ok) {
-      toast('Note saved to Zuno!');
+  if (res.ok) {
+    toast('Saved');
     } else {
       toast(res.data?.detail || 'Failed to save note', true);
     }
@@ -101,10 +105,10 @@ async function handleImageShare(base64Data, mimeType) {
   const resData = await res.json().catch(() => ({}));
 
   if (res.ok) {
-    toast('Image saved to Zuno!');
-    // Fire background AI processing (non-blocking)
+    toast('Saved');
     if (resData.id) {
-      api('POST', '/api/ai/process-content', { content_id: resData.id });
+      addProcessingId(resData.id);
+      api('POST', '/api/ai/process-content', { content_id: resData.id }).catch(() => {});
     }
   } else {
     toast(resData?.detail || 'Failed to save image', true);

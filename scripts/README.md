@@ -2,6 +2,19 @@
 
 Use these scripts from the terminal. On Windows use Git Bash or WSL.
 
+## Release: dev → production
+
+Commit all changes on `development`, merge into `production`, and push both:
+
+```bash
+./scripts/release-to-prod.sh                    # Commit with default message
+./scripts/release-to-prod.sh "Fix login flow"   # Commit with custom message
+```
+
+Steps: switch to `development` → pull → add & commit all → push `development` → checkout `production` → pull → merge `development` → push `production` → checkout `development`.
+
+**Optional:** Create a tag after merging (e.g. `git tag -a v1.2.0 -m "Release 1.2.0"` on `production`, then `git push origin v1.2.0`). Run tests or lint before running the script if you want extra safety.
+
 ## Start app (dev or prod)
 
 ```bash
@@ -60,3 +73,10 @@ On the server **no `.env` files are used** (they are not deployed). The backend 
 
 - **Auth redirect URLs**: Supabase Dashboard → Authentication → URL Configuration.
 - **Set admin user**: In SQL Editor: `UPDATE public.profiles SET role = 'admin' WHERE id = '<uuid>';`
+
+## Suggestions when moving dev → prod
+
+- **Tag releases:** After merging to `production`, create a tag (e.g. `v1.2.0`) and push it so you can refer to deployed versions and roll back if needed.
+- **Run checks first:** Optionally run tests or lint (e.g. `npm run test` / `npm run lint` in `ui/` or `backend/`) before running `release-to-prod.sh`, or add a `--dry-run` that stops before push.
+- **Protect production:** In GitHub → Settings → Branches, add a rule for `production` (e.g. require PR, require status checks) so prod is only updated via merge from `development`.
+- **Changelog:** Keep a CHANGELOG.md or release notes and update it as part of the release commit message or a post-merge step.

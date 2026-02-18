@@ -9,6 +9,8 @@ from app.schemas.models import (
     CollectionCreate,
     CollectionUpdate,
     CollectionItemAdd,
+    CollectionBulkDelete,
+    CollectionItemsBulkRemove,
     ContentOut,
 )
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
@@ -73,6 +75,23 @@ async def list_collections(
 
     result = query.execute()
     return result.data or []
+
+
+@router.post("/bulk-delete", status_code=204)
+@limiter.limit(RATE_WRITE)
+async def bulk_delete_collections(
+    request: Request,
+    body: CollectionBulkDelete,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Delete multiple collections owned by the current user."""
+    if not body.ids:
+        return None
+    db.table("collections").delete().eq("user_id", user_id).in_(
+        "id", body.ids
+    ).execute()
+    return None
 
 
 @router.get("/{collection_id}", response_model=CollectionOut)
@@ -201,6 +220,37 @@ async def add_item_to_collection(
     # Increment item count via RPC
     db.rpc("increment_collection_count", {"collection_id": collection_id}).execute()
     return {"success": True}
+
+
+@router.post("/{collection_id}/items/bulk-remove", status_code=204)
+@limiter.limit(RATE_WRITE)
+async def bulk_remove_items_from_collection(
+    request: Request,
+    collection_id: str,
+    body: CollectionItemsBulkRemove,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Remove multiple content items from a collection."""
+    # Verify collection belongs to user
+    coll = (
+        db.table("collections")
+        .select("id")
+        .eq("id", collection_id)
+        .eq("user_id", user_id)
+        .single()
+        .execute()
+    )
+    if not coll.data:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    if not body.content_ids:
+        return None
+    db.table("collection_items").delete().eq(
+        "collection_id", collection_id
+    ).in_("content_id", body.content_ids).execute()
+    for _ in body.content_ids:
+        db.rpc("decrement_collection_count", {"collection_id": collection_id}).execute()
+    return None
 
 
 @router.delete("/{collection_id}/items/{content_id}", status_code=204)

@@ -12,9 +12,17 @@ import {
 import { syncAuthToNativeIfIOS } from '../core/ios-share-sync.js';
 import { showApiError } from '../utils/api-error.js';
 
+function isDevMode() {
+  return typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development';
+}
+
 export function renderAuth(el) {
+  const aboutButton = isDevMode()
+    ? `<a href="#about" onclick="navigate('#about'); return false" class="fixed top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-neutral-200/90 dark:bg-neutral-700/90 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors" aria-label="About App (dev)">About App</a>`
+    : '';
   el.innerHTML = `
-    <div class="flex flex-col items-center justify-center min-h-[80vh] fade-in">
+    <div class="flex flex-col items-center justify-center min-h-[80vh] fade-in relative">
+      ${aboutButton}
       <div class="w-full max-w-sm">
         <div class="text-center mb-8">
           <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-neutral-200/80 dark:bg-foreground/10 mb-5">

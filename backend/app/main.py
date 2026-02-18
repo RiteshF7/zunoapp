@@ -22,7 +22,7 @@ from app.exceptions import ZunoException
 from app.utils.rate_limit import limiter
 from app.routers import (
     profile, collections, content, feed, search, ai,
-    app_config, user_preferences, suggested_feed, admin,
+    app_config, about_config, user_preferences, suggested_feed, admin,
     knowledge, goals, waitlist,
 )
 
@@ -187,6 +187,7 @@ async def inject_user_id_for_rate_limit(request: Request, call_next):
 # ── API v1 ────────────────────────────────────────────────────────────────
 v1 = APIRouter(prefix="/api/v1")
 v1.include_router(app_config.router)         # GET /api/v1/config
+v1.include_router(about_config.router)       # GET /api/v1/about-config
 v1.include_router(profile.router)            # /api/v1/profile
 v1.include_router(user_preferences.router)   # /api/v1/user-preferences
 v1.include_router(collections.router)        # /api/v1/collections

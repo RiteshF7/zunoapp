@@ -1,4 +1,4 @@
-"""Admin endpoints: cache management, prompt reloading, stats, waitlist.
+"""Admin endpoints: cache management, prompt CRUD, stats, waitlist.
 
 Only users with profile.role = 'admin' can call these endpoints (except /me).
 GET /admin/me returns {"admin": true|false} for any authenticated user.
@@ -6,11 +6,12 @@ GET /admin/me returns {"admin": true|false} for any authenticated user.
 
 import logging
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.dependencies import get_current_user_role, get_admin_user, get_supabase
 from app.utils.cache import bust_cache, get_cache_stats
 from app.prompts import reload_prompts
+from app.schemas.models import PromptListItem, PromptOut, PromptUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -57,16 +58,79 @@ async def bust(
 
 # ── Prompt management ─────────────────────────────────────────────────────
 
+@router.get("/prompts", response_model=list[PromptListItem])
+async def prompts_list(
+    user_id: str = Depends(get_admin_user),
+    db=Depends(get_supabase),
+):
+    """List all prompts (name, version, updated_at). Admin only."""
+    result = (
+        db.table("prompts")
+        .select("name, version, updated_at")
+        .order("name")
+        .execute()
+    )
+    items = result.data if result.data is not None else []
+    return [PromptListItem(**row) for row in items]
+
+
+@router.get("/prompts/{name}", response_model=PromptOut)
+async def prompts_get_one(
+    name: str,
+    user_id: str = Depends(get_admin_user),
+    db=Depends(get_supabase),
+):
+    """Get full config for one prompt. Admin only. 404 if not in DB."""
+    result = (
+        db.table("prompts")
+        .select("name, system, user_template, version, temperature, max_output_tokens, model, updated_at")
+        .eq("name", name)
+        .maybe_single()
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Prompt not found: {name}")
+    return PromptOut(**result.data)
+
+
+@router.put("/prompts/{name}", response_model=PromptOut)
+async def prompts_update(
+    name: str,
+    body: PromptUpdate,
+    user_id: str = Depends(get_admin_user),
+    db=Depends(get_supabase),
+):
+    """Update one prompt (partial update). Clears prompt cache after save. Admin only."""
+    update_payload = body.model_dump(exclude_unset=True)
+    if not update_payload:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update")
+    update_result = (
+        db.table("prompts")
+        .update(update_payload)
+        .eq("name", name)
+        .execute()
+    )
+    if not update_result.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Prompt not found: {name}")
+    reload_prompts()
+    logger.info("Admin prompt updated: %s by user=%s", name, user_id)
+    # Re-fetch full row for response (updated_at etc.)
+    get_result = (
+        db.table("prompts")
+        .select("name, system, user_template, version, temperature, max_output_tokens, model, updated_at")
+        .eq("name", name)
+        .single()
+        .execute()
+    )
+    return PromptOut(**get_result.data)
+
+
 @router.post("/prompts/reload")
 async def prompts_reload(user_id: str = Depends(get_admin_user)):
-    """Reload all AI prompts from YAML files on disk.
-
-    Useful after editing prompt YAML files in development to pick up
-    changes without restarting the server.
-    """
+    """Clear the in-memory prompt cache so the next get_prompt() refetches from DB."""
     reload_prompts()
     logger.info("Admin prompt reload by user=%s", user_id)
-    return {"status": "ok", "message": "Prompts reloaded from disk"}
+    return {"status": "ok", "message": "Prompts cache cleared"}
 
 
 # ── Pro waitlist (landing signups) ────────────────────────────────────────

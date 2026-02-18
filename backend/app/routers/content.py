@@ -7,7 +7,14 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Upl
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
-from app.schemas.models import ContentOut, ContentCreate, ContentCreateText, ContentUpdate, PaginatedResponse
+from app.schemas.models import (
+    ContentOut,
+    ContentCreate,
+    ContentCreateText,
+    ContentUpdate,
+    ContentBulkDelete,
+    PaginatedResponse,
+)
 from app.services.metadata_service import fetch_url_metadata
 from app.utils.rate_limit import limiter, RATE_READ, RATE_WRITE
 from app.utils.upload_validation import (
@@ -64,6 +71,21 @@ async def list_content(
         offset=offset,
         has_more=has_more,
     )
+
+
+@router.post("/bulk-delete", status_code=204)
+@limiter.limit(RATE_WRITE)
+async def bulk_delete_content(
+    request: Request,
+    body: ContentBulkDelete,
+    user_id: str = Depends(get_current_user),
+    db: Client = Depends(get_supabase),
+):
+    """Delete multiple content items owned by the current user."""
+    if not body.ids:
+        return None
+    db.table("content").delete().eq("user_id", user_id).in_("id", body.ids).execute()
+    return None
 
 
 @router.get("/{content_id}", response_model=ContentOut)

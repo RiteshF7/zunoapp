@@ -9,6 +9,168 @@ import { openModal, closeModal } from '../components/modal.js';
 import { customConfirm } from '../components/confirm.js';
 import { esc } from '../utils/helpers.js';
 
+let _collectionDetailId = null;
+let _collectionDetailCollection = null;
+let _collectionDetailItems = [];
+let _collectionDetailSelectMode = false;
+let _collectionDetailSelectedIds = new Set();
+
+function collectionDetailItemsHtml(c, items, selectMode, selectedIds) {
+  if (items.length === 0) return '<div class="text-center py-12"><p class="text-muted-foreground text-sm">No items in this collection</p></div>';
+  if (selectMode) {
+    return `
+      <div class="space-y-2">
+        ${items.map(item => {
+          const ci = item.content || item;
+          const contentId = ci.id || item.content_id;
+          const checked = selectedIds.has(contentId);
+          return `
+          <div role="checkbox" aria-selected="${checked}" data-content-id="${esc(contentId)}" onclick="toggleCollectionDetailSelection('${esc(contentId)}')" class="bg-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-card-hover transition-colors shadow-sm cursor-pointer ${checked ? 'ring-2 ring-accent ring-offset-2 ring-offset-bg' : ''}">
+            <span class="material-icons-round text-xl text-heading/80 flex-shrink-0">${checked ? 'check_circle' : 'radio_button_unchecked'}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-heading text-sm font-medium truncate">${esc(ci.title || ci.url || 'Untitled')}</p>
+              <p class="text-muted-foreground text-xs truncate">${esc(ci.url || '')}</p>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+  return `
+    <div class="space-y-2">
+      ${items.map(item => {
+        const ci = item.content || item;
+        const contentId = ci.id || item.content_id;
+        const processingIds = getProcessingIds();
+        const isProcessing = contentId && processingIds.has(contentId);
+        const processingBadge = isProcessing
+          ? '<span class="text-accent/80 text-[10px] flex items-center gap-1 shrink-0" role="status" aria-busy="true"><span class="progress-bar-inline w-12 h-1"><span class="progress-bar-inline-inner block h-full rounded"></span></span><span class="material-icons-round text-xs">auto_awesome</span> Processing…</span>'
+          : '';
+        return `
+        <div class="bg-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-card-hover transition-colors shadow-sm">
+          <div class="flex-1 min-w-0 cursor-pointer" onclick="navigate('#content-detail/${contentId}')">
+            <p class="text-heading text-sm font-medium truncate">${esc(ci.title || ci.url || 'Untitled')}</p>
+            <p class="text-muted-foreground text-xs truncate">${esc(ci.url || '')}</p>
+            ${processingBadge ? `<div class="mt-1.5">${processingBadge}</div>` : ''}
+          </div>
+          <button onclick="event.stopPropagation(); removeFromCollection('${c.id}','${contentId}')" class="p-1.5 rounded-lg hover:bg-danger/10 transition-colors" aria-label="Remove from collection">
+            <span class="material-icons-round text-base text-danger">close</span>
+          </button>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function collectionDetailPageInnerHtml(c, items, selectMode, selectedIds) {
+  const toolbarHtml = selectMode
+    ? `<div class="flex items-center justify-between gap-3 py-3 px-4 mb-4 rounded-xl bg-surface border border-border sticky top-0 z-10" id="collection-detail-toolbar" role="toolbar">
+        <span class="text-sm font-medium text-heading">${selectedIds.size} selected</span>
+        <div class="flex gap-2 flex-wrap">
+          <button type="button" onclick="exitCollectionDetailSelectMode()" class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-hover text-heading hover:bg-border transition-colors">Cancel</button>
+          <button type="button" onclick="bulkRemoveFromCollection()" class="px-4 py-2 rounded-lg text-sm font-medium bg-surface border border-border text-heading hover:bg-surface-hover transition-colors">Remove from collection</button>
+          <button type="button" onclick="bulkDeleteContentInCollection()" class="px-4 py-2 rounded-lg text-sm font-medium bg-danger text-white hover:bg-danger/90 transition-colors">Delete content</button>
+        </div>
+      </div>`
+    : '';
+  return `
+    <div class="flex items-center gap-3 mb-5">
+      <button onclick="navigate('#collections')" class="p-2 rounded-xl hover:bg-card-hover transition-colors" aria-label="Back to collections">
+        <span class="material-icons-round text-xl text-muted-foreground">arrow_back</span>
+      </button>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="material-icons-round text-2xl text-accent">${esc(c.icon || 'folder')}</span>
+          <h1 class="text-lg font-bold text-heading truncate">${esc(c.title)}</h1>
+        </div>
+        <p class="text-muted-foreground text-xs mt-0.5">${c.item_count} items ${c.is_shared ? '&middot; Shared' : ''}</p>
+      </div>
+      <div class="flex gap-1">
+        ${!selectMode ? `
+          <button onclick="openEditCollectionModal('${c.id}')" class="p-2 rounded-xl hover:bg-card-hover transition-colors" aria-label="Edit collection">
+            <span class="material-icons-round text-lg text-muted-foreground">edit</span>
+          </button>
+          <button onclick="deleteCollection('${c.id}')" class="p-2 rounded-xl hover:bg-danger/10 transition-colors" aria-label="Delete collection">
+            <span class="material-icons-round text-lg text-danger">delete</span>
+          </button>
+          <button onclick="enterCollectionDetailSelectMode()" class="p-2 rounded-xl hover:bg-card-hover transition-colors" aria-label="Select items">
+            <span class="material-icons-round text-lg text-muted-foreground">checklist</span>
+          </button>` : ''}
+      </div>
+    </div>
+
+    ${c.description ? `<p class="text-muted-foreground text-sm mb-4">${esc(c.description)}</p>` : ''}
+
+    ${!selectMode ? `<button onclick="openAddContentToCollectionModal('${c.id}')" class="w-full flex items-center justify-center gap-2 bg-card hover:bg-card-hover border border-border text-heading text-sm font-medium py-3 rounded-xl transition-colors mb-4 shadow-sm active:scale-[0.97]">
+      <span class="material-icons-round text-base">add</span> Add Content
+    </button>` : ''}
+
+    ${toolbarHtml}
+
+    <div id="collection-detail-items">${collectionDetailItemsHtml(c, items, selectMode, selectedIds)}</div>`;
+}
+
+function refreshCollectionDetailContent() {
+  const pageEl = document.getElementById('page');
+  const container = pageEl?.querySelector('#collection-detail-page');
+  if (!container || !_collectionDetailCollection) return;
+  container.innerHTML = collectionDetailPageInnerHtml(
+    _collectionDetailCollection,
+    _collectionDetailItems,
+    _collectionDetailSelectMode,
+    _collectionDetailSelectedIds
+  );
+}
+
+function enterCollectionDetailSelectMode() {
+  _collectionDetailSelectMode = true;
+  _collectionDetailSelectedIds.clear();
+  refreshCollectionDetailContent();
+}
+
+function exitCollectionDetailSelectMode() {
+  _collectionDetailSelectMode = false;
+  _collectionDetailSelectedIds.clear();
+  refreshCollectionDetailContent();
+}
+
+function toggleCollectionDetailSelection(contentId) {
+  if (!_collectionDetailSelectMode) return;
+  if (_collectionDetailSelectedIds.has(contentId)) _collectionDetailSelectedIds.delete(contentId);
+  else _collectionDetailSelectedIds.add(contentId);
+  refreshCollectionDetailContent();
+}
+
+async function bulkRemoveFromCollection() {
+  const ids = Array.from(_collectionDetailSelectedIds);
+  if (ids.length === 0 || !_collectionDetailId) return;
+  const ok = await customConfirm('Remove from collection', `Remove ${ids.length} item${ids.length !== 1 ? 's' : ''} from this collection?`, 'Remove', false);
+  if (!ok) return;
+  const res = await api('POST', `/api/collections/${_collectionDetailId}/items/bulk-remove`, { content_ids: ids });
+  if (res.ok) {
+    toast('Removed from collection');
+    exitCollectionDetailSelectMode();
+    const pageEl = document.getElementById('page');
+    if (pageEl) await renderCollectionDetail(pageEl, _collectionDetailId);
+  } else {
+    toast(res.data?.detail || 'Failed to remove', true);
+  }
+}
+
+async function bulkDeleteContentInCollection() {
+  const ids = Array.from(_collectionDetailSelectedIds);
+  if (ids.length === 0) return;
+  const ok = await customConfirm('Delete content', `Permanently delete ${ids.length} item${ids.length !== 1 ? 's' : ''}? This cannot be undone.`, 'Delete', true);
+  if (!ok) return;
+  const res = await api('POST', '/api/content/bulk-delete', { ids });
+  if (res.ok) {
+    toast('Deleted');
+    exitCollectionDetailSelectMode();
+    const pageEl = document.getElementById('page');
+    if (pageEl) await renderCollectionDetail(pageEl, _collectionDetailId);
+  } else {
+    toast(res.data?.detail || 'Failed to delete', true);
+  }
+}
+
 export async function renderCollectionDetail(el, id) {
   if (!id) { navigate('#collections'); return; }
   const [colRes, itemsRes] = await Promise.all([
@@ -19,60 +181,13 @@ export async function renderCollectionDetail(el, id) {
   const c = colRes.data;
   const items = itemsRes.ok ? (Array.isArray(itemsRes.data) ? itemsRes.data : []) : [];
 
-  el.innerHTML = `
-    <div class="slide-in-right">
-      <!-- Header -->
-      <div class="flex items-center gap-3 mb-5">
-        <button onclick="navigate('#collections')" class="p-2 rounded-xl hover:bg-card-hover transition-colors" aria-label="Back to collections">
-          <span class="material-icons-round text-xl text-muted-foreground">arrow_back</span>
-        </button>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2">
-            <span class="material-icons-round text-2xl text-accent">${esc(c.icon || 'folder')}</span>
-            <h1 class="text-lg font-bold text-heading truncate">${esc(c.title)}</h1>
-          </div>
-          <p class="text-muted-foreground text-xs mt-0.5">${c.item_count} items ${c.is_shared ? '&middot; Shared' : ''}</p>
-        </div>
-        <div class="flex gap-1">
-          <button onclick="openEditCollectionModal('${c.id}')" class="p-2 rounded-xl hover:bg-card-hover transition-colors" aria-label="Edit collection">
-            <span class="material-icons-round text-lg text-muted-foreground">edit</span>
-          </button>
-          <button onclick="deleteCollection('${c.id}')" class="p-2 rounded-xl hover:bg-danger/10 transition-colors" aria-label="Delete collection">
-            <span class="material-icons-round text-lg text-danger">delete</span>
-          </button>
-        </div>
-      </div>
+  _collectionDetailId = id;
+  _collectionDetailCollection = c;
+  _collectionDetailItems = items;
+  _collectionDetailSelectMode = false;
+  _collectionDetailSelectedIds.clear();
 
-      ${c.description ? `<p class="text-muted-foreground text-sm mb-4">${esc(c.description)}</p>` : ''}
-
-      <button onclick="openAddContentToCollectionModal('${c.id}')" class="w-full flex items-center justify-center gap-2 bg-card hover:bg-card-hover border border-border text-heading text-sm font-medium py-3 rounded-xl transition-colors mb-4 shadow-sm active:scale-[0.97]">
-        <span class="material-icons-round text-base">add</span> Add Content
-      </button>
-
-      ${items.length === 0 ? '<div class="text-center py-12"><p class="text-muted-foreground text-sm">No items in this collection</p></div>' : `
-        <div class="space-y-2">
-          ${items.map(item => {
-            const ci = item.content || item;
-            const contentId = ci.id || item.content_id;
-            const processingIds = getProcessingIds();
-            const isProcessing = contentId && processingIds.has(contentId);
-            const processingBadge = isProcessing
-              ? '<span class="text-accent/80 text-[10px] flex items-center gap-1 shrink-0" role="status" aria-busy="true"><span class="progress-bar-inline w-12 h-1"><span class="progress-bar-inline-inner block h-full rounded"></span></span><span class="material-icons-round text-xs">auto_awesome</span> Processing…</span>'
-              : '';
-            return `
-            <div class="bg-card rounded-xl p-3.5 flex items-center gap-3 hover:bg-card-hover transition-colors shadow-sm">
-              <div class="flex-1 min-w-0 cursor-pointer" onclick="navigate('#content-detail/${contentId}')">
-                <p class="text-heading text-sm font-medium truncate">${esc(ci.title || ci.url || 'Untitled')}</p>
-                <p class="text-muted-foreground text-xs truncate">${esc(ci.url || '')}</p>
-                ${processingBadge ? `<div class="mt-1.5">${processingBadge}</div>` : ''}
-              </div>
-              <button onclick="removeFromCollection('${c.id}','${contentId}')" class="p-1.5 rounded-lg hover:bg-danger/10 transition-colors" aria-label="Remove from collection">
-                <span class="material-icons-round text-base text-danger">close</span>
-              </button>
-            </div>`;
-          }).join('')}
-        </div>`}
-    </div>`;
+  el.innerHTML = `<div class="slide-in-right" id="collection-detail-page">${collectionDetailPageInnerHtml(c, items, _collectionDetailSelectMode, _collectionDetailSelectedIds)}</div>`;
 }
 
 async function openAddContentToCollectionModal(collectionId) {
@@ -158,3 +273,8 @@ window.removeFromCollection = removeFromCollection;
 window.openEditCollectionModal = openEditCollectionModal;
 window.doEditCollection = doEditCollection;
 window.deleteCollection = deleteCollection;
+window.enterCollectionDetailSelectMode = enterCollectionDetailSelectMode;
+window.exitCollectionDetailSelectMode = exitCollectionDetailSelectMode;
+window.toggleCollectionDetailSelection = toggleCollectionDetailSelection;
+window.bulkRemoveFromCollection = bulkRemoveFromCollection;
+window.bulkDeleteContentInCollection = bulkDeleteContentInCollection;

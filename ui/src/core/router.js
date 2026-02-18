@@ -19,6 +19,7 @@ import { renderSearch } from '../pages/search.js';
 import { renderKnowledge } from '../pages/knowledge.js';
 import { renderProfile } from '../pages/profile.js';
 import { renderAdmin } from '../pages/admin.js';
+import { renderAbout } from '../pages/about.js';
 
 const _detailPages = ['content-detail', 'collection', 'goal-detail'];
 let _navId = 0;
@@ -60,8 +61,8 @@ export async function router() {
     return;
   }
 
-  // Auth guard
-  if (!token && page !== 'auth' && page !== 'connect-extension') {
+  // Auth guard (allow #about without auth so login screen can open it to check URLs)
+  if (!token && page !== 'auth' && page !== 'connect-extension' && page !== 'about') {
     _routerRunning = false;
     replaceHash('#auth');
     queueMicrotask(() => router());
@@ -140,8 +141,8 @@ export async function router() {
     return;
   }
 
-  // Show/hide shell
-  const isAuth = page === 'auth';
+  // Show/hide shell (hide on auth screen and on about when not logged in)
+  const isAuth = page === 'auth' || (page === 'about' && !token);
   document.getElementById('topnav').classList.toggle('hidden', isAuth);
   document.getElementById('topnav').classList.toggle('flex', !isAuth);
   document.getElementById('bottomnav').classList.toggle('hidden', isAuth);
@@ -153,7 +154,7 @@ export async function router() {
   // Update active nav tab
   const tabMap = {
     home: 'home', feed: 'feed', collections: 'home', 'content-detail': 'home', collection: 'home',
-    goals: 'goals', 'goal-detail': 'goals', knowledge: 'knowledge', profile: 'profile', admin: 'profile',
+    goals: 'goals', 'goal-detail': 'goals', knowledge: 'knowledge', profile: 'profile', admin: 'profile', about: 'profile',
   };
   document.querySelectorAll('.nav-btn').forEach(btn => {
     const active = btn.dataset.tab === tabMap[page];
@@ -235,6 +236,7 @@ export async function router() {
           if (myNavId !== _navId) return;
           break;
         case 'admin': await renderAdmin(main); if (myNavId !== _navId) return; break;
+        case 'about': await renderAbout(main); if (myNavId !== _navId) return; break;
         default:
           _routerRunning = false;
           replaceHash('#home');

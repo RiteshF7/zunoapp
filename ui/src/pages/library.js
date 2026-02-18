@@ -10,8 +10,20 @@ import { openModal, closeModal } from '../components/modal.js';
 import { contentCardHtml } from '../components/ui.js';
 import { esc } from '../utils/helpers.js';
 import { showApiError } from '../utils/api-error.js';
+import { customConfirm } from '../components/confirm.js';
 
 let _processingPollInterval = null;
+
+// Collections page: select mode state
+let _collectionsSelectMode = false;
+let _collectionsSelectedIds = new Set();
+let _collectionsList = [];
+let _collectionsCats = [];
+
+// Library Saved page: select mode state
+let _librarySavedSelectMode = false;
+let _librarySavedSelectedIds = new Set();
+let _librarySavedItems = [];
 
 function stopProcessingPoll() {
   if (_processingPollInterval) {
@@ -72,34 +84,117 @@ function libraryTabsHtml(activeTab) {
   </div>`;
 }
 
+function librarySavedContentListHtml(items, selectMode, selectedIds) {
+  if (items.length === 0) return `
+    <div class="flex flex-col items-center justify-center py-16 text-center">
+      <div class="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center mb-4">
+        <span class="material-icons-round text-4xl text-accent/60">bookmark_border</span>
+      </div>
+      <p class="text-heading font-semibold mb-1">No saved content yet</p>
+      <p class="text-muted text-sm mb-4">Tap the + button to save your first item</p>
+    </div>`;
+  if (selectMode) {
+    return `
+    <div class="space-y-3" id="content-list">
+      ${items.map(item => {
+        const id = item.id || item.content_id;
+        const title = item.title || item.url || 'Untitled';
+        const checked = selectedIds.has(id);
+        return `
+      <div role="checkbox" aria-selected="${checked}" data-content-id="${esc(id)}" onclick="toggleLibrarySavedSelection('${esc(id)}')" class="bg-card rounded-md p-4 border border-border shadow-sm cursor-pointer hover:shadow-md transition-all flex gap-3 items-center ${checked ? 'ring-2 ring-accent ring-offset-2 ring-offset-bg' : ''}">
+        <span class="material-icons-round text-2xl text-heading/80 flex-shrink-0">${checked ? 'check_circle' : 'radio_button_unchecked'}</span>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-heading text-sm leading-snug line-clamp-2">${esc(title)}</p>
+          <p class="text-muted-foreground text-xs truncate">${esc(item.url || '')}</p>
+        </div>
+      </div>`;
+      }).join('')}
+    </div>`;
+  }
+  return `
+    <div class="space-y-3" id="content-list">
+      ${items.map(item => contentCardHtml(item, { showAiStatus: true, processingIds: getProcessingIds(), roundedMinimal: true })).join('')}
+    </div>`;
+}
+
+function librarySavedPageInnerHtml(items, selectMode, selectedIds) {
+  const toolbarHtml = selectMode
+    ? `<div class="flex items-center justify-between gap-3 py-3 px-4 mb-4 rounded-xl bg-surface border border-border sticky top-0 z-10" id="library-saved-toolbar" role="toolbar">
+        <span class="text-sm font-medium text-heading">${selectedIds.size} selected</span>
+        <div class="flex gap-2">
+          <button type="button" onclick="exitLibrarySavedSelectMode()" class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-hover text-heading hover:bg-border transition-colors">Cancel</button>
+          <button type="button" onclick="bulkDeleteContent()" class="px-4 py-2 rounded-lg text-sm font-medium bg-danger text-white hover:bg-danger/90 transition-colors">Delete</button>
+        </div>
+      </div>`
+    : '';
+  return `
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <h1 class="text-xl font-bold text-heading">Library</h1>
+      <div class="flex items-center gap-1">
+        ${!selectMode ? `<button type="button" onclick="enterLibrarySavedSelectMode()" class="px-4 py-2 rounded-xl text-sm font-medium bg-surface border border-border text-heading hover:bg-surface-hover transition-colors">Select</button>` : ''}
+        <button type="button" onclick="refreshLibrary()" id="library-refresh-btn" class="p-2 rounded-xl text-muted hover:text-heading hover:bg-surface-hover transition-colors active:scale-95" aria-label="Refresh list" title="Refresh list">
+          <span class="material-icons-round text-xl">refresh</span>
+        </button>
+      </div>
+    </div>
+    ${toolbarHtml}
+    <div id="library-saved-content">${librarySavedContentListHtml(items, selectMode, selectedIds)}</div>`;
+}
+
+function refreshLibrarySavedPageContent() {
+  const pageEl = document.getElementById('page');
+  const container = pageEl?.querySelector('#library-saved-page');
+  if (!container) return;
+  container.innerHTML = librarySavedPageInnerHtml(_librarySavedItems, _librarySavedSelectMode, _librarySavedSelectedIds);
+}
+
+function enterLibrarySavedSelectMode() {
+  _librarySavedSelectMode = true;
+  _librarySavedSelectedIds.clear();
+  refreshLibrarySavedPageContent();
+}
+
+function exitLibrarySavedSelectMode() {
+  _librarySavedSelectMode = false;
+  _librarySavedSelectedIds.clear();
+  refreshLibrarySavedPageContent();
+}
+
+function toggleLibrarySavedSelection(id) {
+  if (!_librarySavedSelectMode) return;
+  if (_librarySavedSelectedIds.has(id)) _librarySavedSelectedIds.delete(id);
+  else _librarySavedSelectedIds.add(id);
+  refreshLibrarySavedPageContent();
+}
+
+async function bulkDeleteContent() {
+  const ids = Array.from(_librarySavedSelectedIds);
+  if (ids.length === 0) return;
+  const ok = await customConfirm('Delete content', `Permanently delete ${ids.length} item${ids.length !== 1 ? 's' : ''}?`, 'Delete', true);
+  if (!ok) return;
+  const res = await api('POST', '/api/content/bulk-delete', { ids });
+  if (res.ok) {
+    toast('Deleted');
+    exitLibrarySavedSelectMode();
+    _librarySavedItems = _librarySavedItems.filter(item => !ids.includes(item.id || item.content_id));
+    const pageEl = document.getElementById('page');
+    if (pageEl) await renderLibrarySaved(pageEl);
+  } else {
+    toast(res.data?.detail || 'Failed to delete', true);
+  }
+}
+
 async function renderLibrarySaved(el) {
   const res = await api('GET', '/api/content', null, { limit: 50 });
   if (!res.ok) showApiError(res);
   const raw = res.ok ? res.data : null;
   const items = Array.isArray(raw) ? raw : (raw?.items ?? []);
   items.forEach(item => { if (item.ai_processed) removeProcessingId(item.id); });
+  _librarySavedItems = items;
+  _librarySavedSelectMode = false;
+  _librarySavedSelectedIds.clear();
 
-  el.innerHTML = `
-    <div class="fade-in">
-      <div class="flex items-center justify-between gap-3 mb-4">
-        <h1 class="text-xl font-bold text-heading">Library</h1>
-        <button type="button" onclick="refreshLibrary()" id="library-refresh-btn" class="p-2 rounded-xl text-muted hover:text-heading hover:bg-surface-hover transition-colors active:scale-95" aria-label="Refresh list" title="Refresh list">
-          <span class="material-icons-round text-xl">refresh</span>
-        </button>
-      </div>
-
-      ${items.length === 0 ? `
-        <div class="flex flex-col items-center justify-center py-16 text-center">
-          <div class="w-20 h-20 rounded-3xl bg-accent/10 flex items-center justify-center mb-4">
-            <span class="material-icons-round text-4xl text-accent/60">bookmark_border</span>
-          </div>
-          <p class="text-heading font-semibold mb-1">No saved content yet</p>
-          <p class="text-muted text-sm mb-4">Tap the + button to save your first item</p>
-        </div>` : `
-        <div class="space-y-3" id="content-list">
-          ${items.map(item => contentCardHtml(item, { showAiStatus: true, processingIds: getProcessingIds(), roundedMinimal: true })).join('')}
-        </div>`}
-    </div>`;
+  el.innerHTML = `<div class="fade-in" id="library-saved-page">${librarySavedPageInnerHtml(items, _librarySavedSelectMode, _librarySavedSelectedIds)}</div>`;
   if (getProcessingIds().size > 0) {
     stopProcessingPoll();
     _processingPollInterval = setInterval(() => pollProcessingContent(el), 4500);
@@ -155,9 +250,9 @@ const _collectionThemeColors = {
   indigo: 'from-indigo-500/20 to-indigo-600/5 border-indigo-500/20',
 };
 
-function collectionsContentHtml(cols, cats) {
+function collectionsContentHtml(cols, cats, selectMode = false, selectedIds = new Set()) {
   return `
-    ${cats.length > 0 ? `
+    ${cats.length > 0 && !selectMode ? `
       <div class="mb-5">
         <h2 class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Topics</h2>
         <div class="flex flex-wrap gap-1.5">
@@ -174,9 +269,22 @@ function collectionsContentHtml(cols, cats) {
         <p class="text-muted text-sm mb-4">Create your first collection to organize content</p>
         <button onclick="openCreateCollectionModal()" class="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors active:scale-[0.97]">Create Collection</button>
       </div>` : `
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 gap-3" id="collections-grid">
         ${cols.map(c => {
           const tc = _collectionThemeColors[c.theme] || _collectionThemeColors.blue;
+          const checked = selectedIds.has(c.id);
+          if (selectMode) {
+            return `
+          <article role="checkbox" aria-selected="${checked}" data-collection-id="${esc(c.id)}" onclick="toggleCollectionSelection('${esc(c.id)}')" class="bg-gradient-to-br ${tc} border rounded-md p-4 cursor-pointer hover:scale-[1.02] transition-all duration-200 active:scale-[0.97] shadow-card h-36 flex flex-col justify-between relative ${checked ? 'ring-2 ring-accent ring-offset-2 ring-offset-bg' : ''}">
+            <span class="material-icons-round absolute top-3 right-3 text-lg text-heading/80">${checked ? 'check_circle' : 'radio_button_unchecked'}</span>
+            <span class="material-icons-round text-2xl text-heading/80">${esc(c.icon || 'folder')}</span>
+            <div>
+              <h3 class="text-heading font-semibold text-sm leading-snug line-clamp-1">${esc(c.title)}</h3>
+              <p class="text-muted text-xs mt-0.5">${c.item_count} item${c.item_count !== 1 ? 's' : ''}</p>
+              ${c.is_shared ? '<span class="text-[10px] text-accent font-medium">Shared</span>' : ''}
+            </div>
+          </article>`;
+          }
           return `
           <article onclick="navigate('#collection/${c.id}')" class="bg-gradient-to-br ${tc} border rounded-md p-4 cursor-pointer hover:scale-[1.02] transition-all duration-200 active:scale-[0.97] shadow-card h-36 flex flex-col justify-between">
             <span class="material-icons-round text-2xl text-heading/80">${esc(c.icon || 'folder')}</span>
@@ -187,12 +295,73 @@ function collectionsContentHtml(cols, cats) {
             </div>
           </article>`;
         }).join('')}
-        <button onclick="openCreateCollectionModal()" class="border-2 border-dashed border-border rounded-md h-36 flex flex-col items-center justify-center gap-2 hover:border-accent hover:bg-accent/5 transition-all duration-200 active:scale-[0.97]" aria-label="Create new collection">
+        ${!selectMode ? `<button onclick="openCreateCollectionModal()" class="border-2 border-dashed border-border rounded-md h-36 flex flex-col items-center justify-center gap-2 hover:border-accent hover:bg-accent/5 transition-all duration-200 active:scale-[0.97]" aria-label="Create new collection">
           <span class="material-icons-round text-2xl text-muted">add</span>
           <span class="text-muted text-xs font-medium">New Collection</span>
-        </button>
+        </button>` : ''}
       </div>`}
   `;
+}
+
+function collectionsPageInnerHtml(cols, cats, selectMode, selectedIds) {
+  const toolbarHtml = selectMode
+    ? `<div class="flex items-center justify-between gap-3 py-3 px-4 mb-4 rounded-xl bg-surface border border-border sticky top-0 z-10" id="collections-toolbar" role="toolbar">
+        <span class="text-sm font-medium text-heading">${selectedIds.size} selected</span>
+        <div class="flex gap-2">
+          <button type="button" onclick="exitCollectionsSelectMode()" class="px-4 py-2 rounded-lg text-sm font-medium bg-surface-hover text-heading hover:bg-border transition-colors">Cancel</button>
+          <button type="button" onclick="bulkDeleteCollections()" class="px-4 py-2 rounded-lg text-sm font-medium bg-danger text-white hover:bg-danger/90 transition-colors">Delete</button>
+        </div>
+      </div>`
+    : '';
+  return `
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <h1 class="text-xl font-bold text-heading">Collections</h1>
+      ${!selectMode ? `<button type="button" onclick="enterCollectionsSelectMode()" class="px-4 py-2 rounded-xl text-sm font-medium bg-surface border border-border text-heading hover:bg-surface-hover transition-colors">Select</button>` : ''}
+    </div>
+    ${toolbarHtml}
+    <div id="collections-content">${collectionsContentHtml(cols, cats, selectMode, selectedIds)}</div>`;
+}
+
+function refreshCollectionsPageContent() {
+  const pageEl = document.getElementById('page');
+  const container = pageEl?.querySelector('#collections-page');
+  if (!container) return;
+  container.innerHTML = collectionsPageInnerHtml(_collectionsList, _collectionsCats, _collectionsSelectMode, _collectionsSelectedIds);
+}
+
+function enterCollectionsSelectMode() {
+  _collectionsSelectMode = true;
+  _collectionsSelectedIds.clear();
+  refreshCollectionsPageContent();
+}
+
+function exitCollectionsSelectMode() {
+  _collectionsSelectMode = false;
+  _collectionsSelectedIds.clear();
+  refreshCollectionsPageContent();
+}
+
+function toggleCollectionSelection(id) {
+  if (!_collectionsSelectMode) return;
+  if (_collectionsSelectedIds.has(id)) _collectionsSelectedIds.delete(id);
+  else _collectionsSelectedIds.add(id);
+  refreshCollectionsPageContent();
+}
+
+async function bulkDeleteCollections() {
+  const ids = Array.from(_collectionsSelectedIds);
+  if (ids.length === 0) return;
+  const ok = await customConfirm('Delete collections', `Delete ${ids.length} collection${ids.length !== 1 ? 's' : ''}? This will not delete the content inside them.`, 'Delete', true);
+  if (!ok) return;
+  const res = await api('POST', '/api/collections/bulk-delete', { ids });
+  if (res.ok) {
+    toast('Deleted');
+    exitCollectionsSelectMode();
+    const pageEl = document.getElementById('page');
+    if (pageEl) await renderCollectionsPage(pageEl);
+  } else {
+    toast(res.data?.detail || 'Failed to delete', true);
+  }
 }
 
 /**
@@ -211,12 +380,12 @@ export async function renderCollectionsPage(el) {
   if (!catRes.ok) showApiError(catRes);
   const cols = colRes.ok ? (Array.isArray(colRes.data) ? colRes.data : []) : [];
   const cats = catRes.ok ? (Array.isArray(catRes.data) ? catRes.data : []) : [];
+  _collectionsList = cols;
+  _collectionsCats = cats;
+  _collectionsSelectMode = false;
+  _collectionsSelectedIds.clear();
 
-  el.innerHTML = `
-    <div class="fade-in">
-      <h1 class="text-xl font-bold text-heading mb-4">Collections</h1>
-      ${collectionsContentHtml(cols, cats)}
-    </div>`;
+  el.innerHTML = `<div class="fade-in" id="collections-page">${collectionsPageInnerHtml(cols, cats, _collectionsSelectMode, _collectionsSelectedIds)}</div>`;
 }
 
 async function refreshLibrary() {
@@ -286,10 +455,16 @@ async function refreshSavedListOnly(newItemId = null) {
   if (!res.ok) return;
   const raw = res.data;
   const items = Array.isArray(raw) ? raw : (raw?.items ?? []);
+  _librarySavedItems = items;
 
   items.forEach(item => {
     if (item.ai_processed) removeProcessingId(item.id);
   });
+
+  if (_librarySavedSelectMode) {
+    refreshLibrarySavedPageContent();
+    return;
+  }
 
   const listEl = document.getElementById('content-list');
   if (listEl) {
@@ -414,3 +589,11 @@ window.openSaveContentModal = openSaveContentModal;
 window.doSaveContent = doSaveContent;
 window.openCreateCollectionModal = openCreateCollectionModal;
 window.doCreateCollection = doCreateCollection;
+window.enterCollectionsSelectMode = enterCollectionsSelectMode;
+window.exitCollectionsSelectMode = exitCollectionsSelectMode;
+window.toggleCollectionSelection = toggleCollectionSelection;
+window.bulkDeleteCollections = bulkDeleteCollections;
+window.enterLibrarySavedSelectMode = enterLibrarySavedSelectMode;
+window.exitLibrarySavedSelectMode = exitLibrarySavedSelectMode;
+window.toggleLibrarySavedSelection = toggleLibrarySavedSelection;
+window.bulkDeleteContent = bulkDeleteContent;

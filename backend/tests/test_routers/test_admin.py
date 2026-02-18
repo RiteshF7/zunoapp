@@ -51,4 +51,4 @@ def test_post_prompts_reload_clears_prompt_cache(client, auth_headers):
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "ok"
-    assert "reloaded" in data["message"].lower()
+    assert "cache" in data["message"].lower()

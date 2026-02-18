@@ -154,9 +154,12 @@ Scoring: `category_rank (0-20) + tag_overlap_count`. Deduplicates by URL. New us
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/admin/cache/stats` | Yes | Cache statistics |
-| POST | `/api/admin/cache/bust?pattern=` | Yes | Invalidate cache |
-| POST | `/api/admin/prompts/reload` | Yes | Reload YAML prompts |
+| GET | `/api/admin/cache/stats` | Yes (admin) | Cache statistics |
+| POST | `/api/admin/cache/bust?pattern=` | Yes (admin) | Invalidate cache |
+| GET | `/api/admin/prompts` | Yes (admin) | List prompts (name, version, updated_at) |
+| GET | `/api/admin/prompts/{name}` | Yes (admin) | Get full prompt config |
+| PUT | `/api/admin/prompts/{name}` | Yes (admin) | Update prompt (body: system, user_template, version, temperature, max_output_tokens, model); clears prompt cache |
+| POST | `/api/admin/prompts/reload` | Yes (admin) | Clear prompt cache (next get_prompt refetches from DB) |
 
 ---
 

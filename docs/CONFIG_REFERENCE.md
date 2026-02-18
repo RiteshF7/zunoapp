@@ -159,7 +159,7 @@ Optional seed data; applied when `[db.seed]` is enabled in `config.toml` during 
 
 ### 5.4 Edge Functions (`supabase/functions/`)
 
-Backend has replaced the original Edge Functions (process-content, generate-embedding, generate-feed) with FastAPI routes. Remaining Edge Functions (if any) are documented in the repo; deploy with `supabase functions deploy <name>` and set secrets in the Dashboard or via `supabase secrets set`.
+AI processing is done by the **Python backend** (FastAPI) only. The Supabase Edge Functions `process-content`, `generate-embedding`, and `generate-feed` have been removed. If you add new Edge Functions later, deploy with `supabase functions deploy <name>` and set secrets in the Dashboard or via `supabase secrets set`.
 
 ---
 

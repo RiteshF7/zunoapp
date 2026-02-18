@@ -102,6 +102,13 @@ export async function renderProfile(el) {
       <button onclick="doLogout()" class="w-full flex items-center justify-center gap-2 bg-danger/10 hover:bg-danger/20 text-danger font-semibold py-3.5 rounded-md transition-colors active:scale-[0.97]">
         <span class="material-icons-round text-lg">logout</span> Sign Out
       </button>
+
+      <!-- About Us -->
+      <section class="mt-4" aria-label="About">
+        <button onclick="navigate('#about')" class="w-full flex items-center justify-center gap-2 bg-bg hover:bg-surface-hover border border-border text-heading font-medium py-3 rounded-md transition-colors active:scale-[0.97]">
+          <span class="material-icons-round text-lg text-muted-foreground">info</span> About Us
+        </button>
+      </section>
     </div>`;
 }
 

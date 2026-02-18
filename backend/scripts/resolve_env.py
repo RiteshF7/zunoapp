@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Single source of truth: root .env → one active env per app.
+"""Single source of truth: root .env -> one active env per app.
 
 Reads root .env (with _DEV/_PROD suffixes), picks one mode, writes:
   - backend/.env   (single file; ENVIRONMENT=development|production)
@@ -149,7 +149,7 @@ def main() -> int:
     (BACKEND_DIR / ".env.development").write_text(_env_to_output(backend_dev), encoding="utf-8")
     (BACKEND_DIR / ".env.production").write_text(_env_to_output(backend_prod), encoding="utf-8")
 
-    print(f"Resolved {mode} → backend/.env, ui/.env (active). Also backend/.env.development, .env.production.")
+    print(f"Resolved {mode} -> backend/.env, ui/.env (active). Also backend/.env.development, .env.production.")
 
     # Inject Chrome extension defaults from current mode (ZUNO_APP_URL, ZUNO_API_BASE)
     env = dev_env if mode == "development" else prod_env

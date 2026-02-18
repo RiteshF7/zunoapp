@@ -88,6 +88,18 @@ class CollectionItemAdd(BaseModel):
     content_id: str
 
 
+class CollectionBulkDelete(BaseModel):
+    """Request body for bulk-deleting collections."""
+
+    ids: list[str] = Field(..., min_length=1, max_length=100)
+
+
+class CollectionItemsBulkRemove(BaseModel):
+    """Request body for bulk-removing items from a collection."""
+
+    content_ids: list[str] = Field(..., min_length=1, max_length=100)
+
+
 # ---------------------------------------------------------------------------
 # Content
 # ---------------------------------------------------------------------------
@@ -136,6 +148,12 @@ class ContentUpdate(BaseModel):
     content_type: str | None = None
     ai_category: str | None = None
     ai_summary: str | None = None
+
+
+class ContentBulkDelete(BaseModel):
+    """Request body for bulk-deleting content."""
+
+    ids: list[str] = Field(..., min_length=1, max_length=100)
 
 
 class TagOut(BaseModel):
@@ -424,3 +442,35 @@ class AppConfigOut(BaseModel):
             "tiktok", "spotify", "web",
         ]
     )
+
+
+# ---------------------------------------------------------------------------
+# Admin prompts (stored in Supabase prompts table)
+# ---------------------------------------------------------------------------
+class PromptListItem(BaseModel):
+    """One prompt in the list (name, version, updated_at)."""
+    name: str
+    version: str | None = None
+    updated_at: str
+
+
+class PromptOut(BaseModel):
+    """Full prompt config for GET one / admin edit."""
+    name: str
+    system: str
+    user_template: str | None = None
+    version: str | None = None
+    temperature: float | None = None
+    max_output_tokens: int | None = None
+    model: str | None = None
+    updated_at: str
+
+
+class PromptUpdate(BaseModel):
+    """Payload for PUT /admin/prompts/{name}. All fields optional (partial update)."""
+    system: str | None = None
+    user_template: str | None = None
+    version: str | None = None
+    temperature: float | None = None
+    max_output_tokens: int | None = None
+    model: str | None = None

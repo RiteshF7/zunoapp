@@ -84,8 +84,7 @@ In Supabase Dashboard → Authentication → URL Configuration, add:
 
 ### 3.3 Edge Functions
 
-- [ ] Set env in Supabase Dashboard for Edge Functions: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and any AI/embedding keys for `process-content`, `generate-embedding`, `generate-feed`
-- [ ] Deploy Edge Functions to production after setting env
+AI processing (content analysis, embeddings, feed generation) is done by the **Python backend** only. The former Supabase Edge Functions `process-content`, `generate-embedding`, and `generate-feed` have been removed. No Edge Function deployment or env is required for AI.
 
 ---
 
@@ -196,7 +195,6 @@ Commit `backend/jwks.json` so Render (or your host) has it. Re-run after JWT key
 - [ ] JWKS fetched from prod Supabase
 - [ ] `supabase db push` run
 - [ ] Auth redirect URLs added
-- [ ] Edge Function env set and deployed
 - [ ] Backend deployed with prod env
 - [ ] UI built with prod env and deployed
 - [ ] HTTPS everywhere
@@ -207,7 +205,6 @@ Commit `backend/jwks.json` so Render (or your host) has it. Re-run after JWT key
 | Step | Where |
 |------|--------|
 | Auth redirect URLs | Supabase Dashboard → Auth → URL Configuration |
-| Edge Function secrets | Supabase Dashboard → Edge Functions |
 | Set admin user | `UPDATE public.profiles SET role = 'admin' WHERE id = '<uuid>';` |
 
 ### Optional (post-launch)

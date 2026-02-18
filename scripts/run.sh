@@ -72,6 +72,10 @@ case "$CMD" in
   android-prod)
     _build_ui_mobile prod production
     cd "$ROOT/mobile"
+    # Force Capacitor to use bundled www/ (no dev server URL) so prod APK doesn't load 10.0.2.2:5173
+    export CAPACITOR_USE_BUNDLE=1
+    unset CAPACITOR_DEV_SERVER
+    unset CAPACITOR_SERVER_URL
     npx cap sync android
     cd "$ROOT/mobile/android"
     ./gradlew assembleRelease installRelease

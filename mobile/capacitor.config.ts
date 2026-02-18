@@ -2,11 +2,14 @@ import type { CapacitorConfig } from '@capacitor/cli';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-// Use dev server (10.0.2.2:5173) when: CAPACITOR_DEV_SERVER=1 OR file mobile/.use-dev-server exists
+// Use dev server (10.0.2.2:5173) when: CAPACITOR_DEV_SERVER=1 OR file mobile/.use-dev-server exists.
+// Force bundled www when CAPACITOR_USE_BUNDLE=1 (run.sh android-prod sets this so prod APK never loads dev server).
 const useDevServer =
-  process.env.CAPACITOR_DEV_SERVER === '1' ||
-  process.env.CAPACITOR_DEV_SERVER === 'true' ||
-  existsSync(join(__dirname, '.use-dev-server'));
+  process.env.CAPACITOR_USE_BUNDLE !== '1' &&
+  process.env.CAPACITOR_USE_BUNDLE !== 'true' &&
+  (process.env.CAPACITOR_DEV_SERVER === '1' ||
+    process.env.CAPACITOR_DEV_SERVER === 'true' ||
+    existsSync(join(__dirname, '.use-dev-server')));
 
 const config: CapacitorConfig = {
   appId: 'com.zuno.app',

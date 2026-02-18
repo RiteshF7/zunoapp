@@ -44,5 +44,15 @@ def _get_ref() -> AboutConfigOut:
 @router.get("", response_model=AboutConfigOut)
 @limiter.limit(RATE_PUBLIC)
 async def get_about_config(request: Request):
-    """Return reference dev/prod URLs from server env (for About App screen comparison)."""
+    """Return reference dev/prod URLs (for About App screen comparison).
+    Reads from DB (app_config_store key=local) when set by admin; else from env."""
+    from app.config_store import get_config
+    data = get_config("local")
+    if data:
+        dev = data.get("dev") or {}
+        prod = data.get("prod") or {}
+        return AboutConfigOut(
+            dev=EnvRef(apiBase=dev.get("apiBase"), appUrl=dev.get("appUrl")),
+            prod=EnvRef(apiBase=prod.get("apiBase"), appUrl=prod.get("appUrl")),
+        )
     return _get_ref()

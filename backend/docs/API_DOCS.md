@@ -160,6 +160,10 @@ Scoring: `category_rank (0-20) + tag_overlap_count`. Deduplicates by URL. New us
 | GET | `/api/admin/prompts/{name}` | Yes (admin) | Get full prompt config |
 | PUT | `/api/admin/prompts/{name}` | Yes (admin) | Update prompt (body: system, user_template, version, temperature, max_output_tokens, model); clears prompt cache |
 | POST | `/api/admin/prompts/reload` | Yes (admin) | Clear prompt cache (next get_prompt refetches from DB) |
+| GET | `/api/admin/config/global` | Yes (admin) | Get global app config (from DB or default) |
+| PUT | `/api/admin/config/global` | Yes (admin) | Update global app config (body: AppConfigOut JSON) |
+| GET | `/api/admin/config/local` | Yes (admin) | Get local/about config (dev/prod ref URLs from DB or env) |
+| PUT | `/api/admin/config/local` | Yes (admin) | Update local/about config (body: AboutConfigOut JSON) |
 
 ---
 

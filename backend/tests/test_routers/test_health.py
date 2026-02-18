@@ -45,11 +45,10 @@ def test_get_health_ready_returns_503_when_db_fails(client):
         app.dependency_overrides.pop(get_supabase, None)
 
 
-def test_get_root_redirects_to_static_index(client):
-    """GET / redirects to /static/index.html (status 307)."""
-    response = client.get("/", follow_redirects=False)
-    assert response.status_code == 307
-    assert response.headers["location"] == "/static/index.html"
+def test_get_root_returns_404(client):
+    """GET / returns 404 — backend is API-only, no static serving."""
+    response = client.get("/")
+    assert response.status_code == 404
 
 
 def test_get_api_config_returns_valid_app_config(client):

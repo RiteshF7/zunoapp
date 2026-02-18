@@ -6,12 +6,11 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
-_ROOT_DIR = _BACKEND_DIR.parent
 
 
 def _get_mode() -> str:
     """Current environment mode: development or production (and staging).
-    Sources: ZUNO_ENV or ENVIRONMENT env var, then ZUNO_MODE from root .env. Default development.
+    Sources: ZUNO_ENV or ENVIRONMENT env var, then ZUNO_MODE from .env. Default development.
     """
     mode = os.environ.get("ZUNO_ENV") or os.environ.get("ENVIRONMENT")
     if mode:
@@ -20,9 +19,9 @@ def _get_mode() -> str:
             return mode
         if mode in ("dev", "prod"):
             return "development" if mode == "dev" else "production"
-    root_env = _ROOT_DIR / ".env"
-    if root_env.exists():
-        root_vars = _read_dotenv_file(root_env)
+    env_path = _BACKEND_DIR / ".env"
+    if env_path.exists():
+        root_vars = _read_dotenv_file(env_path)
         mode = root_vars.get("ZUNO_MODE", "").strip().lower()
         if mode in ("development", "production", "staging"):
             return mode

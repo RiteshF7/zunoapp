@@ -68,6 +68,13 @@ async def get_app_config(request: Request):
 
     This is a **public** endpoint (no JWT required) so the app can
     fetch it before the user has signed in.
+    Reads from DB (app_config_store key=global) when set by admin; else returns defaults.
     """
-    logger.info("Serving app config (v%s)", _CONFIG.app_version)
+    from app.config_store import get_config
+    data = get_config("global")
+    if data:
+        out = AppConfigOut(**data)
+        logger.info("Serving app config from DB (v%s)", out.app_version)
+        return out
+    logger.info("Serving app config default (v%s)", _CONFIG.app_version)
     return _CONFIG

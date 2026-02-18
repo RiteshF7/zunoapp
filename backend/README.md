@@ -1,101 +1,25 @@
-# Zuno Backend API
+# Zuno Backend (API + Supabase)
 
-FastAPI backend for the Zuno content curation app. Sits between the React Native frontend and Supabase, handling all CRUD operations, JWT auth validation, and AI processing.
+API-only FastAPI backend. Supabase migrations live in `supabase/`.
 
-## Quick Start
+## Setup
 
 ```bash
-cd backend
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# or: venv\Scripts\activate  # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy and fill in environment variables
-cp .env.example .env
-# Edit .env with your Supabase and Vertex AI config
-
-# Run the server
-uvicorn app.main:app --reload --port 8000
-# Or: python -m uvicorn app.main:app --port 8000
+cp .env.example .env   # fill in Supabase, GCP, CORS_ORIGINS
+npm install            # supabase CLI
+./scripts/resolve-env.sh
+./scripts/use-env.sh dev
 ```
 
-**Windows:** Hot reload is off by default to avoid `multiprocessing` WinError 87. Run as above (no reload) or set `RELOAD=1` if you need reload and your environment supports it.
+## Run
 
-## Environment Variables
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-| Variable | Required | Description |
-|---|---|---|
-| `SUPABASE_URL` | Yes | Your Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key (secret) |
-| `SUPABASE_JWT_SECRET` | Yes | Supabase JWT secret for token validation |
-| `GCP_PROJECT_ID` | Yes* | Google Cloud project ID for Vertex AI |
-| `GCP_LOCATION` | No | GCP region (default: `us-central1`) |
-| `GCP_CREDENTIALS_JSON` | No | Path to service account JSON (uses ADC if empty) |
-| `VERTEX_EMBEDDING_MODEL` | No | Embedding model (default: `text-embedding-005`) |
-| `VERTEX_LLM_MODEL` | No | LLM model (default: `gemini-2.0-flash-001`) |
-| `RAG_CHUNK_SIZE` | No | Target tokens per chunk (default: 500) |
-| `RAG_CHUNK_OVERLAP` | No | Overlap tokens between chunks (default: 50) |
-| `RAG_TOP_K` | No | Chunks to retrieve for RAG (default: 8) |
-| `BACKEND_PORT` | No | Server port (default: 8000) |
-| `ENVIRONMENT` | No | `development`, `staging`, or `production` (default: development). Production disables /docs and /redoc and tightens CORS. |
-| `CORS_ORIGINS` | Yes in prod | Comma-separated allowed origins. Set to your production app URL(s) before going live. |
+## Supabase
 
-*Required for AI features (content analysis, embeddings, feed generation, knowledge engine). See [docs/VERTEX_AI_SETUP.md](../docs/VERTEX_AI_SETUP.md) for setup instructions.
-
-### JWT validation (JWKS)
-
-The backend fetches JWKS from `SUPABASE_URL/auth/v1/.well-known/jwks.json` at runtime. No manual download or local file is needed.
-
-## API Endpoints (25 total)
-
-### Profile
-- `GET /api/profile` — get current user's profile
-- `PATCH /api/profile` — update display_name, avatar_url
-
-### Collections
-- `GET /api/collections` — list user's collections
-- `GET /api/collections/{id}` — get single collection
-- `POST /api/collections` — create collection
-- `PATCH /api/collections/{id}` — update collection
-- `DELETE /api/collections/{id}` — delete collection
-- `GET /api/collections/{id}/items` — get items in collection
-- `POST /api/collections/{id}/items` — add content to collection
-- `DELETE /api/collections/{id}/items/{content_id}` — remove from collection
-
-### Content
-- `GET /api/content` — list content (with query filters)
-- `GET /api/content/{id}` — get single content
-- `POST /api/content` — save new content
-- `PATCH /api/content/{id}` — update content
-- `DELETE /api/content/{id}` — delete content
-- `GET /api/content/{id}/tags` — get content with tags
-
-### Feed
-- `GET /api/feed` — get feed items
-- `GET /api/bookmarks` — get bookmarked feed item IDs
-- `POST /api/bookmarks/{feed_item_id}/toggle` — toggle bookmark
-
-### Search
-- `GET /api/search?q=...` — full-text search
-- `GET /api/search/hybrid?q=...` — hybrid (FTS + semantic) search
-- `GET /api/search/tag/{slug}` — tag-based search
-- `GET /api/tags/popular` — popular tags
-
-### AI Processing
-- `POST /api/ai/process-content` — AI categorize/summarize/tag/embed
-- `POST /api/ai/generate-embedding` — generate embedding vector
-- `POST /api/ai/generate-feed` — generate personalized feed
-
-### Knowledge Engine (RAG)
-- `POST /api/knowledge/ask` — query your saved content with RAG
-- `POST /api/knowledge/reindex` — re-chunk and re-embed content
-- `GET /api/knowledge/stats` — knowledge base statistics
-
-## Architecture
-
-All endpoints require a valid Supabase JWT in the `Authorization: Bearer <token>` header. The backend validates the token using the Supabase JWT secret and extracts the user ID. It then uses the Supabase service role key to bypass RLS and interact with the database directly.
+```bash
+./scripts/supabase-push-dev.sh   # push migrations to dev
+./scripts/supabase-push.sh       # push to prod
+```

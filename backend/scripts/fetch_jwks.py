@@ -64,7 +64,8 @@ def main():
         if arg.startswith("http://") or arg.startswith("https://"):
             raw = arg
         else:
-            env_path = (base.parent / arg).resolve() if not Path(arg).is_absolute() else Path(arg)
+            rel = arg.replace("backend/", "", 1) if arg.startswith("backend/") else arg
+            env_path = (base / rel).resolve() if not Path(arg).is_absolute() else Path(arg).resolve()
             if not env_path.exists():
                 print(f"Env file not found: {env_path}", file=sys.stderr)
                 sys.exit(1)

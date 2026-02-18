@@ -11,7 +11,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.dependencies import get_current_user_role, get_admin_user, get_supabase
 from app.utils.cache import bust_cache, get_cache_stats
 from app.prompts import reload_prompts
-from app.schemas.models import PromptListItem, PromptOut, PromptUpdate
+from app.config_store import get_config, set_config
+from app.schemas.models import (
+    PromptListItem,
+    PromptOut,
+    PromptUpdate,
+    AppConfigOut,
+    FeatureFlags,
+    ContentLimits,
+    FeedSettings,
+    AppLinks,
+)
+from app.routers.about_config import AboutConfigOut, EnvRef
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +65,76 @@ async def bust(
     removed = bust_cache(pattern)
     logger.info("Admin cache bust: pattern='%s' removed=%d by user=%s", pattern, removed, user_id)
     return {"pattern": pattern, "entries_removed": removed}
+
+
+# ── Global and local config (declare before /prompts/{name} so they match first)
+# ───────────────────────────────────────────────────────────────────────────
+
+def _default_app_config() -> AppConfigOut:
+    return AppConfigOut(
+        app_version="1.0.0",
+        min_supported_version="1.0.0",
+        maintenance_mode=False,
+        maintenance_message=None,
+        feature_flags=FeatureFlags(),
+        content_limits=ContentLimits(),
+        feed_settings=FeedSettings(),
+        app_links=AppLinks(),
+        supported_platforms=["youtube", "instagram", "x", "reddit", "tiktok", "spotify", "web"],
+    )
+
+
+@router.get("/config/global", response_model=AppConfigOut)
+async def config_get_global(user_id: str = Depends(get_admin_user)):
+    """Get global app config (from DB or default). Admin only."""
+    data = get_config("global")
+    if data:
+        return AppConfigOut(**data)
+    return _default_app_config()
+
+
+@router.put("/config/global", response_model=AppConfigOut)
+async def config_put_global(body: AppConfigOut, user_id: str = Depends(get_admin_user)):
+    """Update global app config. Admin only."""
+    set_config("global", body.model_dump())
+    logger.info("Admin config global updated by user=%s", user_id)
+    return body
+
+
+def _default_about_config() -> AboutConfigOut:
+    import os
+    return AboutConfigOut(
+        dev=EnvRef(
+            apiBase=os.environ.get("ZUNO_API_BASE_DEV") or None,
+            appUrl=os.environ.get("ZUNO_APP_URL_DEV") or None,
+        ),
+        prod=EnvRef(
+            apiBase=os.environ.get("ZUNO_API_BASE_PROD") or None,
+            appUrl=os.environ.get("ZUNO_APP_URL_PROD") or None,
+        ),
+    )
+
+
+@router.get("/config/local", response_model=AboutConfigOut)
+async def config_get_local(user_id: str = Depends(get_admin_user)):
+    """Get local/about config (dev/prod ref URLs from DB or env). Admin only."""
+    data = get_config("local")
+    if data:
+        dev = data.get("dev") or {}
+        prod = data.get("prod") or {}
+        return AboutConfigOut(
+            dev=EnvRef(apiBase=dev.get("apiBase"), appUrl=dev.get("appUrl")),
+            prod=EnvRef(apiBase=prod.get("apiBase"), appUrl=prod.get("appUrl")),
+        )
+    return _default_about_config()
+
+
+@router.put("/config/local", response_model=AboutConfigOut)
+async def config_put_local(body: AboutConfigOut, user_id: str = Depends(get_admin_user)):
+    """Update local/about config. Admin only."""
+    set_config("local", body.model_dump())
+    logger.info("Admin config local updated by user=%s", user_id)
+    return body
 
 
 # ── Prompt management ─────────────────────────────────────────────────────

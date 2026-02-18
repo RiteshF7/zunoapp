@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-"""Single source of truth: root .env -> one active env per app.
+"""Resolve .env (with _DEV/_PROD suffixes) into active backend env.
 
-Reads root .env (with _DEV/_PROD suffixes), picks one mode, writes:
-  - backend/.env   (single file; ENVIRONMENT=development|production)
-  - ui/.env        (single file; all VITE_* for that mode)
+Reads backend/.env, picks one mode, writes:
+  - .env             (active; ENVIRONMENT=development|production)
+  - .env.development (for scripts that need dev vars)
+  - .env.production  (for scripts that need prod vars)
 
-You only edit root .env. Run with --mode or use ZUNO_MODE in root .env.
-Scripts (build-android-debug, build-android-release, start.sh) run this with the right mode.
+Copy .env.example to .env and fill values. Run with --mode or use ZUNO_MODE in .env.
 
 Usage:
-  python backend/scripts/resolve_env.py [--mode dev|prod]
-  ./scripts/resolve-env.sh              # uses ZUNO_MODE from root .env
-  ./scripts/use-dev.sh                  # switch to dev (then start backend / build UI)
-  ./scripts/use-prod.sh                 # switch to prod
+  python scripts/resolve_env.py [--mode dev|prod]
+  ./scripts/resolve-env.sh
 """
 
 import argparse
@@ -20,9 +18,7 @@ import os
 import sys
 from pathlib import Path
 
-# Repo root (parent of backend/)
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-ROOT_DIR = BACKEND_DIR.parent
 
 
 def _get_mode() -> str:
@@ -31,9 +27,9 @@ def _get_mode() -> str:
         mode = str(mode).strip().lower()
         if mode in ("development", "production", "dev", "prod"):
             return "development" if mode in ("development", "dev") else "production"
-    root_env = ROOT_DIR / ".env"
-    if root_env.exists():
-        env_vars = _read_dotenv(root_env)
+    env_path = BACKEND_DIR / ".env"
+    if env_path.exists():
+        env_vars = _read_dotenv(env_path)
         raw = env_vars.get("ZUNO_MODE", "").strip().lower()
         if raw in ("development", "dev"):
             return "development"
@@ -59,26 +55,24 @@ def _read_dotenv(path: Path) -> dict[str, str]:
 
 
 def _resolve_env(root_env: dict[str, str]) -> tuple[dict[str, str], dict[str, str]]:
-    """Resolve root env into dev and prod envs. Returns (dev_env, prod_env)."""
+    """Resolve .env into dev and prod envs. Returns (dev_env, prod_env)."""
     dev_env: dict[str, str] = {}
     prod_env: dict[str, str] = {}
 
     for key, val in root_env.items():
         if key.endswith("_DEV"):
-            base = key[:-4]  # strip _DEV
-            # SUPABASE_DB_PASSWORD_DEV stays as-is (scripts read this exact name)
+            base = key[:-4]
             if key == "SUPABASE_DB_PASSWORD_DEV":
                 dev_env[key] = val
             else:
                 dev_env[base] = val
         elif key.endswith("_PROD"):
-            base = key[:-5]  # strip _PROD
+            base = key[:-5]
             if key == "SUPABASE_DB_PASSWORD_PROD":
                 prod_env[key] = val
             else:
                 prod_env[base] = val
         else:
-            # Shared - goes to both
             dev_env[key] = val
             prod_env[key] = val
 
@@ -107,8 +101,8 @@ def _env_to_output(env: dict[str, str]) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Resolve root .env into backend and ui env files")
-    parser.add_argument("--mode", choices=["dev", "prod"], help="Override mode (default: from config/env-mode)")
+    parser = argparse.ArgumentParser(description="Resolve .env into backend env files")
+    parser.add_argument("--mode", choices=["dev", "prod"], help="Override mode")
     args = parser.parse_args()
 
     mode = "development"
@@ -117,52 +111,23 @@ def main() -> int:
     else:
         mode = _get_mode()
 
-    root_env_path = ROOT_DIR / ".env"
-    if not root_env_path.exists():
-        print("root/.env not found. Copy from .env.example and fill values.", file=sys.stderr)
+    env_path = BACKEND_DIR / ".env"
+    if not env_path.exists():
+        print(".env not found. Copy .env.example to .env and fill values.", file=sys.stderr)
         return 1
 
-    root_env = _read_dotenv(root_env_path)
+    root_env = _read_dotenv(env_path)
     dev_env, prod_env = _resolve_env(root_env)
 
-    # Build backend envs - include all non-VITE vars
     backend_dev = {k: v for k, v in dev_env.items() if not k.startswith("VITE_")}
     backend_prod = {k: v for k, v in prod_env.items() if not k.startswith("VITE_")}
-
-    # Build ui envs - only VITE_*
-    ui_dev = {k: v for k, v in dev_env.items() if k.startswith("VITE_")}
-    ui_prod = {k: v for k, v in prod_env.items() if k.startswith("VITE_")}
-    # OAuth deep link: dev APK uses com.zuno.app.dev, prod uses com.zuno.app (must match Android applicationId)
-    ui_dev["VITE_APP_SCHEME"] = "com.zuno.app.dev"
-    ui_prod["VITE_APP_SCHEME"] = "com.zuno.app"
-
-    # Active env (what backend and UI use by default)
     backend_active = {**(backend_dev if mode == "development" else backend_prod), "ENVIRONMENT": mode}
-    ui_active = ui_dev if mode == "development" else ui_prod
 
     (BACKEND_DIR / ".env").write_text(_env_to_output(backend_active), encoding="utf-8")
-    ui_dir = ROOT_DIR / "ui"
-    ui_dir.mkdir(exist_ok=True)
-    (ui_dir / ".env").write_text(_env_to_output(ui_active), encoding="utf-8")
-
-    # Keep .env.development / .env.production for scripts that need both (e.g. clone-prod-to-dev-db)
     (BACKEND_DIR / ".env.development").write_text(_env_to_output(backend_dev), encoding="utf-8")
     (BACKEND_DIR / ".env.production").write_text(_env_to_output(backend_prod), encoding="utf-8")
 
-    print(f"Resolved {mode} -> backend/.env, ui/.env (active). Also backend/.env.development, .env.production.")
-
-    # Inject Chrome extension defaults from current mode (ZUNO_APP_URL, ZUNO_API_BASE)
-    env = dev_env if mode == "development" else prod_env
-    app_url = (env.get("ZUNO_APP_URL") or "https://zunoapp.onrender.com/app/").rstrip("/") + "/"
-    api_base = (env.get("ZUNO_API_BASE") or "https://zunoapp.onrender.com").rstrip("/")
-    ext_dir = ROOT_DIR / "chrome-extension"
-    for name in ("background.js", "popup.js", "content.js"):
-        path = ext_dir / name
-        if path.exists():
-            text = path.read_text(encoding="utf-8")
-            text = text.replace("__ZUNO_APP_URL__", app_url).replace("__ZUNO_API_BASE__", api_base)
-            path.write_text(text, encoding="utf-8")
-
+    print(f"Resolved {mode} -> .env, .env.development, .env.production")
     return 0
 
 

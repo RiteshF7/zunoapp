@@ -1,0 +1,38 @@
+# Secrets, keys & API credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.keystore
+**/keystore.properties
+**/google-services.json
+**/GoogleService-Info.plist
+*credentials*.json
+
+# UI
+ui/node_modules/
+ui/dist/
+
+# Mobile
+mobile/node_modules/
+mobile/www/
+keystore/
+**/keystore-passwords.txt
+
+# Landing
+landing-ui/node_modules/
+landing-ui/dist/
+
+# Build
+**/.cxx/
+**/.gradle/
+**/build/
+**/.expo/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.cursor/
+.idea/
+*.orig.*

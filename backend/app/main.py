@@ -4,14 +4,11 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
-from pathlib import Path
-
 import jwt as pyjwt
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse, RedirectResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -40,6 +37,15 @@ async def lifespan(app: FastAPI):
     """Startup: record start time. Shutdown: clear caches."""
     app.state.start_time = time.time()
     logger.info("Zuno API started")
+    # Check app_config_store exists (admin config); log once so migration can be applied
+    try:
+        from app.config_store import _get_db
+        _get_db().table("app_config_store").select("key").limit(1).execute()
+    except Exception as e:
+        logger.warning(
+            "app_config_store table not available (run migration 20260218100000_app_config_store): %s",
+            e,
+        )
     yield
     logger.info("Zuno API shutting down")
     from app.utils.cache import _store
@@ -184,6 +190,22 @@ async def inject_user_id_for_rate_limit(request: Request, call_next):
     return await call_next(request)
 
 
+# ── Legacy redirect: /api/<non-v1> → /api/v1/... (in middleware so /api/v1/... is never caught)
+@app.middleware("http")
+async def legacy_api_redirect_middleware(request: Request, call_next):
+    """Redirect old /api/... requests to /api/v1/... during migration.
+    Only redirect when path does NOT already start with /api/v1/ so v1 routes are handled normally.
+    """
+    path = request.url.path
+    if path.startswith("/api/") and not path.startswith("/api/v1/"):
+        # e.g. /api/bookmarks -> /api/v1/bookmarks
+        rest = path[5:]  # after "/api/"
+        if rest != "v1" and not rest.startswith("v1/"):
+            query = f"?{request.url.query}" if request.url.query else ""
+            return RedirectResponse(url=f"/api/v1/{rest}{query}", status_code=307)
+    return await call_next(request)
+
+
 # ── API v1 ────────────────────────────────────────────────────────────────
 v1 = APIRouter(prefix="/api/v1")
 v1.include_router(app_config.router)         # GET /api/v1/config
@@ -202,25 +224,6 @@ v1.include_router(admin.router)              # /api/v1/admin
 v1.include_router(waitlist.router)           # POST /api/v1/waitlist (public)
 
 app.include_router(v1)
-
-
-# ── Legacy redirect: /api/... → /api/v1/... ──────────────────────────────
-@app.api_route(
-    "/api/{path:path}",
-    methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
-    include_in_schema=False,
-)
-async def legacy_api_redirect(path: str, request: Request):
-    """Redirect old /api/... requests to /api/v1/... during migration.
-    Skip when path already starts with v1/ to avoid redirect loops (e.g. /api/v1/bookmarks).
-    """
-    if path.startswith("v1/") or path == "v1":
-        raise StarletteHTTPException(status_code=404, detail="Not found")
-    query = f"?{request.url.query}" if request.url.query else ""
-    return RedirectResponse(
-        url=f"/api/v1/{path}{query}",
-        status_code=307,
-    )
 
 
 @app.get("/health")
@@ -259,30 +262,8 @@ async def health_ready(db=Depends(get_supabase)):
         )
 
 
-# ── Static files (landing at /, app at /app/) ──────────────────────────────
-_static_dir = Path(__file__).resolve().parent.parent / "static"
-_app_index = _static_dir / "app" / "index.html"
-
-
-# No-cache for app shell so browsers always get latest index.html (and thus latest hashed JS/CSS)
-_APP_INDEX_HEADERS = {
-    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-    "Pragma": "no-cache",
-}
-
-
-@app.get("/app", include_in_schema=False)
-@app.get("/app/", include_in_schema=False)
-async def serve_app_spa():
-    """Serve app SPA index.html for /app and /app/. Hash routes (#auth, #home) are client-side."""
-    if _app_index.is_file():
-        return FileResponse(str(_app_index), headers=_APP_INDEX_HEADERS)
-    raise StarletteHTTPException(status_code=404, detail="App not built. Run ./scripts/run.sh web-prod")
-
-
-if _static_dir.is_dir():
-    app.mount("/", StaticFiles(directory=str(_static_dir), html=True), name="static")
-
+# NOTE: This backend is API-only. Frontend is deployed separately (Vercel, Netlify, etc.)
+# and calls this API via VITE_API_BASE. No static files are served.
 
 if __name__ == "__main__":
     import uvicorn

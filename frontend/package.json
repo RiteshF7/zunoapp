@@ -1,0 +1,11 @@
+{
+  "name": "zuno-frontend",
+  "private": true,
+  "scripts": {
+    "run": "bash scripts/run.sh",
+    "web:debug": "bash scripts/run.sh web-debug",
+    "web:prod": "bash scripts/run.sh web-prod",
+    "android:debug": "bash scripts/run.sh android-debug",
+    "android:prod": "bash scripts/run.sh android-prod"
+  }
+}

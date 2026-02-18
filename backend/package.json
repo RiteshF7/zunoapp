@@ -1,0 +1,12 @@
+{
+  "name": "zuno-backend",
+  "private": true,
+  "scripts": {
+    "resolve-env": "bash scripts/resolve-env.sh",
+    "supabase:push": "bash scripts/supabase-push.sh",
+    "supabase:push-dev": "bash scripts/supabase-push-dev.sh"
+  },
+  "devDependencies": {
+    "supabase": "^2.76.8"
+  }
+}
